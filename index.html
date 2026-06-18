@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Checklist Personalizável</title>
+
+  <!-- ESTILOS -->
   <style>
     * {
       box-sizing: border-box;
@@ -414,6 +416,7 @@
 </head>
 <body>
   <main class="app">
+    <!-- COMPONENTES -->
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark">✓</div>
@@ -422,6 +425,7 @@
       <button class="btn secondary small hidden" id="backHomeButton" type="button">Voltar ao início</button>
     </header>
 
+    <!-- TELA INICIAL -->
     <section class="screen active" id="homeScreen">
       <div class="hero">
         <div>
@@ -461,6 +465,7 @@
       </div>
     </section>
 
+    <!-- TELA CRIAR CHECKLIST -->
     <section class="screen" id="createScreen">
       <div class="panel">
         <div class="panel-header">
@@ -517,6 +522,7 @@
       </div>
     </section>
 
+    <!-- TELA CHECKLIST -->
     <section class="screen" id="checklistScreen">
       <div class="panel">
         <div class="panel-header">
@@ -551,7 +557,15 @@
     </section>
   </main>
 
+  <!-- CONFIG -->
   <script>
+    // Guarda os nomes das telas em um só lugar para evitar erros de digitação.
+    const SCREENS = {
+      home: 'home',
+      create: 'create',
+      checklist: 'checklist'
+    };
+
     // Dados principais que ficam na memória enquanto a pessoa usa a página.
     let currentChecklist = null;
     let tasksBeingCreated = [];
@@ -585,18 +599,21 @@
     const totalPointsText = document.getElementById('totalPointsText');
     const progressFill = document.getElementById('progressFill');
     const sendWhatsAppButton = document.getElementById('sendWhatsAppButton');
+  </script>
 
+  <!-- FUNÇÕES -->
+  <script>
     // Mostra uma tela e esconde as outras.
     function showScreen(screenName) {
       homeScreen.classList.remove('active');
       createScreen.classList.remove('active');
       checklistScreen.classList.remove('active');
 
-      if (screenName === 'home') homeScreen.classList.add('active');
-      if (screenName === 'create') createScreen.classList.add('active');
-      if (screenName === 'checklist') checklistScreen.classList.add('active');
+      if (screenName === SCREENS.home) homeScreen.classList.add('active');
+      if (screenName === SCREENS.create) createScreen.classList.add('active');
+      if (screenName === SCREENS.checklist) checklistScreen.classList.add('active');
 
-      backHomeButton.classList.toggle('hidden', screenName === 'home');
+      backHomeButton.classList.toggle('hidden', screenName === SCREENS.home);
     }
 
     // Cria um código curto para abrir o checklist depois.
@@ -605,48 +622,69 @@
       return 'CHK-' + numbers;
     }
 
-    function getStorageKey(code) {
-      return 'checklist-personalizavel-' + code;
+    // Cria uma mensagem vazia quando ainda não há tarefas.
+    function showEmptyCreationList() {
+      const emptyMessage = document.createElement('div');
+      emptyMessage.className = 'empty';
+      emptyMessage.textContent = 'Nenhuma tarefa adicionada ainda.';
+      creationTaskList.appendChild(emptyMessage);
     }
 
-    function saveToLocalStorage(checklist) {
-      localStorage.setItem(getStorageKey(checklist.code), JSON.stringify(checklist));
+    // Monta o texto menor que aparece abaixo do nome de cada tarefa.
+    function createTaskMeta(task) {
+      const meta = document.createElement('div');
+      meta.className = 'task-meta';
+      meta.textContent = task.points + ' pontos • ' + task.frequency;
+      return meta;
     }
 
-    function loadFromLocalStorage(code) {
-      const savedData = localStorage.getItem(getStorageKey(code));
-      return savedData ? JSON.parse(savedData) : null;
-    }
-
+    // Mostra as tarefas adicionadas enquanto o checklist está sendo criado.
     function renderCreationTasks() {
       creationTaskList.innerHTML = '';
 
       if (tasksBeingCreated.length === 0) {
-        creationTaskList.innerHTML = '<div class="empty">Nenhuma tarefa adicionada ainda.</div>';
+        showEmptyCreationList();
         return;
       }
 
       tasksBeingCreated.forEach(function(task, index) {
         const taskCard = document.createElement('div');
         taskCard.className = 'task-card';
-        taskCard.innerHTML = `
-          <div class="brand-mark">✓</div>
-          <div>
-            <div class="task-title">${task.name}</div>
-            <div class="task-meta">${task.points} pontos • ${task.frequency}</div>
-          </div>
-          <button class="btn danger small" type="button" onclick="removeTask(${index})">Remover</button>
-        `;
 
+        const icon = document.createElement('div');
+        icon.className = 'brand-mark';
+        icon.textContent = '✓';
+
+        const textArea = document.createElement('div');
+
+        const title = document.createElement('div');
+        title.className = 'task-title';
+        title.textContent = task.name;
+
+        const removeButton = document.createElement('button');
+        removeButton.className = 'btn danger small';
+        removeButton.type = 'button';
+        removeButton.textContent = 'Remover';
+        removeButton.addEventListener('click', function() {
+          removeTask(index);
+        });
+
+        textArea.appendChild(title);
+        textArea.appendChild(createTaskMeta(task));
+        taskCard.appendChild(icon);
+        taskCard.appendChild(textArea);
+        taskCard.appendChild(removeButton);
         creationTaskList.appendChild(taskCard);
       });
     }
 
+    // Remove uma tarefa da lista de criação.
     function removeTask(index) {
       tasksBeingCreated.splice(index, 1);
       renderCreationTasks();
     }
 
+    // Adiciona uma nova tarefa na lista antes de salvar o checklist.
     function addTask() {
       const name = taskNameInput.value.trim();
       const points = Number(taskPointsInput.value);
@@ -676,6 +714,7 @@
       renderCreationTasks();
     }
 
+    // Salva os dados preenchidos e abre o checklist criado.
     function saveChecklist() {
       const personName = personNameInput.value.trim();
       const whatsapp = whatsappInput.value.trim();
@@ -707,6 +746,7 @@
       openChecklist(checklist.code);
     }
 
+    // Busca um checklist salvo e abre a tela de acompanhamento.
     function openChecklist(code) {
       const cleanCode = code.trim().toUpperCase();
       const checklist = loadFromLocalStorage(cleanCode);
@@ -718,9 +758,10 @@
 
       currentChecklist = checklist;
       renderChecklist();
-      showScreen('checklist');
+      showScreen(SCREENS.checklist);
     }
 
+    // Mostra na tela as tarefas do checklist aberto.
     function renderChecklist() {
       checklistTitle.textContent = currentChecklist.checklistName;
       checklistOwner.textContent = currentChecklist.personName + ' • Código: ' + currentChecklist.code;
@@ -729,27 +770,43 @@
       currentChecklist.tasks.forEach(function(task, index) {
         const taskCard = document.createElement('div');
         taskCard.className = 'task-card';
-        taskCard.innerHTML = `
-          <input class="check-input" type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${index})">
-          <div>
-            <div class="task-title">${task.name}</div>
-            <div class="task-meta">${task.points} pontos • ${task.frequency}</div>
-          </div>
-          <strong>${task.done ? task.points : 0} pts</strong>
-        `;
 
+        const checkbox = document.createElement('input');
+        checkbox.className = 'check-input';
+        checkbox.type = 'checkbox';
+        checkbox.checked = task.done;
+        checkbox.addEventListener('change', function() {
+          toggleTask(index);
+        });
+
+        const textArea = document.createElement('div');
+
+        const title = document.createElement('div');
+        title.className = 'task-title';
+        title.textContent = task.name;
+
+        const points = document.createElement('strong');
+        points.textContent = (task.done ? task.points : 0) + ' pts';
+
+        textArea.appendChild(title);
+        textArea.appendChild(createTaskMeta(task));
+        taskCard.appendChild(checkbox);
+        taskCard.appendChild(textArea);
+        taskCard.appendChild(points);
         checklistTaskList.appendChild(taskCard);
       });
 
       updateProgress();
     }
 
+    // Marca ou desmarca uma tarefa e salva a alteração.
     function toggleTask(index) {
       currentChecklist.tasks[index].done = !currentChecklist.tasks[index].done;
       saveToLocalStorage(currentChecklist);
       renderChecklist();
     }
 
+    // Atualiza percentual, pontos feitos e pontos totais.
     function updateProgress() {
       const totalTasks = currentChecklist.tasks.length;
       const doneTasks = currentChecklist.tasks.filter(function(task) {
@@ -772,6 +829,7 @@
       progressFill.style.width = progress + '%';
     }
 
+    // Monta o relatório e abre o WhatsApp em uma nova aba.
     function sendWhatsAppReport() {
       const doneTasks = currentChecklist.tasks.filter(function(task) {
         return task.done;
@@ -800,6 +858,7 @@
       window.open(url, '_blank');
     }
 
+    // Limpa o formulário e começa um checklist novo.
     function startNewChecklist() {
       tasksBeingCreated = [];
       personNameInput.value = '';
@@ -810,15 +869,17 @@
       taskFrequencyInput.value = 'Diária';
       generatedCodeBox.classList.add('hidden');
       renderCreationTasks();
-      showScreen('create');
+      showScreen(SCREENS.create);
     }
 
+    // Liga os botões e campos às funções acima.
     createNewButton.addEventListener('click', startNewChecklist);
     addTaskButton.addEventListener('click', addTask);
     saveChecklistButton.addEventListener('click', saveChecklist);
     sendWhatsAppButton.addEventListener('click', sendWhatsAppReport);
+
     backHomeButton.addEventListener('click', function() {
-      showScreen('home');
+      showScreen(SCREENS.home);
     });
 
     openChecklistButton.addEventListener('click', function() {
@@ -832,6 +893,25 @@
     });
 
     renderCreationTasks();
+  </script>
+
+  <!-- LOCALSTORAGE -->
+  <script>
+    // Cria o nome usado para salvar cada checklist no navegador.
+    function getStorageKey(code) {
+      return 'checklist-personalizavel-' + code;
+    }
+
+    // Salva um checklist no localStorage.
+    function saveToLocalStorage(checklist) {
+      localStorage.setItem(getStorageKey(checklist.code), JSON.stringify(checklist));
+    }
+
+    // Busca um checklist no localStorage pelo código de acesso.
+    function loadFromLocalStorage(code) {
+      const savedData = localStorage.getItem(getStorageKey(code));
+      return savedData ? JSON.parse(savedData) : null;
+    }
   </script>
 </body>
 </html>
