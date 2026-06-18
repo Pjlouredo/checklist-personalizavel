@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checklist Personalizável</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #1f2937;
+      background:
+        radial-gradient(circle at top left, rgba(20, 184, 166, 0.18), transparent 30%),
+        linear-gradient(135deg, #f8fafc 0%, #eef6f3 48%, #fff7ed 100%);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    .app {
+      width: min(1040px, 100%);
+      margin: 0 auto;
+      padding: 28px 16px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      color: #0f766e;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border-radius: 12px;
+      color: #ffffff;
+      background: #0f766e;
+      box-shadow: 0 12px 28px rgba(15, 118, 110, 0.22);
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .hero,
+    .panel {
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.86);
+      box-shadow: 0 20px 70px rgba(15, 23, 42, 0.08);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 28px;
+      min-height: 520px;
+      padding: 40px;
+      align-items: center;
+    }
+
+    h1 {
+      max-width: 620px;
+      margin-bottom: 16px;
+      font-size: clamp(2.1rem, 6vw, 4.4rem);
+      line-height: 1;
+      color: #102a43;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      max-width: 560px;
+      color: #526173;
+      font-size: 1.06rem;
+      line-height: 1.7;
+    }
+
+    .home-actions {
+      display: grid;
+      gap: 14px;
+      margin-top: 28px;
+      max-width: 420px;
+    }
+
+    .access-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+
+    .visual-board {
+      display: grid;
+      gap: 14px;
+      padding: 22px;
+      border-radius: 8px;
+      background: #0f172a;
+      color: #f8fafc;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .visual-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .fake-check {
+      width: 22px;
+      height: 22px;
+      border-radius: 7px;
+      background: #14b8a6;
+      box-shadow: inset 0 0 0 5px #ccfbf1;
+    }
+
+    .fake-line {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.34);
+    }
+
+    .fake-points {
+      font-size: 0.9rem;
+      color: #fde68a;
+      font-weight: 700;
+    }
+
+    .panel {
+      padding: 26px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    h2 {
+      margin-bottom: 6px;
+      color: #102a43;
+      font-size: 1.7rem;
+      letter-spacing: 0;
+    }
+
+    .muted {
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: #334155;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 11px 12px;
+      color: #0f172a;
+      background: #ffffff;
+      outline: none;
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #0f766e;
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+    }
+
+    .task-form {
+      display: grid;
+      grid-template-columns: 1.5fr 0.7fr 1fr auto;
+      gap: 12px;
+      align-items: end;
+      margin-top: 26px;
+      padding-top: 24px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .task-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .task-card {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      gap: 12px;
+      align-items: center;
+      min-height: 58px;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .task-title {
+      font-weight: 800;
+      color: #0f172a;
+      overflow-wrap: anywhere;
+    }
+
+    .task-meta {
+      color: #64748b;
+      font-size: 0.9rem;
+      margin-top: 3px;
+    }
+
+    .check-input {
+      width: 22px;
+      height: 22px;
+      accent-color: #0f766e;
+    }
+
+    .progress-area {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .metric {
+      padding: 16px;
+      border: 1px solid #dbeafe;
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
+    .metric span {
+      display: block;
+      margin-bottom: 6px;
+      color: #64748b;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .metric strong {
+      color: #0f172a;
+      font-size: 1.65rem;
+    }
+
+    .progress-bar {
+      overflow: hidden;
+      height: 12px;
+      margin-bottom: 20px;
+      border-radius: 999px;
+      background: #e2e8f0;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #0f766e, #f59e0b);
+      transition: width 0.25s ease;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 46px;
+      padding: 11px 16px;
+      border-radius: 8px;
+      color: #ffffff;
+      background: #0f766e;
+      font-weight: 800;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      background: #115e59;
+      box-shadow: 0 12px 24px rgba(15, 118, 110, 0.2);
+    }
+
+    .btn.secondary {
+      color: #0f766e;
+      background: #ccfbf1;
+    }
+
+    .btn.secondary:hover {
+      background: #99f6e4;
+    }
+
+    .btn.danger {
+      color: #991b1b;
+      background: #fee2e2;
+    }
+
+    .btn.danger:hover {
+      background: #fecaca;
+      box-shadow: none;
+    }
+
+    .btn.small {
+      min-height: 38px;
+      padding: 8px 11px;
+      font-size: 0.9rem;
+    }
+
+    .empty {
+      padding: 18px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      color: #64748b;
+      text-align: center;
+      background: #f8fafc;
+    }
+
+    .code-box {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 8px;
+      color: #134e4a;
+      background: #ccfbf1;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 780px) {
+      .hero {
+        grid-template-columns: 1fr;
+        min-height: auto;
+        padding: 24px;
+      }
+
+      .visual-board {
+        order: -1;
+      }
+
+      .form-grid,
+      .task-form,
+      .progress-area {
+        grid-template-columns: 1fr;
+      }
+
+      .access-row {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-header,
+      .topbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .task-card {
+        grid-template-columns: auto 1fr auto;
+      }
+
+      .task-card .btn {
+        grid-column: 1 / -1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">✓</div>
+        <span>Checklist Personalizável</span>
+      </div>
+      <button class="btn secondary small hidden" id="backHomeButton" type="button">Voltar ao início</button>
+    </header>
+
+    <section class="screen active" id="homeScreen">
+      <div class="hero">
+        <div>
+          <h1>Checklist simples para acompanhar tarefas e pontos.</h1>
+          <p class="subtitle">
+            Crie um checklist personalizado, salve no navegador e acompanhe o progresso
+            das tarefas com pontuação. Tudo funciona localmente por enquanto.
+          </p>
+
+          <div class="home-actions">
+            <button class="btn" id="createNewButton" type="button">Criar novo checklist</button>
+
+            <div class="access-row">
+              <input id="accessCodeInput" type="text" placeholder="Código de acesso">
+              <button class="btn secondary" id="openChecklistButton" type="button">Abrir checklist</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="visual-board" aria-hidden="true">
+          <div class="visual-item">
+            <div class="fake-check"></div>
+            <div class="fake-line"></div>
+            <div class="fake-points">10 pts</div>
+          </div>
+          <div class="visual-item">
+            <div class="fake-check"></div>
+            <div class="fake-line"></div>
+            <div class="fake-points">5 pts</div>
+          </div>
+          <div class="visual-item">
+            <div class="fake-check"></div>
+            <div class="fake-line"></div>
+            <div class="fake-points">15 pts</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="createScreen">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Criar checklist</h2>
+            <p class="muted">Preencha os dados principais e adicione as tarefas desejadas.</p>
+          </div>
+          <button class="btn" id="saveChecklistButton" type="button">Salvar checklist</button>
+        </div>
+
+        <div class="form-grid">
+          <label>
+            Nome da pessoa
+            <input id="personNameInput" type="text" placeholder="Ex: Maria Silva">
+          </label>
+
+          <label>
+            Telefone do WhatsApp
+            <input id="whatsappInput" type="tel" placeholder="Ex: 5511999999999">
+          </label>
+
+          <label>
+            Nome do checklist
+            <input id="checklistNameInput" type="text" placeholder="Ex: Rotina da semana">
+          </label>
+        </div>
+
+        <div class="task-form">
+          <label>
+            Nome da tarefa
+            <input id="taskNameInput" type="text" placeholder="Ex: Beber água">
+          </label>
+
+          <label>
+            Pontuação
+            <input id="taskPointsInput" type="number" min="1" value="10">
+          </label>
+
+          <label>
+            Frequência
+            <select id="taskFrequencyInput">
+              <option value="Diária">Diária</option>
+              <option value="Semanal">Semanal</option>
+              <option value="Mensal">Mensal</option>
+              <option value="Única">Única</option>
+            </select>
+          </label>
+
+          <button class="btn secondary" id="addTaskButton" type="button">Adicionar tarefa</button>
+        </div>
+
+        <div class="task-list" id="creationTaskList"></div>
+        <div class="code-box hidden" id="generatedCodeBox"></div>
+      </div>
+    </section>
+
+    <section class="screen" id="checklistScreen">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 id="checklistTitle">Checklist</h2>
+            <p class="muted" id="checklistOwner"></p>
+          </div>
+          <button class="btn" id="sendWhatsAppButton" type="button">Enviar relatório no WhatsApp</button>
+        </div>
+
+        <div class="progress-area">
+          <div class="metric">
+            <span>Progresso</span>
+            <strong id="progressText">0%</strong>
+          </div>
+          <div class="metric">
+            <span>Pontos feitos</span>
+            <strong id="donePointsText">0</strong>
+          </div>
+          <div class="metric">
+            <span>Pontos totais</span>
+            <strong id="totalPointsText">0</strong>
+          </div>
+        </div>
+
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="task-list" id="checklistTaskList"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Dados principais que ficam na memória enquanto a pessoa usa a página.
+    let currentChecklist = null;
+    let tasksBeingCreated = [];
+
+    // Atalhos para encontrar os elementos da tela.
+    const homeScreen = document.getElementById('homeScreen');
+    const createScreen = document.getElementById('createScreen');
+    const checklistScreen = document.getElementById('checklistScreen');
+    const backHomeButton = document.getElementById('backHomeButton');
+
+    const createNewButton = document.getElementById('createNewButton');
+    const openChecklistButton = document.getElementById('openChecklistButton');
+    const accessCodeInput = document.getElementById('accessCodeInput');
+
+    const personNameInput = document.getElementById('personNameInput');
+    const whatsappInput = document.getElementById('whatsappInput');
+    const checklistNameInput = document.getElementById('checklistNameInput');
+    const taskNameInput = document.getElementById('taskNameInput');
+    const taskPointsInput = document.getElementById('taskPointsInput');
+    const taskFrequencyInput = document.getElementById('taskFrequencyInput');
+    const addTaskButton = document.getElementById('addTaskButton');
+    const saveChecklistButton = document.getElementById('saveChecklistButton');
+    const creationTaskList = document.getElementById('creationTaskList');
+    const generatedCodeBox = document.getElementById('generatedCodeBox');
+
+    const checklistTitle = document.getElementById('checklistTitle');
+    const checklistOwner = document.getElementById('checklistOwner');
+    const checklistTaskList = document.getElementById('checklistTaskList');
+    const progressText = document.getElementById('progressText');
+    const donePointsText = document.getElementById('donePointsText');
+    const totalPointsText = document.getElementById('totalPointsText');
+    const progressFill = document.getElementById('progressFill');
+    const sendWhatsAppButton = document.getElementById('sendWhatsAppButton');
+
+    // Mostra uma tela e esconde as outras.
+    function showScreen(screenName) {
+      homeScreen.classList.remove('active');
+      createScreen.classList.remove('active');
+      checklistScreen.classList.remove('active');
+
+      if (screenName === 'home') homeScreen.classList.add('active');
+      if (screenName === 'create') createScreen.classList.add('active');
+      if (screenName === 'checklist') checklistScreen.classList.add('active');
+
+      backHomeButton.classList.toggle('hidden', screenName === 'home');
+    }
+
+    // Cria um código curto para abrir o checklist depois.
+    function createAccessCode() {
+      const numbers = Math.floor(1000 + Math.random() * 9000);
+      return 'CHK-' + numbers;
+    }
+
+    function getStorageKey(code) {
+      return 'checklist-personalizavel-' + code;
+    }
+
+    function saveToLocalStorage(checklist) {
+      localStorage.setItem(getStorageKey(checklist.code), JSON.stringify(checklist));
+    }
+
+    function loadFromLocalStorage(code) {
+      const savedData = localStorage.getItem(getStorageKey(code));
+      return savedData ? JSON.parse(savedData) : null;
+    }
+
+    function renderCreationTasks() {
+      creationTaskList.innerHTML = '';
+
+      if (tasksBeingCreated.length === 0) {
+        creationTaskList.innerHTML = '<div class="empty">Nenhuma tarefa adicionada ainda.</div>';
+        return;
+      }
+
+      tasksBeingCreated.forEach(function(task, index) {
+        const taskCard = document.createElement('div');
+        taskCard.className = 'task-card';
+        taskCard.innerHTML = `
+          <div class="brand-mark">✓</div>
+          <div>
+            <div class="task-title">${task.name}</div>
+            <div class="task-meta">${task.points} pontos • ${task.frequency}</div>
+          </div>
+          <button class="btn danger small" type="button" onclick="removeTask(${index})">Remover</button>
+        `;
+
+        creationTaskList.appendChild(taskCard);
+      });
+    }
+
+    function removeTask(index) {
+      tasksBeingCreated.splice(index, 1);
+      renderCreationTasks();
+    }
+
+    function addTask() {
+      const name = taskNameInput.value.trim();
+      const points = Number(taskPointsInput.value);
+      const frequency = taskFrequencyInput.value;
+
+      if (!name) {
+        alert('Digite o nome da tarefa.');
+        return;
+      }
+
+      if (!points || points < 1) {
+        alert('Digite uma pontuação maior que zero.');
+        return;
+      }
+
+      tasksBeingCreated.push({
+        id: Date.now(),
+        name: name,
+        points: points,
+        frequency: frequency,
+        done: false
+      });
+
+      taskNameInput.value = '';
+      taskPointsInput.value = '10';
+      taskFrequencyInput.value = 'Diária';
+      renderCreationTasks();
+    }
+
+    function saveChecklist() {
+      const personName = personNameInput.value.trim();
+      const whatsapp = whatsappInput.value.trim();
+      const checklistName = checklistNameInput.value.trim();
+
+      if (!personName || !whatsapp || !checklistName) {
+        alert('Preencha nome, WhatsApp e nome do checklist.');
+        return;
+      }
+
+      if (tasksBeingCreated.length === 0) {
+        alert('Adicione pelo menos uma tarefa.');
+        return;
+      }
+
+      const checklist = {
+        code: createAccessCode(),
+        personName: personName,
+        whatsapp: whatsapp,
+        checklistName: checklistName,
+        tasks: tasksBeingCreated
+      };
+
+      currentChecklist = checklist;
+      saveToLocalStorage(checklist);
+      generatedCodeBox.textContent = 'Código de acesso: ' + checklist.code;
+      generatedCodeBox.classList.remove('hidden');
+      alert('Checklist salvo! Use o código ' + checklist.code + ' para abrir depois.');
+      openChecklist(checklist.code);
+    }
+
+    function openChecklist(code) {
+      const cleanCode = code.trim().toUpperCase();
+      const checklist = loadFromLocalStorage(cleanCode);
+
+      if (!checklist) {
+        alert('Checklist não encontrado. Confira o código de acesso.');
+        return;
+      }
+
+      currentChecklist = checklist;
+      renderChecklist();
+      showScreen('checklist');
+    }
+
+    function renderChecklist() {
+      checklistTitle.textContent = currentChecklist.checklistName;
+      checklistOwner.textContent = currentChecklist.personName + ' • Código: ' + currentChecklist.code;
+      checklistTaskList.innerHTML = '';
+
+      currentChecklist.tasks.forEach(function(task, index) {
+        const taskCard = document.createElement('div');
+        taskCard.className = 'task-card';
+        taskCard.innerHTML = `
+          <input class="check-input" type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${index})">
+          <div>
+            <div class="task-title">${task.name}</div>
+            <div class="task-meta">${task.points} pontos • ${task.frequency}</div>
+          </div>
+          <strong>${task.done ? task.points : 0} pts</strong>
+        `;
+
+        checklistTaskList.appendChild(taskCard);
+      });
+
+      updateProgress();
+    }
+
+    function toggleTask(index) {
+      currentChecklist.tasks[index].done = !currentChecklist.tasks[index].done;
+      saveToLocalStorage(currentChecklist);
+      renderChecklist();
+    }
+
+    function updateProgress() {
+      const totalTasks = currentChecklist.tasks.length;
+      const doneTasks = currentChecklist.tasks.filter(function(task) {
+        return task.done;
+      }).length;
+
+      const totalPoints = currentChecklist.tasks.reduce(function(sum, task) {
+        return sum + task.points;
+      }, 0);
+
+      const donePoints = currentChecklist.tasks.reduce(function(sum, task) {
+        return task.done ? sum + task.points : sum;
+      }, 0);
+
+      const progress = totalTasks === 0 ? 0 : Math.round((doneTasks / totalTasks) * 100);
+
+      progressText.textContent = progress + '%';
+      donePointsText.textContent = donePoints;
+      totalPointsText.textContent = totalPoints;
+      progressFill.style.width = progress + '%';
+    }
+
+    function sendWhatsAppReport() {
+      const doneTasks = currentChecklist.tasks.filter(function(task) {
+        return task.done;
+      });
+
+      const totalPoints = currentChecklist.tasks.reduce(function(sum, task) {
+        return sum + task.points;
+      }, 0);
+
+      const donePoints = doneTasks.reduce(function(sum, task) {
+        return sum + task.points;
+      }, 0);
+
+      const taskLines = currentChecklist.tasks.map(function(task) {
+        return (task.done ? '[x] ' : '[ ] ') + task.name + ' - ' + task.points + ' pontos';
+      }).join('\n');
+
+      const message =
+        'Relatório do checklist: ' + currentChecklist.checklistName + '\n' +
+        'Pessoa: ' + currentChecklist.personName + '\n' +
+        'Pontos: ' + donePoints + ' de ' + totalPoints + '\n\n' +
+        taskLines;
+
+      const phone = currentChecklist.whatsapp.replace(/\D/g, '');
+      const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
+      window.open(url, '_blank');
+    }
+
+    function startNewChecklist() {
+      tasksBeingCreated = [];
+      personNameInput.value = '';
+      whatsappInput.value = '';
+      checklistNameInput.value = '';
+      taskNameInput.value = '';
+      taskPointsInput.value = '10';
+      taskFrequencyInput.value = 'Diária';
+      generatedCodeBox.classList.add('hidden');
+      renderCreationTasks();
+      showScreen('create');
+    }
+
+    createNewButton.addEventListener('click', startNewChecklist);
+    addTaskButton.addEventListener('click', addTask);
+    saveChecklistButton.addEventListener('click', saveChecklist);
+    sendWhatsAppButton.addEventListener('click', sendWhatsAppReport);
+    backHomeButton.addEventListener('click', function() {
+      showScreen('home');
+    });
+
+    openChecklistButton.addEventListener('click', function() {
+      openChecklist(accessCodeInput.value);
+    });
+
+    accessCodeInput.addEventListener('keyup', function(event) {
+      if (event.key === 'Enter') {
+        openChecklist(accessCodeInput.value);
+      }
+    });
+
+    renderCreationTasks();
+  </script>
+</body>
+</html>
