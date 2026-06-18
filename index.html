@@ -491,6 +491,11 @@
             Nome do checklist
             <input id="checklistNameInput" type="text" placeholder="Ex: Rotina da semana">
           </label>
+
+          <label>
+            Código de acesso personalizado
+            <input id="customAccessCodeInput" type="text" placeholder="Ex: checklist-joao">
+          </label>
         </div>
 
         <div class="task-form">
@@ -566,6 +571,17 @@
       checklist: 'checklist'
     };
 
+    // Enquanto estiver true, o projeto salva no navegador. Quando mudar para false, usa Supabase.
+    const MODO_DESENVOLVIMENTO = true;
+
+    // Preencha a chave pública manualmente antes de usar o Supabase.
+    const SUPABASE_URL = "https://hbpgbsbjcbzlheuijtzs.supabase.co";
+    const SUPABASE_ANON_KEY = "";
+
+    // Nomes das tabelas esperadas no Supabase.
+    const SUPABASE_TABLE_CHECKLISTS = 'checklists';
+    const SUPABASE_TABLE_TAREFAS = 'tarefas';
+
     // Dados principais que ficam na memória enquanto a pessoa usa a página.
     let currentChecklist = null;
     let tasksBeingCreated = [];
@@ -583,6 +599,7 @@
     const personNameInput = document.getElementById('personNameInput');
     const whatsappInput = document.getElementById('whatsappInput');
     const checklistNameInput = document.getElementById('checklistNameInput');
+    const customAccessCodeInput = document.getElementById('customAccessCodeInput');
     const taskNameInput = document.getElementById('taskNameInput');
     const taskPointsInput = document.getElementById('taskPointsInput');
     const taskFrequencyInput = document.getElementById('taskFrequencyInput');
@@ -616,10 +633,16 @@
       backHomeButton.classList.toggle('hidden', screenName === SCREENS.home);
     }
 
-    // Cria um código curto para abrir o checklist depois.
-    function createAccessCode() {
-      const numbers = Math.floor(1000 + Math.random() * 9000);
-      return 'CHK-' + numbers;
+    // Prepara o código para ficar simples, sem acentos e sem caracteres especiais.
+    function normalizeAccessCode(code) {
+      return code
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-]/g, '')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
     }
 
     // Cria uma mensagem vazia quando ainda não há tarefas.
@@ -715,13 +738,25 @@
     }
 
     // Salva os dados preenchidos e abre o checklist criado.
-    function saveChecklist() {
+    async function saveChecklist() {
       const personName = personNameInput.value.trim();
       const whatsapp = whatsappInput.value.trim();
       const checklistName = checklistNameInput.value.trim();
+      const customAccessCode = normalizeAccessCode(customAccessCodeInput.value);
+      customAccessCodeInput.value = customAccessCode;
 
       if (!personName || !whatsapp || !checklistName) {
         alert('Preencha nome, WhatsApp e nome do checklist.');
+        return;
+      }
+
+      if (!customAccessCode) {
+        alert('Preencha um código de acesso personalizado.');
+        return;
+      }
+
+      if (MODO_DESENVOLVIMENTO && loadChecklistFromLocalStorage(customAccessCode)) {
+        alert('Este código de acesso já está em uso. Escolha outro código.');
         return;
       }
 
@@ -731,25 +766,42 @@
       }
 
       const checklist = {
-        code: createAccessCode(),
+        code: customAccessCode,
         personName: personName,
         whatsapp: whatsapp,
         checklistName: checklistName,
         tasks: tasksBeingCreated
       };
 
-      currentChecklist = checklist;
-      saveToLocalStorage(checklist);
-      generatedCodeBox.textContent = 'Código de acesso: ' + checklist.code;
-      generatedCodeBox.classList.remove('hidden');
-      alert('Checklist salvo! Use o código ' + checklist.code + ' para abrir depois.');
-      openChecklist(checklist.code);
+      try {
+        currentChecklist = checklist;
+        await salvarChecklist(checklist);
+        await salvarTarefas(checklist);
+        generatedCodeBox.textContent = 'Código de acesso: ' + checklist.code;
+        generatedCodeBox.classList.remove('hidden');
+        alert('Checklist salvo! Use o código ' + checklist.code + ' para abrir depois.');
+        await openChecklist(checklist.code);
+      } catch (error) {
+        alert(error.message);
+      }
     }
 
     // Busca um checklist salvo e abre a tela de acompanhamento.
-    function openChecklist(code) {
-      const cleanCode = code.trim().toUpperCase();
-      const checklist = loadFromLocalStorage(cleanCode);
+    async function openChecklist(code) {
+      const cleanCode = normalizeAccessCode(code);
+      let checklist = null;
+
+      if (!cleanCode) {
+        alert('Digite um código de acesso válido.');
+        return;
+      }
+
+      try {
+        checklist = await buscarChecklist(cleanCode);
+      } catch (error) {
+        alert(error.message);
+        return;
+      }
 
       if (!checklist) {
         alert('Checklist não encontrado. Confira o código de acesso.');
@@ -800,10 +852,17 @@
     }
 
     // Marca ou desmarca uma tarefa e salva a alteração.
-    function toggleTask(index) {
+    async function toggleTask(index) {
       currentChecklist.tasks[index].done = !currentChecklist.tasks[index].done;
-      saveToLocalStorage(currentChecklist);
-      renderChecklist();
+
+      try {
+        await salvarTarefas(currentChecklist);
+        renderChecklist();
+      } catch (error) {
+        currentChecklist.tasks[index].done = !currentChecklist.tasks[index].done;
+        alert(error.message);
+        renderChecklist();
+      }
     }
 
     // Atualiza percentual, pontos feitos e pontos totais.
@@ -864,6 +923,7 @@
       personNameInput.value = '';
       whatsappInput.value = '';
       checklistNameInput.value = '';
+      customAccessCodeInput.value = '';
       taskNameInput.value = '';
       taskPointsInput.value = '10';
       taskFrequencyInput.value = 'Diária';
@@ -892,6 +952,10 @@
       }
     });
 
+    customAccessCodeInput.addEventListener('input', function() {
+      customAccessCodeInput.value = normalizeAccessCode(customAccessCodeInput.value);
+    });
+
     renderCreationTasks();
   </script>
 
@@ -902,15 +966,168 @@
       return 'checklist-personalizavel-' + code;
     }
 
-    // Salva um checklist no localStorage.
-    function saveToLocalStorage(checklist) {
+    // Salva um checklist completo no localStorage.
+    function saveChecklistToLocalStorage(checklist) {
       localStorage.setItem(getStorageKey(checklist.code), JSON.stringify(checklist));
     }
 
-    // Busca um checklist no localStorage pelo código de acesso.
-    function loadFromLocalStorage(code) {
+    // Busca um checklist completo no localStorage pelo código de acesso.
+    function loadChecklistFromLocalStorage(code) {
       const savedData = localStorage.getItem(getStorageKey(code));
       return savedData ? JSON.parse(savedData) : null;
+    }
+
+    // Envia uma requisição simples para o Supabase usando a API REST.
+    async function supabaseRequest(path, options) {
+      if (!SUPABASE_ANON_KEY) {
+        throw new Error('Preencha SUPABASE_ANON_KEY antes de usar o Supabase.');
+      }
+
+      const response = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+        headers: {
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation',
+          ...(options.headers || {})
+        },
+        method: options.method || 'GET',
+        body: options.body ? JSON.stringify(options.body) : undefined
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao conversar com o Supabase.');
+      }
+
+      if (response.status === 204) {
+        return null;
+      }
+
+      return response.json();
+    }
+
+    // Converte o checklist da tela para o formato esperado na tabela checklists.
+    function checklistToSupabaseRow(checklist) {
+      return {
+        code: checklist.code,
+        person_name: checklist.personName,
+        whatsapp: checklist.whatsapp,
+        checklist_name: checklist.checklistName
+      };
+    }
+
+    // Converte uma linha da tabela checklists para o formato usado pela tela.
+    function checklistFromSupabaseRow(row, tasks) {
+      return {
+        code: row.code,
+        personName: row.person_name,
+        whatsapp: row.whatsapp,
+        checklistName: row.checklist_name,
+        tasks: tasks
+      };
+    }
+
+    // Converte uma tarefa da tela para o formato esperado na tabela tarefas.
+    function taskToSupabaseRow(task, checklistCode) {
+      return {
+        checklist_code: checklistCode,
+        task_id: task.id,
+        name: task.name,
+        points: task.points,
+        frequency: task.frequency,
+        done: task.done
+      };
+    }
+
+    // Converte uma linha da tabela tarefas para o formato usado pela tela.
+    function taskFromSupabaseRow(row) {
+      return {
+        id: row.task_id,
+        name: row.name,
+        points: row.points,
+        frequency: row.frequency,
+        done: row.done
+      };
+    }
+
+    // Salva os dados principais do checklist.
+    async function salvarChecklist(checklist) {
+      if (MODO_DESENVOLVIMENTO) {
+        saveChecklistToLocalStorage(checklist);
+        return checklist;
+      }
+
+      await supabaseRequest(SUPABASE_TABLE_CHECKLISTS + '?on_conflict=code', {
+        method: 'POST',
+        headers: {
+          Prefer: 'resolution=merge-duplicates,return=representation'
+        },
+        body: checklistToSupabaseRow(checklist)
+      });
+
+      return checklist;
+    }
+
+    // Busca os dados principais e junta com as tarefas do checklist.
+    async function buscarChecklist(code) {
+      if (MODO_DESENVOLVIMENTO) {
+        return loadChecklistFromLocalStorage(code);
+      }
+
+      const checklistRows = await supabaseRequest(
+        SUPABASE_TABLE_CHECKLISTS + '?code=eq.' + encodeURIComponent(code) + '&select=*',
+        {}
+      );
+
+      if (!checklistRows || checklistRows.length === 0) {
+        return null;
+      }
+
+      const tasks = await buscarTarefas(code);
+      return checklistFromSupabaseRow(checklistRows[0], tasks);
+    }
+
+    // Salva as tarefas do checklist.
+    async function salvarTarefas(checklist) {
+      if (MODO_DESENVOLVIMENTO) {
+        saveChecklistToLocalStorage(checklist);
+        return checklist.tasks;
+      }
+
+      await supabaseRequest(
+        SUPABASE_TABLE_TAREFAS + '?checklist_code=eq.' + encodeURIComponent(checklist.code),
+        { method: 'DELETE' }
+      );
+
+      if (checklist.tasks.length === 0) {
+        return [];
+      }
+
+      const taskRows = checklist.tasks.map(function(task) {
+        return taskToSupabaseRow(task, checklist.code);
+      });
+
+      await supabaseRequest(SUPABASE_TABLE_TAREFAS, {
+        method: 'POST',
+        body: taskRows
+      });
+
+      return checklist.tasks;
+    }
+
+    // Busca as tarefas de um checklist.
+    async function buscarTarefas(code) {
+      if (MODO_DESENVOLVIMENTO) {
+        const checklist = loadChecklistFromLocalStorage(code);
+        return checklist ? checklist.tasks : [];
+      }
+
+      const taskRows = await supabaseRequest(
+        SUPABASE_TABLE_TAREFAS + '?checklist_code=eq.' + encodeURIComponent(code) + '&select=*&order=task_id.asc',
+        {}
+      );
+
+      return taskRows.map(taskFromSupabaseRow);
     }
   </script>
 </body>
