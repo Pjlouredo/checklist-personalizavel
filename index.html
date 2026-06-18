@@ -200,7 +200,8 @@
     }
 
     input,
-    select {
+    select,
+    textarea {
       width: 100%;
       min-height: 46px;
       border: 1px solid #cbd5e1;
@@ -213,14 +214,21 @@
     }
 
     input:focus,
-    select:focus {
+    select:focus,
+    textarea:focus {
       border-color: #0f766e;
       box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
     }
 
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
     .task-form {
       display: grid;
-      grid-template-columns: 1.5fr 0.7fr 1fr auto;
+      grid-template-columns: 1.2fr 1fr 0.7fr 1fr auto;
       gap: 12px;
       align-items: end;
       margin-top: 26px;
@@ -258,10 +266,57 @@
       margin-top: 3px;
     }
 
+    .category-title {
+      margin-top: 12px;
+      border: 0;
+      background: transparent;
+      color: #0f766e;
+      font-size: 1rem;
+      font-weight: 800;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .category-items {
+      display: grid;
+      gap: 10px;
+    }
+
     .check-input {
       width: 22px;
       height: 22px;
       accent-color: #0f766e;
+    }
+
+    .task-status {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      min-height: 34px;
+      place-items: center;
+      border-radius: 8px;
+      font-weight: 800;
+      line-height: 1;
+      box-shadow: none;
+    }
+
+    .task-status.done {
+      color: #ffffff;
+      background: #0f766e;
+    }
+
+    .task-status.pending {
+      color: #991b1b;
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+    }
+
+    .task-status.pending:hover {
+      background: #fecaca;
+    }
+
+    .task-status.history {
+      cursor: default;
     }
 
     .progress-area {
@@ -373,6 +428,40 @@
       text-align: center;
     }
 
+    .history-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .history-day {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .history-day:first-child {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .history-manager {
+      display: grid;
+      gap: 12px;
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .history-manager-title {
+      color: #64748b;
+      font-weight: 800;
+    }
+
     .hidden {
       display: none;
     }
@@ -410,6 +499,11 @@
 
       .task-card .btn {
         grid-column: 1 / -1;
+      }
+
+      .history-actions {
+        align-items: stretch;
+        flex-direction: column;
       }
     }
   </style>
@@ -500,6 +594,11 @@
 
         <div class="task-form">
           <label>
+            Categoria
+            <input id="taskCategoryInput" type="text" placeholder="Ex: Quarto">
+          </label>
+
+          <label>
             Nome da tarefa
             <input id="taskNameInput" type="text" placeholder="Ex: Beber água">
           </label>
@@ -535,7 +634,11 @@
             <h2 id="checklistTitle">Checklist</h2>
             <p class="muted" id="checklistOwner"></p>
           </div>
-          <button class="btn" id="sendWhatsAppButton" type="button">Enviar relatório no WhatsApp</button>
+          <div class="history-actions">
+            <button class="btn secondary" id="familyAgreementsButton" type="button">📝 Combinados da família</button>
+            <button class="btn secondary" id="viewHistoryButton" type="button">Ver histórico</button>
+            <button class="btn" id="sendWhatsAppButton" type="button">Enviar relatório no WhatsApp</button>
+          </div>
         </div>
 
         <div class="progress-area">
@@ -560,6 +663,80 @@
         <div class="task-list" id="checklistTaskList"></div>
       </div>
     </section>
+
+    <!-- TELA HISTÓRICO -->
+    <section class="screen" id="historyScreen">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Histórico</h2>
+            <p class="muted" id="historyOwner"></p>
+          </div>
+          <button class="btn secondary" id="backToChecklistButton" type="button">Voltar</button>
+        </div>
+
+        <div class="progress-area">
+          <div class="metric">
+            <span>Dia selecionado</span>
+            <strong id="historyDateText">-</strong>
+          </div>
+          <div class="metric">
+            <span>Feitas</span>
+            <strong id="historyGainsText">0</strong>
+          </div>
+          <div class="metric">
+            <span>Não feitas</span>
+            <strong id="historyLossesText">0</strong>
+          </div>
+          <div class="metric">
+            <span>Aura Coins do dia</span>
+            <strong id="historyBalanceText">0</strong>
+          </div>
+          <div class="metric">
+            <span>Aura Coins</span>
+            <strong id="historyAuraCoinsText">0</strong>
+          </div>
+        </div>
+
+        <div class="task-form">
+          <label>
+            Filtrar por data
+            <input id="historyDateFilterInput" type="date">
+          </label>
+
+          <button class="btn secondary" id="showAllHistoryButton" type="button">Mostrar todos</button>
+        </div>
+
+        <div class="task-list" id="historyList"></div>
+
+        <div class="history-manager">
+          <div class="history-manager-title">⚙️ Gerenciar histórico</div>
+          <button class="btn danger small" id="clearHistoryButton" type="button">🧹 Limpar histórico deste checklist</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELA COMBINADOS DA FAMÍLIA -->
+    <section class="screen" id="agreementsScreen">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>📝 Combinados da família</h2>
+            <p class="muted" id="agreementsOwner"></p>
+          </div>
+          <button class="btn secondary" id="backFromAgreementsButton" type="button">Voltar</button>
+        </div>
+
+        <label>
+          Quando uma tarefa não for concluída:
+          <textarea id="familyAgreementInput" placeholder="Sem combinado definido"></textarea>
+        </label>
+
+        <div class="home-actions">
+          <button class="btn" id="saveFamilyAgreementButton" type="button">Salvar</button>
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- CONFIG -->
@@ -568,7 +745,9 @@
     const SCREENS = {
       home: 'home',
       create: 'create',
-      checklist: 'checklist'
+      checklist: 'checklist',
+      history: 'history',
+      agreements: 'agreements'
     };
 
     // Enquanto estiver true, o projeto salva no navegador. Quando mudar para false, usa Supabase.
@@ -581,15 +760,19 @@
     // Nomes das tabelas esperadas no Supabase.
     const SUPABASE_TABLE_CHECKLISTS = 'checklists';
     const SUPABASE_TABLE_TAREFAS = 'tarefas';
+    const SUPABASE_TABLE_HISTORICO = 'historico_diario';
 
     // Dados principais que ficam na memória enquanto a pessoa usa a página.
     let currentChecklist = null;
     let tasksBeingCreated = [];
+    let currentHistory = [];
 
     // Atalhos para encontrar os elementos da tela.
     const homeScreen = document.getElementById('homeScreen');
     const createScreen = document.getElementById('createScreen');
     const checklistScreen = document.getElementById('checklistScreen');
+    const historyScreen = document.getElementById('historyScreen');
+    const agreementsScreen = document.getElementById('agreementsScreen');
     const backHomeButton = document.getElementById('backHomeButton');
 
     const createNewButton = document.getElementById('createNewButton');
@@ -600,6 +783,7 @@
     const whatsappInput = document.getElementById('whatsappInput');
     const checklistNameInput = document.getElementById('checklistNameInput');
     const customAccessCodeInput = document.getElementById('customAccessCodeInput');
+    const taskCategoryInput = document.getElementById('taskCategoryInput');
     const taskNameInput = document.getElementById('taskNameInput');
     const taskPointsInput = document.getElementById('taskPointsInput');
     const taskFrequencyInput = document.getElementById('taskFrequencyInput');
@@ -616,6 +800,23 @@
     const totalPointsText = document.getElementById('totalPointsText');
     const progressFill = document.getElementById('progressFill');
     const sendWhatsAppButton = document.getElementById('sendWhatsAppButton');
+    const familyAgreementsButton = document.getElementById('familyAgreementsButton');
+    const viewHistoryButton = document.getElementById('viewHistoryButton');
+    const backToChecklistButton = document.getElementById('backToChecklistButton');
+    const historyOwner = document.getElementById('historyOwner');
+    const historyDateText = document.getElementById('historyDateText');
+    const historyGainsText = document.getElementById('historyGainsText');
+    const historyLossesText = document.getElementById('historyLossesText');
+    const historyBalanceText = document.getElementById('historyBalanceText');
+    const historyAuraCoinsText = document.getElementById('historyAuraCoinsText');
+    const historyList = document.getElementById('historyList');
+    const historyDateFilterInput = document.getElementById('historyDateFilterInput');
+    const showAllHistoryButton = document.getElementById('showAllHistoryButton');
+    const clearHistoryButton = document.getElementById('clearHistoryButton');
+    const agreementsOwner = document.getElementById('agreementsOwner');
+    const familyAgreementInput = document.getElementById('familyAgreementInput');
+    const saveFamilyAgreementButton = document.getElementById('saveFamilyAgreementButton');
+    const backFromAgreementsButton = document.getElementById('backFromAgreementsButton');
   </script>
 
   <!-- FUNÇÕES -->
@@ -625,10 +826,14 @@
       homeScreen.classList.remove('active');
       createScreen.classList.remove('active');
       checklistScreen.classList.remove('active');
+      historyScreen.classList.remove('active');
+      agreementsScreen.classList.remove('active');
 
       if (screenName === SCREENS.home) homeScreen.classList.add('active');
       if (screenName === SCREENS.create) createScreen.classList.add('active');
       if (screenName === SCREENS.checklist) checklistScreen.classList.add('active');
+      if (screenName === SCREENS.history) historyScreen.classList.add('active');
+      if (screenName === SCREENS.agreements) agreementsScreen.classList.add('active');
 
       backHomeButton.classList.toggle('hidden', screenName === SCREENS.home);
     }
@@ -643,6 +848,154 @@
         .replace(/[^a-z0-9-]/g, '')
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '');
+    }
+
+    // Retorna a data de hoje no formato YYYY-MM-DD.
+    function getTodayDate() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+
+      return year + '-' + month + '-' + day;
+    }
+
+    // Garante que toda tarefa tenha uma categoria para exibição.
+    function getTaskCategory(task) {
+      return task.category || 'Sem categoria';
+    }
+
+    // Agrupa tarefas por categoria, mantendo também o índice original da tarefa.
+    function groupTasksByCategory(tasks) {
+      const groups = [];
+
+      tasks.forEach(function(task, index) {
+        const categoryName = getTaskCategory(task);
+        let group = groups.find(function(item) {
+          return item.name === categoryName;
+        });
+
+        if (!group) {
+          group = {
+            name: categoryName,
+            tasks: []
+          };
+          groups.push(group);
+        }
+
+        group.tasks.push({
+          task: task,
+          index: index
+        });
+      });
+
+      return groups;
+    }
+
+    // Retorna o valor positivo ou negativo salvo na tarefa do histórico.
+    function getTaskHistoryValue(task, record) {
+      if (typeof task.historyValue === 'number') {
+        return task.historyValue;
+      }
+
+      if (record && record.penaltyApplied !== true) {
+        return task.done ? task.points : 0;
+      }
+
+      return task.done ? task.points : -task.points;
+    }
+
+    // Calcula os ganhos do dia mesmo em históricos antigos.
+    function getRecordGains(record) {
+      if (typeof record.gains === 'number') {
+        return record.gains;
+      }
+
+      if (typeof record.dayPoints === 'number') {
+        return record.dayPoints;
+      }
+
+      return record.tasks.reduce(function(sum, task) {
+        return task.done ? sum + task.points : sum;
+      }, 0);
+    }
+
+    // Calcula as perdas do dia mesmo em históricos antigos.
+    function getRecordLosses(record) {
+      if (typeof record.losses === 'number') {
+        return record.losses;
+      }
+
+      return 0;
+    }
+
+    // Calcula o saldo do dia mesmo em históricos antigos.
+    function getRecordBalance(record) {
+      if (typeof record.balance === 'number') {
+        return record.balance;
+      }
+
+      if (typeof record.dayPoints === 'number') {
+        return record.dayPoints;
+      }
+
+      return getRecordGains(record) - getRecordLosses(record);
+    }
+
+    // Conta tarefas feitas mesmo em históricos antigos.
+    function getRecordCompletedCount(record) {
+      if (typeof record.completedCount === 'number') {
+        return record.completedCount;
+      }
+
+      return record.tasks.filter(function(task) {
+        return task.done;
+      }).length;
+    }
+
+    // Conta tarefas não feitas mesmo em históricos antigos.
+    function getRecordIncompleteCount(record) {
+      if (typeof record.incompleteCount === 'number') {
+        return record.incompleteCount;
+      }
+
+      return record.tasks.filter(function(task) {
+        return !task.done;
+      }).length;
+    }
+
+    // Calcula Aura Coins automáticas do dia: feitas menos não feitas.
+    function getRecordDailyAuraCoins(record) {
+      if (typeof record.dailyAuraCoins === 'number') {
+        return record.dailyAuraCoins;
+      }
+
+      return getRecordCompletedCount(record) - getRecordIncompleteCount(record);
+    }
+
+    // Retorna o combinado salvo no histórico ou o padrão para registros antigos.
+    function getRecordFamilyAgreement(record) {
+      return record.familyAgreement || 'Sem combinado definido';
+    }
+
+    // Retorna o combinado salvo ou o texto padrão para checklists antigos.
+    function getFamilyAgreement(checklist) {
+      return checklist.familyAgreement || 'Sem combinado definido';
+    }
+
+    // Cria o cabeçalho clicável da categoria.
+    function createCollapsibleCategoryHeader(categoryName, itemsArea) {
+      const categoryTitle = document.createElement('button');
+      categoryTitle.className = 'category-title';
+      categoryTitle.type = 'button';
+      categoryTitle.textContent = '▼ ' + categoryName;
+
+      categoryTitle.addEventListener('click', function() {
+        const isHidden = itemsArea.classList.toggle('hidden');
+        categoryTitle.textContent = (isHidden ? '▶ ' : '▼ ') + categoryName;
+      });
+
+      return categoryTitle;
     }
 
     // Cria uma mensagem vazia quando ainda não há tarefas.
@@ -670,34 +1023,43 @@
         return;
       }
 
-      tasksBeingCreated.forEach(function(task, index) {
-        const taskCard = document.createElement('div');
-        taskCard.className = 'task-card';
+      groupTasksByCategory(tasksBeingCreated).forEach(function(group) {
+        const categoryTitle = document.createElement('div');
+        categoryTitle.className = 'category-title';
+        categoryTitle.textContent = group.name;
+        creationTaskList.appendChild(categoryTitle);
 
-        const icon = document.createElement('div');
-        icon.className = 'brand-mark';
-        icon.textContent = '✓';
+        group.tasks.forEach(function(item) {
+          const task = item.task;
+          const index = item.index;
+          const taskCard = document.createElement('div');
+          taskCard.className = 'task-card';
 
-        const textArea = document.createElement('div');
+          const icon = document.createElement('div');
+          icon.className = 'brand-mark';
+          icon.textContent = '✓';
 
-        const title = document.createElement('div');
-        title.className = 'task-title';
-        title.textContent = task.name;
+          const textArea = document.createElement('div');
 
-        const removeButton = document.createElement('button');
-        removeButton.className = 'btn danger small';
-        removeButton.type = 'button';
-        removeButton.textContent = 'Remover';
-        removeButton.addEventListener('click', function() {
-          removeTask(index);
+          const title = document.createElement('div');
+          title.className = 'task-title';
+          title.textContent = task.name;
+
+          const removeButton = document.createElement('button');
+          removeButton.className = 'btn danger small';
+          removeButton.type = 'button';
+          removeButton.textContent = 'Remover';
+          removeButton.addEventListener('click', function() {
+            removeTask(index);
+          });
+
+          textArea.appendChild(title);
+          textArea.appendChild(createTaskMeta(task));
+          taskCard.appendChild(icon);
+          taskCard.appendChild(textArea);
+          taskCard.appendChild(removeButton);
+          creationTaskList.appendChild(taskCard);
         });
-
-        textArea.appendChild(title);
-        textArea.appendChild(createTaskMeta(task));
-        taskCard.appendChild(icon);
-        taskCard.appendChild(textArea);
-        taskCard.appendChild(removeButton);
-        creationTaskList.appendChild(taskCard);
       });
     }
 
@@ -709,6 +1071,7 @@
 
     // Adiciona uma nova tarefa na lista antes de salvar o checklist.
     function addTask() {
+      const category = taskCategoryInput.value.trim() || 'Sem categoria';
       const name = taskNameInput.value.trim();
       const points = Number(taskPointsInput.value);
       const frequency = taskFrequencyInput.value;
@@ -725,12 +1088,14 @@
 
       tasksBeingCreated.push({
         id: Date.now(),
+        category: category,
         name: name,
         points: points,
         frequency: frequency,
         done: false
       });
 
+      taskCategoryInput.value = '';
       taskNameInput.value = '';
       taskPointsInput.value = '10';
       taskFrequencyInput.value = 'Diária';
@@ -770,6 +1135,7 @@
         personName: personName,
         whatsapp: whatsapp,
         checklistName: checklistName,
+        familyAgreement: 'Sem combinado definido',
         tasks: tasksBeingCreated
       };
 
@@ -819,33 +1185,45 @@
       checklistOwner.textContent = currentChecklist.personName + ' • Código: ' + currentChecklist.code;
       checklistTaskList.innerHTML = '';
 
-      currentChecklist.tasks.forEach(function(task, index) {
-        const taskCard = document.createElement('div');
-        taskCard.className = 'task-card';
+      groupTasksByCategory(currentChecklist.tasks).forEach(function(group) {
+        const categoryItems = document.createElement('div');
+        categoryItems.className = 'category-items';
 
-        const checkbox = document.createElement('input');
-        checkbox.className = 'check-input';
-        checkbox.type = 'checkbox';
-        checkbox.checked = task.done;
-        checkbox.addEventListener('change', function() {
-          toggleTask(index);
+        const categoryTitle = createCollapsibleCategoryHeader(group.name, categoryItems);
+        checklistTaskList.appendChild(categoryTitle);
+        checklistTaskList.appendChild(categoryItems);
+
+        group.tasks.forEach(function(item) {
+          const task = item.task;
+          const index = item.index;
+          const taskCard = document.createElement('div');
+          taskCard.className = 'task-card';
+
+          const statusButton = document.createElement('button');
+          statusButton.className = 'task-status ' + (task.done ? 'done' : 'pending');
+          statusButton.type = 'button';
+          statusButton.textContent = task.done ? '✓' : '❌';
+          statusButton.title = task.done ? 'Tarefa concluída' : 'Tarefa não concluída';
+          statusButton.addEventListener('click', function() {
+            toggleTask(index);
+          });
+
+          const textArea = document.createElement('div');
+
+          const title = document.createElement('div');
+          title.className = 'task-title';
+          title.textContent = task.name;
+
+          const points = document.createElement('strong');
+          points.textContent = (task.done ? task.points : 0) + ' pts';
+
+          textArea.appendChild(title);
+          textArea.appendChild(createTaskMeta(task));
+          taskCard.appendChild(statusButton);
+          taskCard.appendChild(textArea);
+          taskCard.appendChild(points);
+          categoryItems.appendChild(taskCard);
         });
-
-        const textArea = document.createElement('div');
-
-        const title = document.createElement('div');
-        title.className = 'task-title';
-        title.textContent = task.name;
-
-        const points = document.createElement('strong');
-        points.textContent = (task.done ? task.points : 0) + ' pts';
-
-        textArea.appendChild(title);
-        textArea.appendChild(createTaskMeta(task));
-        taskCard.appendChild(checkbox);
-        taskCard.appendChild(textArea);
-        taskCard.appendChild(points);
-        checklistTaskList.appendChild(taskCard);
       });
 
       updateProgress();
@@ -857,6 +1235,7 @@
 
       try {
         await salvarTarefas(currentChecklist);
+        await salvarProgressoDiario(currentChecklist);
         renderChecklist();
       } catch (error) {
         currentChecklist.tasks[index].done = !currentChecklist.tasks[index].done;
@@ -889,32 +1268,238 @@
     }
 
     // Monta o relatório e abre o WhatsApp em uma nova aba.
-    function sendWhatsAppReport() {
-      const doneTasks = currentChecklist.tasks.filter(function(task) {
-        return task.done;
-      });
+    async function sendWhatsAppReport() {
+      let todayHistory = null;
 
-      const totalPoints = currentChecklist.tasks.reduce(function(sum, task) {
-        return sum + task.points;
-      }, 0);
+      try {
+        todayHistory = await salvarProgressoDiario(currentChecklist);
+      } catch (error) {
+        alert(error.message);
+        return;
+      }
 
-      const donePoints = doneTasks.reduce(function(sum, task) {
-        return sum + task.points;
-      }, 0);
+      const taskLines = groupTasksByCategory(todayHistory.tasks).map(function(group) {
+        const lines = group.tasks.map(function(item) {
+          const task = item.task;
+          const historyValue = getTaskHistoryValue(task, todayHistory);
+          const valueText = (historyValue > 0 ? '+' : '') + historyValue + ' Aura Coins';
 
-      const taskLines = currentChecklist.tasks.map(function(task) {
-        return (task.done ? '[x] ' : '[ ] ') + task.name + ' - ' + task.points + ' pontos';
-      }).join('\n');
+          return (task.done ? '✅ ' : '❌ ') + task.name + ' (' + valueText + ')';
+        }).join('\n');
+
+        return group.name + '\n' + lines;
+      }).join('\n\n');
 
       const message =
         'Relatório do checklist: ' + currentChecklist.checklistName + '\n' +
         'Pessoa: ' + currentChecklist.personName + '\n' +
-        'Pontos: ' + donePoints + ' de ' + totalPoints + '\n\n' +
+        'Data: ' + todayHistory.date + '\n' +
+        'Feitas: ' + getRecordCompletedCount(todayHistory) + '\n' +
+        'Não feitas: ' + getRecordIncompleteCount(todayHistory) + '\n' +
+        'Aura Coins do dia: ' + getRecordDailyAuraCoins(todayHistory) + '\n' +
+        'Ganhos: +' + getRecordGains(todayHistory) + '\n' +
+        'Perdas: -' + getRecordLosses(todayHistory) + '\n' +
+        'Saldo: ' + getRecordBalance(todayHistory) + '\n' +
+        'Aura Coins acumuladas: ' + todayHistory.auraCoins + '\n' +
+        'Combinado da família: ' + getRecordFamilyAgreement(todayHistory) + '\n\n' +
         taskLines;
 
       const phone = currentChecklist.whatsapp.replace(/\D/g, '');
       const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
       window.open(url, '_blank');
+
+      await resetDailyTasks();
+    }
+
+    // Depois do relatório, desmarca as tarefas sem apagar os dados do checklist.
+    async function resetDailyTasks() {
+      currentChecklist.tasks = currentChecklist.tasks.map(function(task) {
+        return {
+          ...task,
+          done: false
+        };
+      });
+
+      await salvarTarefas(currentChecklist);
+      renderChecklist();
+    }
+
+    // Abre a tela de histórico e mostra os registros salvos.
+    async function openHistory() {
+      try {
+        const history = await buscarHistorico(currentChecklist.code);
+        currentHistory = history;
+        historyDateFilterInput.value = '';
+        renderizarHistorico(currentHistory);
+        showScreen(SCREENS.history);
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    // Mostra apenas o registro da data escolhida.
+    function filterHistoryByDate() {
+      const selectedDate = historyDateFilterInput.value;
+
+      if (!selectedDate) {
+        renderizarHistorico(currentHistory);
+        return;
+      }
+
+      const filteredHistory = currentHistory.filter(function(record) {
+        return record.date === selectedDate;
+      });
+
+      renderizarHistorico(filteredHistory, 'Nenhum registro encontrado para esta data.');
+    }
+
+    // Limpa o filtro e mostra todos os registros do checklist atual.
+    function showAllHistory() {
+      historyDateFilterInput.value = '';
+      renderizarHistorico(currentHistory);
+    }
+
+    // Abre a tela para editar o combinado da família.
+    function openFamilyAgreements() {
+      agreementsOwner.textContent = currentChecklist.checklistName + ' • Código: ' + currentChecklist.code;
+      familyAgreementInput.value = getFamilyAgreement(currentChecklist);
+      showScreen(SCREENS.agreements);
+    }
+
+    // Salva o combinado no checklist atual.
+    async function saveFamilyAgreement() {
+      currentChecklist.familyAgreement = familyAgreementInput.value.trim() || 'Sem combinado definido';
+
+      try {
+        await salvarChecklist(currentChecklist);
+        alert('Combinado salvo!');
+        showScreen(SCREENS.checklist);
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    // Apaga somente o histórico do checklist aberto.
+    async function clearCurrentChecklistHistory() {
+      const confirmed = confirm('Tem certeza que deseja apagar o histórico deste checklist? Essa ação não pode ser desfeita.');
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        await limparHistorico(currentChecklist.code);
+        currentHistory = [];
+        historyDateFilterInput.value = '';
+        renderizarHistorico(currentHistory);
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    // Mostra o histórico salvo na tela.
+    function renderizarHistorico(history, emptyMessageText) {
+      historyOwner.textContent = currentChecklist.checklistName + ' • Código: ' + currentChecklist.code;
+      historyList.innerHTML = '';
+
+      if (history.length === 0) {
+        historyDateText.textContent = '-';
+        historyGainsText.textContent = '0';
+        historyLossesText.textContent = '0';
+        historyBalanceText.textContent = '0';
+        historyAuraCoinsText.textContent = '0';
+
+        const emptyMessage = document.createElement('div');
+        emptyMessage.className = 'empty';
+        emptyMessage.textContent = emptyMessageText || 'Nenhum progresso diário salvo ainda.';
+        historyList.appendChild(emptyMessage);
+        return;
+      }
+
+      const newestRecord = history[history.length - 1];
+      historyDateText.textContent = newestRecord.date;
+      historyGainsText.textContent = getRecordCompletedCount(newestRecord);
+      historyLossesText.textContent = getRecordIncompleteCount(newestRecord);
+      historyBalanceText.textContent = getRecordDailyAuraCoins(newestRecord);
+      historyAuraCoinsText.textContent = newestRecord.auraCoins;
+
+      history.slice().reverse().forEach(function(record) {
+        const dayArea = document.createElement('div');
+        dayArea.className = 'history-day';
+
+        const dayTitle = document.createElement('div');
+        dayTitle.className = 'task-title';
+        dayTitle.textContent = '📅 ' + record.date;
+        dayArea.appendChild(dayTitle);
+
+        const completedLine = document.createElement('div');
+        completedLine.className = 'task-meta';
+        completedLine.textContent = '✅ Feitas: ' + getRecordCompletedCount(record);
+
+        const incompleteLine = document.createElement('div');
+        incompleteLine.className = 'task-meta';
+        incompleteLine.textContent = '❌ Não feitas: ' + getRecordIncompleteCount(record);
+
+        const auraLine = document.createElement('div');
+        auraLine.className = 'task-meta';
+        auraLine.textContent = '🪙 Aura Coins: ' + getRecordDailyAuraCoins(record);
+
+        const agreementTitle = document.createElement('div');
+        agreementTitle.className = 'task-title';
+        agreementTitle.textContent = '📝 Combinado da família:';
+
+        const agreementText = document.createElement('div');
+        agreementText.className = 'task-meta';
+        agreementText.textContent = getRecordFamilyAgreement(record);
+
+        dayArea.appendChild(completedLine);
+        dayArea.appendChild(incompleteLine);
+        dayArea.appendChild(auraLine);
+        dayArea.appendChild(agreementTitle);
+        dayArea.appendChild(agreementText);
+
+        groupTasksByCategory(record.tasks).forEach(function(group) {
+          const categoryItems = document.createElement('div');
+          categoryItems.className = 'category-items';
+
+          const categoryTitle = createCollapsibleCategoryHeader(group.name, categoryItems);
+          dayArea.appendChild(categoryTitle);
+          dayArea.appendChild(categoryItems);
+
+          group.tasks.forEach(function(item) {
+            const task = item.task;
+            const taskCard = document.createElement('div');
+            taskCard.className = 'task-card';
+
+            const icon = document.createElement('div');
+            icon.className = 'task-status history ' + (task.done ? 'done' : 'pending');
+            icon.textContent = task.done ? '✅' : '❌';
+
+            const textArea = document.createElement('div');
+
+            const title = document.createElement('div');
+            title.className = 'task-title';
+            const historyValue = getTaskHistoryValue(task, record);
+            title.textContent = task.name + ' (' + (historyValue > 0 ? '+' : '') + historyValue + ')';
+
+            const meta = document.createElement('div');
+            meta.className = 'task-meta';
+            meta.textContent = task.done ? 'Concluída' : 'Não concluída';
+
+            const points = document.createElement('strong');
+            points.textContent = (historyValue > 0 ? '+' : '') + historyValue;
+
+            textArea.appendChild(title);
+            textArea.appendChild(meta);
+            taskCard.appendChild(icon);
+            taskCard.appendChild(textArea);
+            taskCard.appendChild(points);
+            categoryItems.appendChild(taskCard);
+          });
+        });
+
+        historyList.appendChild(dayArea);
+      });
     }
 
     // Limpa o formulário e começa um checklist novo.
@@ -924,6 +1509,7 @@
       whatsappInput.value = '';
       checklistNameInput.value = '';
       customAccessCodeInput.value = '';
+      taskCategoryInput.value = '';
       taskNameInput.value = '';
       taskPointsInput.value = '10';
       taskFrequencyInput.value = 'Diária';
@@ -937,10 +1523,25 @@
     addTaskButton.addEventListener('click', addTask);
     saveChecklistButton.addEventListener('click', saveChecklist);
     sendWhatsAppButton.addEventListener('click', sendWhatsAppReport);
+    familyAgreementsButton.addEventListener('click', openFamilyAgreements);
+    viewHistoryButton.addEventListener('click', openHistory);
 
     backHomeButton.addEventListener('click', function() {
       showScreen(SCREENS.home);
     });
+
+    backToChecklistButton.addEventListener('click', function() {
+      showScreen(SCREENS.checklist);
+    });
+
+    backFromAgreementsButton.addEventListener('click', function() {
+      showScreen(SCREENS.checklist);
+    });
+
+    saveFamilyAgreementButton.addEventListener('click', saveFamilyAgreement);
+    clearHistoryButton.addEventListener('click', clearCurrentChecklistHistory);
+    historyDateFilterInput.addEventListener('change', filterHistoryByDate);
+    showAllHistoryButton.addEventListener('click', showAllHistory);
 
     openChecklistButton.addEventListener('click', function() {
       openChecklist(accessCodeInput.value);
@@ -966,6 +1567,11 @@
       return 'checklist-personalizavel-' + code;
     }
 
+    // Cria o nome usado para salvar o histórico de um checklist.
+    function getHistoryStorageKey(code) {
+      return 'checklist-personalizavel-historico-' + code;
+    }
+
     // Salva um checklist completo no localStorage.
     function saveChecklistToLocalStorage(checklist) {
       localStorage.setItem(getStorageKey(checklist.code), JSON.stringify(checklist));
@@ -975,6 +1581,22 @@
     function loadChecklistFromLocalStorage(code) {
       const savedData = localStorage.getItem(getStorageKey(code));
       return savedData ? JSON.parse(savedData) : null;
+    }
+
+    // Salva a lista completa do histórico no localStorage.
+    function saveHistoryToLocalStorage(code, history) {
+      localStorage.setItem(getHistoryStorageKey(code), JSON.stringify(history));
+    }
+
+    // Busca a lista completa do histórico no localStorage.
+    function loadHistoryFromLocalStorage(code) {
+      const savedData = localStorage.getItem(getHistoryStorageKey(code));
+      return savedData ? JSON.parse(savedData) : [];
+    }
+
+    // Apaga o histórico de um checklist no localStorage.
+    function clearHistoryFromLocalStorage(code) {
+      localStorage.removeItem(getHistoryStorageKey(code));
     }
 
     // Envia uma requisição simples para o Supabase usando a API REST.
@@ -1032,6 +1654,7 @@
       return {
         checklist_code: checklistCode,
         task_id: task.id,
+        category: getTaskCategory(task),
         name: task.name,
         points: task.points,
         frequency: task.frequency,
@@ -1043,11 +1666,86 @@
     function taskFromSupabaseRow(row) {
       return {
         id: row.task_id,
+        category: row.category || 'Sem categoria',
         name: row.name,
         points: row.points,
         frequency: row.frequency,
         done: row.done
       };
+    }
+
+    // Cria um registro com o progresso do dia atual.
+    function createDailyProgressRecord(checklist) {
+      const tasks = checklist.tasks.map(function(task) {
+        const historyValue = task.done ? task.points : -task.points;
+
+        return {
+          id: task.id,
+          category: getTaskCategory(task),
+          name: task.name,
+          points: task.points,
+          frequency: task.frequency,
+          done: task.done,
+          historyValue: historyValue
+        };
+      });
+
+      const gains = tasks.reduce(function(sum, task) {
+        return task.done ? sum + task.points : sum;
+      }, 0);
+
+      const losses = tasks.reduce(function(sum, task) {
+        return task.done ? sum : sum + task.points;
+      }, 0);
+
+      const balance = gains - losses;
+      const completedCount = tasks.filter(function(task) {
+        return task.done;
+      }).length;
+      const incompleteCount = tasks.length - completedCount;
+      const dailyAuraCoins = completedCount - incompleteCount;
+
+      return {
+        date: getTodayDate(),
+        checklistCode: checklist.code,
+        tasks: tasks,
+        completedCount: completedCount,
+        incompleteCount: incompleteCount,
+        dailyAuraCoins: dailyAuraCoins,
+        familyAgreement: getFamilyAgreement(checklist),
+        dayPoints: balance,
+        gains: gains,
+        losses: losses,
+        balance: balance,
+        penaltyApplied: true,
+        auraCoins: 0
+      };
+    }
+
+    // Recalcula o total acumulado de Aura Coins em ordem de data.
+    function recalculateAuraCoins(history) {
+      let total = 0;
+
+      return history
+        .sort(function(first, second) {
+          return first.date.localeCompare(second.date);
+        })
+        .map(function(record) {
+          total = total + getRecordDailyAuraCoins(record);
+          return {
+            ...record,
+            completedCount: getRecordCompletedCount(record),
+            incompleteCount: getRecordIncompleteCount(record),
+            dailyAuraCoins: getRecordDailyAuraCoins(record),
+            familyAgreement: getRecordFamilyAgreement(record),
+            gains: getRecordGains(record),
+            losses: getRecordLosses(record),
+            balance: getRecordBalance(record),
+            dayPoints: getRecordBalance(record),
+            penaltyApplied: record.penaltyApplied === true || typeof record.losses === 'number' || typeof record.balance === 'number',
+            auraCoins: total
+          };
+        });
     }
 
     // Salva os dados principais do checklist.
@@ -1128,6 +1826,100 @@
       );
 
       return taskRows.map(taskFromSupabaseRow);
+    }
+
+    // Salva o progresso do dia. No mesmo dia, atualiza em vez de duplicar.
+    async function salvarProgressoDiario(checklist) {
+      const todayRecord = createDailyProgressRecord(checklist);
+
+      if (MODO_DESENVOLVIMENTO) {
+        const history = loadHistoryFromLocalStorage(checklist.code);
+        const historyWithoutToday = history.filter(function(record) {
+          return record.date !== todayRecord.date;
+        });
+
+        const updatedHistory = recalculateAuraCoins(historyWithoutToday.concat(todayRecord));
+        saveHistoryToLocalStorage(checklist.code, updatedHistory);
+
+        return updatedHistory.find(function(record) {
+          return record.date === todayRecord.date;
+        });
+      }
+
+      // Preparado para o Supabase no futuro.
+      await supabaseRequest(SUPABASE_TABLE_HISTORICO + '?on_conflict=checklist_code,date', {
+        method: 'POST',
+        headers: {
+          Prefer: 'resolution=merge-duplicates,return=representation'
+        },
+        body: {
+          checklist_code: todayRecord.checklistCode,
+          date: todayRecord.date,
+          tasks: todayRecord.tasks,
+          completed_count: todayRecord.completedCount,
+          incomplete_count: todayRecord.incompleteCount,
+          daily_aura_coins: todayRecord.dailyAuraCoins,
+          family_agreement: todayRecord.familyAgreement,
+          day_points: todayRecord.dayPoints,
+          gains: todayRecord.gains,
+          losses: todayRecord.losses,
+          balance: todayRecord.balance,
+          penalty_applied: todayRecord.penaltyApplied,
+          aura_coins: todayRecord.auraCoins
+        }
+      });
+
+      const history = await buscarHistorico(checklist.code);
+      return history.find(function(record) {
+        return record.date === todayRecord.date;
+      });
+    }
+
+    // Busca todos os registros diários de um checklist.
+    async function buscarHistorico(code) {
+      if (MODO_DESENVOLVIMENTO) {
+        return recalculateAuraCoins(loadHistoryFromLocalStorage(code));
+      }
+
+      // Preparado para o Supabase no futuro.
+      const historyRows = await supabaseRequest(
+        SUPABASE_TABLE_HISTORICO + '?checklist_code=eq.' + encodeURIComponent(code) + '&select=*&order=date.asc',
+        {}
+      );
+
+      const history = historyRows.map(function(row) {
+        return {
+          date: row.date,
+          checklistCode: row.checklist_code,
+          tasks: row.tasks,
+          completedCount: row.completed_count,
+          incompleteCount: row.incomplete_count,
+          dailyAuraCoins: row.daily_aura_coins,
+          familyAgreement: row.family_agreement,
+          dayPoints: row.day_points,
+          gains: row.gains,
+          losses: row.losses,
+          balance: row.balance,
+          penaltyApplied: row.penalty_applied,
+          auraCoins: row.aura_coins
+        };
+      });
+
+      return recalculateAuraCoins(history);
+    }
+
+    // Limpa o histórico salvo do checklist informado.
+    async function limparHistorico(code) {
+      if (MODO_DESENVOLVIMENTO) {
+        clearHistoryFromLocalStorage(code);
+        return;
+      }
+
+      // Preparado para o Supabase no futuro.
+      await supabaseRequest(
+        SUPABASE_TABLE_HISTORICO + '?checklist_code=eq.' + encodeURIComponent(code),
+        { method: 'DELETE' }
+      );
     }
   </script>
 </body>
