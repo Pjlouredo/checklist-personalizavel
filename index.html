@@ -755,12 +755,13 @@
 
     // Preencha a chave pública manualmente antes de usar o Supabase.
     const SUPABASE_URL = "https://hbpgbsbjcbzlheuijtzs.supabase.co";
-    const SUPABASE_ANON_KEY = "";
+    // Cole aqui a Publishable Key do Supabase. Nao use Secret Key neste arquivo.
+    const SUPABASE_ANON_KEY = "sb_publishable_YelqjfzK2C-3oeVvtC9tMg_v1ZSKK1A";
 
     // Nomes das tabelas esperadas no Supabase.
     const SUPABASE_TABLE_CHECKLISTS = 'checklists';
     const SUPABASE_TABLE_TAREFAS = 'tarefas';
-    const SUPABASE_TABLE_HISTORICO = 'historico_diario';
+    const SUPABASE_TABLE_HISTORICO = 'registros_diarios';
 
     // Dados principais que ficam na memória enquanto a pessoa usa a página.
     let currentChecklist = null;
@@ -1605,26 +1606,55 @@
       localStorage.removeItem(getHistoryStorageKey(code));
     }
 
+    // Testa somente a conexao com o Supabase, sem salvar dados.
+    async function testarConexaoSupabase() {
+      if (!SUPABASE_URL.trim() || !SUPABASE_ANON_KEY.trim()) {
+        console.log('Supabase não configurado');
+        return;
+      }
+
+      try {
+        await supabaseRequest(SUPABASE_TABLE_CHECKLISTS + '?select=*&limit=1', {});
+        console.log('Conexão Supabase OK');
+      } catch (error) {
+        console.log('Erro na conexão Supabase');
+        if (error.status) {
+          console.log('Status HTTP:', error.status);
+        }
+        if (error.supabaseResponse) {
+          console.log('Resposta Supabase:', error.supabaseResponse);
+        }
+      }
+    }
+
     // Envia uma requisição simples para o Supabase usando a API REST.
     async function supabaseRequest(path, options) {
       if (!SUPABASE_ANON_KEY) {
         throw new Error('Preencha SUPABASE_ANON_KEY antes de usar o Supabase.');
       }
 
+      const supabaseHeaders = {
+        apikey: SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+        ...(options.headers || {})
+      };
+
+      if (SUPABASE_ANON_KEY.startsWith('eyJ')) {
+        supabaseHeaders.Authorization = 'Bearer ' + SUPABASE_ANON_KEY;
+      }
+
       const response = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
-        headers: {
-          apikey: SUPABASE_ANON_KEY,
-          Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
-          'Content-Type': 'application/json',
-          Prefer: 'return=representation',
-          ...(options.headers || {})
-        },
+        headers: supabaseHeaders,
         method: options.method || 'GET',
         body: options.body ? JSON.stringify(options.body) : undefined
       });
 
       if (!response.ok) {
-        throw new Error('Erro ao conversar com o Supabase.');
+        const error = new Error('Erro ao conversar com o Supabase.');
+        error.status = response.status;
+        error.supabaseResponse = await response.text();
+        throw error;
       }
 
       if (response.status === 204) {
@@ -1927,6 +1957,8 @@
         { method: 'DELETE' }
       );
     }
+
+    testarConexaoSupabase();
   </script>
 </body>
 </html>
