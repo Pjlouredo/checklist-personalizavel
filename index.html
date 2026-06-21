@@ -973,14 +973,20 @@
       return getRecordCompletedCount(record) - getRecordIncompleteCount(record);
     }
 
-    // Retorna o combinado salvo no histórico ou o padrão para registros antigos.
-    function getRecordFamilyAgreement(record) {
-      return record.familyAgreement || 'Sem combinado definido';
+    // Trata checklists antigos que salvaram o texto do placeholder como valor real.
+    function normalizeFamilyAgreement(familyAgreement) {
+      const agreement = typeof familyAgreement === 'string' ? familyAgreement.trim() : '';
+      return agreement === familyAgreementInput.placeholder ? '' : agreement;
     }
 
-    // Retorna o combinado salvo ou o texto padrão para checklists antigos.
+    // Retorna o combinado salvo no histórico.
+    function getRecordFamilyAgreement(record) {
+      return normalizeFamilyAgreement(record.familyAgreement);
+    }
+
+    // Retorna o combinado salvo.
     function getFamilyAgreement(checklist) {
-      return checklist.familyAgreement || 'Sem combinado definido';
+      return normalizeFamilyAgreement(checklist.familyAgreement);
     }
 
     // Cria o cabeçalho clicável da categoria.
@@ -1135,7 +1141,7 @@
         personName: personName,
         whatsapp: whatsapp,
         checklistName: checklistName,
-        familyAgreement: 'Sem combinado definido',
+        familyAgreement: '',
         tasks: tasksBeingCreated
       };
 
@@ -1368,7 +1374,7 @@
 
     // Salva o combinado no checklist atual.
     async function saveFamilyAgreement() {
-      currentChecklist.familyAgreement = familyAgreementInput.value.trim() || 'Sem combinado definido';
+      currentChecklist.familyAgreement = normalizeFamilyAgreement(familyAgreementInput.value);
 
       try {
         await salvarChecklist(currentChecklist);
