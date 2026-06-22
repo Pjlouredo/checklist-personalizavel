@@ -635,9 +635,38 @@
             <p class="muted" id="checklistOwner"></p>
           </div>
           <div class="history-actions">
+            <button class="btn secondary" id="editChecklistDataButton" type="button">Editar dados</button>
             <button class="btn secondary" id="familyAgreementsButton" type="button">📝 Combinados da família</button>
             <button class="btn secondary" id="viewHistoryButton" type="button">Ver histórico</button>
             <button class="btn" id="sendWhatsAppButton" type="button">Enviar relatório no WhatsApp</button>
+          </div>
+        </div>
+
+        <div class="hidden" id="editChecklistDataArea">
+          <div class="form-grid">
+            <label>
+              Nome da pessoa
+              <input id="editPersonNameInput" type="text">
+            </label>
+
+            <label>
+              WhatsApp
+              <input id="editWhatsappInput" type="tel">
+            </label>
+
+            <label>
+              Nome do checklist
+              <input id="editChecklistNameInput" type="text">
+            </label>
+
+            <label>
+              Código personalizado
+              <input id="editAccessCodeInput" type="text" disabled>
+            </label>
+          </div>
+
+          <div class="history-actions">
+            <button class="btn" id="saveChecklistDataButton" type="button">Salvar alterações</button>
           </div>
         </div>
 
@@ -801,6 +830,13 @@
     const totalPointsText = document.getElementById('totalPointsText');
     const progressFill = document.getElementById('progressFill');
     const sendWhatsAppButton = document.getElementById('sendWhatsAppButton');
+    const editChecklistDataButton = document.getElementById('editChecklistDataButton');
+    const editChecklistDataArea = document.getElementById('editChecklistDataArea');
+    const editPersonNameInput = document.getElementById('editPersonNameInput');
+    const editWhatsappInput = document.getElementById('editWhatsappInput');
+    const editChecklistNameInput = document.getElementById('editChecklistNameInput');
+    const editAccessCodeInput = document.getElementById('editAccessCodeInput');
+    const saveChecklistDataButton = document.getElementById('saveChecklistDataButton');
     const familyAgreementsButton = document.getElementById('familyAgreementsButton');
     const viewHistoryButton = document.getElementById('viewHistoryButton');
     const backToChecklistButton = document.getElementById('backToChecklistButton');
@@ -1236,6 +1272,55 @@
       updateProgress();
     }
 
+    // Abre ou fecha a area simples para editar os dados principais.
+    function toggleChecklistDataEditor() {
+      if (!currentChecklist) {
+        return;
+      }
+
+      const isHidden = editChecklistDataArea.classList.contains('hidden');
+
+      if (isHidden) {
+        editPersonNameInput.value = currentChecklist.personName;
+        editWhatsappInput.value = currentChecklist.whatsapp;
+        editChecklistNameInput.value = currentChecklist.checklistName;
+        editAccessCodeInput.value = currentChecklist.code;
+        editChecklistDataArea.classList.remove('hidden');
+        return;
+      }
+
+      editChecklistDataArea.classList.add('hidden');
+    }
+
+    // Salva somente nome, WhatsApp e nome do checklist.
+    async function saveChecklistDataChanges() {
+      if (!currentChecklist) {
+        return;
+      }
+
+      const personName = editPersonNameInput.value.trim();
+      const whatsapp = editWhatsappInput.value.trim();
+      const checklistName = editChecklistNameInput.value.trim();
+
+      if (!personName || !whatsapp || !checklistName) {
+        alert('Preencha nome, WhatsApp e nome do checklist.');
+        return;
+      }
+
+      currentChecklist.personName = personName;
+      currentChecklist.whatsapp = whatsapp;
+      currentChecklist.checklistName = checklistName;
+
+      try {
+        await salvarChecklist(currentChecklist);
+        renderChecklist();
+        editChecklistDataArea.classList.add('hidden');
+        console.log('Dados do checklist atualizados');
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
     // Marca ou desmarca uma tarefa e salva a alteração.
     async function toggleTask(index) {
       currentChecklist.tasks[index].done = !currentChecklist.tasks[index].done;
@@ -1530,6 +1615,8 @@
     addTaskButton.addEventListener('click', addTask);
     saveChecklistButton.addEventListener('click', saveChecklist);
     sendWhatsAppButton.addEventListener('click', sendWhatsAppReport);
+    editChecklistDataButton.addEventListener('click', toggleChecklistDataEditor);
+    saveChecklistDataButton.addEventListener('click', saveChecklistDataChanges);
     familyAgreementsButton.addEventListener('click', openFamilyAgreements);
     viewHistoryButton.addEventListener('click', openHistory);
 
