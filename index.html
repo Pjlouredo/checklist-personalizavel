@@ -2639,6 +2639,11 @@
         return;
       }
 
+      if (!usuarioLogado || !usuarioLogado.id) {
+        console.warn('Checklist não espelhado no Supabase: usuário não está logado.');
+        return;
+      }
+
       const codeNormalizado = dadosChecklist.code || dadosChecklist.codigo || dadosChecklist.accessCode || '';
       const personNameNormalizado = dadosChecklist.person_name || dadosChecklist.personName || dadosChecklist.nomePessoa || '';
       const whatsappNormalizado = dadosChecklist.whatsapp || dadosChecklist.telefone || dadosChecklist.phone || '';
@@ -2655,20 +2660,53 @@
         person_name: personNameNormalizado,
         whatsapp: whatsappNormalizado,
         checklist_name: checklistNameNormalizado,
-        family_agreement: familyAgreementNormalizado
+        family_agreement: familyAgreementNormalizado,
+        user_id: usuarioLogado.id
       };
 
       try {
-        await supabaseRequest(SUPABASE_TABLE_CHECKLISTS + '?on_conflict=code', {
-          method: 'POST',
-          headers: {
-            Prefer: 'resolution=merge-duplicates,return=representation'
-          },
-          body: payload
+        const checklistRows = await supabaseRequest(
+          SUPABASE_TABLE_CHECKLISTS + '?code=eq.' + encodeURIComponent(codeNormalizado) + '&select=*',
+          {}
+        );
+
+        const checklistDoUsuario = checklistRows.find(function(row) {
+          return row.user_id === usuarioLogado.id;
         });
+        const checklistSemDono = checklistRows.find(function(row) {
+          return !row.user_id;
+        });
+        const checklistDeOutroUsuario = checklistRows.find(function(row) {
+          return row.user_id && row.user_id !== usuarioLogado.id;
+        });
+
+        if (checklistDoUsuario) {
+          await supabaseRequest(
+            SUPABASE_TABLE_CHECKLISTS + '?code=eq.' + encodeURIComponent(codeNormalizado) + '&user_id=eq.' + encodeURIComponent(usuarioLogado.id),
+            { method: 'PATCH', body: payload }
+          );
+        } else if (checklistSemDono) {
+          await supabaseRequest(
+            SUPABASE_TABLE_CHECKLISTS + '?code=eq.' + encodeURIComponent(codeNormalizado) + '&user_id=is.null',
+            { method: 'PATCH', body: payload }
+          );
+        } else if (checklistDeOutroUsuario) {
+          console.warn('Checklist não espelhado no Supabase: este código já pertence a outro usuário.');
+          return;
+        } else {
+          await supabaseRequest(SUPABASE_TABLE_CHECKLISTS, {
+            method: 'POST',
+            body: payload
+          });
+        }
 
         console.log('Checklist espelhado no Supabase OK');
       } catch (error) {
+        if (error.status === 409) {
+          console.warn('Checklist não espelhado no Supabase: este código já pertence a outro usuário.');
+          return;
+        }
+
         console.log('Erro ao espelhar checklist no Supabase');
         if (error.status) {
           console.log('Status HTTP:', error.status);
