@@ -1250,6 +1250,11 @@
         editCategoryButton.type = 'button';
         editCategoryButton.textContent = 'Editar categoria';
 
+        const deleteCategoryButton = document.createElement('button');
+        deleteCategoryButton.className = 'btn danger small';
+        deleteCategoryButton.type = 'button';
+        deleteCategoryButton.textContent = 'Apagar categoria';
+
         const categoryEditor = document.createElement('div');
         categoryEditor.className = 'inline-editor hidden';
 
@@ -1302,8 +1307,27 @@
           console.log('Categoria atualizada');
         });
 
+        deleteCategoryButton.addEventListener('click', function() {
+          const confirmed = confirm('Tem certeza que deseja apagar esta categoria? As tarefas desta categoria serão movidas para Sem categoria.');
+
+          if (!confirmed) {
+            return;
+          }
+
+          currentChecklist.tasks.forEach(function(task) {
+            if (getTaskCategory(task) === group.name) {
+              task.category = 'Sem categoria';
+            }
+          });
+
+          saveChecklistToLocalStorage(currentChecklist);
+          renderChecklist();
+          console.log('Categoria apagada');
+        });
+
         categoryHeader.appendChild(categoryTitle);
         categoryHeader.appendChild(editCategoryButton);
+        categoryHeader.appendChild(deleteCategoryButton);
         checklistTaskList.appendChild(categoryHeader);
         checklistTaskList.appendChild(categoryEditor);
         checklistTaskList.appendChild(categoryItems);
@@ -1336,6 +1360,11 @@
           editTaskButton.className = 'btn secondary small';
           editTaskButton.type = 'button';
           editTaskButton.textContent = 'Editar';
+
+          const deleteTaskButton = document.createElement('button');
+          deleteTaskButton.className = 'btn danger small';
+          deleteTaskButton.type = 'button';
+          deleteTaskButton.textContent = 'Apagar';
 
           const taskEditor = document.createElement('div');
           taskEditor.className = 'inline-editor hidden';
@@ -1420,12 +1449,26 @@
             console.log('Tarefa atualizada');
           });
 
+          deleteTaskButton.addEventListener('click', function() {
+            const confirmed = confirm('Tem certeza que deseja apagar esta tarefa?');
+
+            if (!confirmed) {
+              return;
+            }
+
+            currentChecklist.tasks.splice(index, 1);
+            saveChecklistToLocalStorage(currentChecklist);
+            renderChecklist();
+            console.log('Tarefa apagada');
+          });
+
           textArea.appendChild(title);
           textArea.appendChild(createTaskMeta(task));
           taskCard.appendChild(statusButton);
           taskCard.appendChild(textArea);
           taskCard.appendChild(points);
           taskCard.appendChild(editTaskButton);
+          taskCard.appendChild(deleteTaskButton);
           categoryItems.appendChild(taskCard);
           categoryItems.appendChild(taskEditor);
         });
