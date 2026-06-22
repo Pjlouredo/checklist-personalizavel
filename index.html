@@ -1677,6 +1677,52 @@
 
     // testarEscritaSupabase();
 
+    // Espelha somente o cadastro do checklist no Supabase, sem tarefas ou historico.
+    async function salvarChecklistSupabaseEspelho(dadosChecklist) {
+      if (!SUPABASE_URL.trim() || !SUPABASE_ANON_KEY.trim()) {
+        return;
+      }
+
+      const codeNormalizado = dadosChecklist.code || dadosChecklist.codigo || dadosChecklist.accessCode || '';
+      const personNameNormalizado = dadosChecklist.person_name || dadosChecklist.personName || dadosChecklist.nomePessoa || '';
+      const whatsappNormalizado = dadosChecklist.whatsapp || dadosChecklist.telefone || dadosChecklist.phone || '';
+      const checklistNameNormalizado = dadosChecklist.checklist_name || dadosChecklist.checklistName || dadosChecklist.nomeChecklist || '';
+      const familyAgreementOriginal = dadosChecklist.family_agreement || dadosChecklist.familyAgreement || dadosChecklist.combinadoFamilia || '';
+      const familyAgreementNormalizado = normalizeFamilyAgreement(familyAgreementOriginal);
+
+      if (!codeNormalizado) {
+        return;
+      }
+
+      const payload = {
+        code: codeNormalizado,
+        person_name: personNameNormalizado,
+        whatsapp: whatsappNormalizado,
+        checklist_name: checklistNameNormalizado,
+        family_agreement: familyAgreementNormalizado
+      };
+
+      try {
+        await supabaseRequest(SUPABASE_TABLE_CHECKLISTS + '?on_conflict=code', {
+          method: 'POST',
+          headers: {
+            Prefer: 'resolution=merge-duplicates,return=representation'
+          },
+          body: payload
+        });
+
+        console.log('Checklist espelhado no Supabase OK');
+      } catch (error) {
+        console.log('Erro ao espelhar checklist no Supabase');
+        if (error.status) {
+          console.log('Status HTTP:', error.status);
+        }
+        if (error.supabaseResponse) {
+          console.log('Resposta Supabase:', error.supabaseResponse);
+        }
+      }
+    }
+
     // Envia uma requisição simples para o Supabase usando a API REST.
     async function supabaseRequest(path, options) {
       if (!SUPABASE_ANON_KEY) {
@@ -1838,6 +1884,7 @@
     async function salvarChecklist(checklist) {
       if (MODO_DESENVOLVIMENTO) {
         saveChecklistToLocalStorage(checklist);
+        salvarChecklistSupabaseEspelho(checklist);
         return checklist;
       }
 
