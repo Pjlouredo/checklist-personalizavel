@@ -55,6 +55,17 @@
       color: #0f766e;
     }
 
+    .auth-info {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      color: #64748b;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
     .brand-mark {
       display: grid;
       width: 42px;
@@ -113,6 +124,31 @@
       gap: 14px;
       margin-top: 28px;
       max-width: 420px;
+    }
+
+    .login-card {
+      display: grid;
+      gap: 18px;
+      width: min(460px, 100%);
+      margin: 8vh auto 0;
+      padding: 28px;
+    }
+
+    .login-card h1 {
+      margin-bottom: 6px;
+      font-size: clamp(2rem, 8vw, 3rem);
+    }
+
+    .login-form {
+      display: grid;
+      gap: 14px;
+    }
+
+    .login-error {
+      min-height: 22px;
+      color: #b91c1c;
+      font-weight: 700;
+      line-height: 1.4;
     }
 
     .access-row {
@@ -654,17 +690,51 @@
 </head>
 <body>
   <main class="app">
+    <!-- TELA LOGIN -->
+    <section class="screen active" id="loginScreen">
+      <div class="panel login-card">
+        <div class="brand">
+          <div class="brand-mark">✓</div>
+          <span>Checklist Personalizável</span>
+        </div>
+
+        <div>
+          <h1>Acesso restrito</h1>
+          <p class="subtitle">Entre com o e-mail autorizado para usar o app.</p>
+        </div>
+
+        <div class="login-form">
+          <label>
+            E-mail
+            <input id="loginEmailInput" type="email" autocomplete="email" placeholder="seu@email.com">
+          </label>
+
+          <label>
+            Senha
+            <input id="loginPasswordInput" type="password" autocomplete="current-password" placeholder="Sua senha">
+          </label>
+
+          <button class="btn" id="loginButton" type="button">Entrar</button>
+          <div class="login-error" id="loginErrorMessage"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- COMPONENTES -->
-    <header class="topbar">
+    <header class="topbar hidden" id="appTopbar">
       <div class="brand">
         <div class="brand-mark">✓</div>
         <span>Checklist Personalizável</span>
+      </div>
+      <div class="auth-info">
+        <span id="loggedUserEmail"></span>
+        <button class="btn-ghost" id="logoutButton" type="button">Sair</button>
       </div>
       <button class="btn secondary small hidden" id="backHomeButton" type="button">Voltar ao início</button>
     </header>
 
     <!-- TELA INICIAL -->
-    <section class="screen active" id="homeScreen">
+    <section class="screen" id="homeScreen">
       <div class="hero">
         <div>
           <h1>Checklist simples para acompanhar tarefas e pontos.</h1>
@@ -988,6 +1058,8 @@
     </section>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <!-- CONFIG -->
   <script>
     // Guarda os nomes das telas em um só lugar para evitar erros de digitação.
@@ -1011,14 +1083,24 @@
     const SUPABASE_TABLE_CHECKLISTS = 'checklists';
     const SUPABASE_TABLE_TAREFAS = 'tarefas';
     const SUPABASE_TABLE_HISTORICO = 'registros_diarios';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Dados principais que ficam na memória enquanto a pessoa usa a página.
+    let usuarioLogado = null;
     let currentChecklist = null;
     let tasksBeingCreated = [];
     let currentHistory = [];
     let checklistEditMode = false;
 
     // Atalhos para encontrar os elementos da tela.
+    const loginScreen = document.getElementById('loginScreen');
+    const appTopbar = document.getElementById('appTopbar');
+    const loginEmailInput = document.getElementById('loginEmailInput');
+    const loginPasswordInput = document.getElementById('loginPasswordInput');
+    const loginButton = document.getElementById('loginButton');
+    const loginErrorMessage = document.getElementById('loginErrorMessage');
+    const loggedUserEmail = document.getElementById('loggedUserEmail');
+    const logoutButton = document.getElementById('logoutButton');
     const homeScreen = document.getElementById('homeScreen');
     const createScreen = document.getElementById('createScreen');
     const checklistScreen = document.getElementById('checklistScreen');
@@ -1095,8 +1177,44 @@
 
   <!-- FUNÇÕES -->
   <script>
+    function usuarioEstaLogado() {
+      return Boolean(usuarioLogado);
+    }
+
+    function atualizarInfoUsuario() {
+      loggedUserEmail.textContent = usuarioLogado ? usuarioLogado.email : '';
+    }
+
+    function mostrarLogin(message) {
+      loginScreen.classList.add('active');
+      appTopbar.classList.add('hidden');
+      homeScreen.classList.remove('active');
+      createScreen.classList.remove('active');
+      checklistScreen.classList.remove('active');
+      historyScreen.classList.remove('active');
+      agreementsScreen.classList.remove('active');
+      backHomeButton.classList.add('hidden');
+      loginErrorMessage.textContent = message || '';
+      atualizarInfoUsuario();
+    }
+
+    function exigirLogin() {
+      if (usuarioEstaLogado()) {
+        return true;
+      }
+
+      mostrarLogin();
+      return false;
+    }
+
     // Mostra uma tela e esconde as outras.
     function showScreen(screenName) {
+      if (!exigirLogin()) {
+        return;
+      }
+
+      loginScreen.classList.remove('active');
+      appTopbar.classList.remove('hidden');
       homeScreen.classList.remove('active');
       createScreen.classList.remove('active');
       checklistScreen.classList.remove('active');
@@ -1110,6 +1228,75 @@
       if (screenName === SCREENS.agreements) agreementsScreen.classList.add('active');
 
       backHomeButton.classList.toggle('hidden', screenName === SCREENS.home);
+      atualizarInfoUsuario();
+    }
+
+    async function entrarComEmailSenha() {
+      const email = loginEmailInput.value.trim();
+      const password = loginPasswordInput.value;
+
+      if (!email || !password) {
+        loginErrorMessage.textContent = 'Preencha e-mail e senha para entrar.';
+        return;
+      }
+
+      loginButton.disabled = true;
+      loginErrorMessage.textContent = '';
+
+      try {
+        const result = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+        if (result.error) {
+          loginErrorMessage.textContent = 'Não foi possível entrar. Confira e-mail e senha.';
+          return;
+        }
+
+        usuarioLogado = result.data.user;
+        loginPasswordInput.value = '';
+        showScreen(SCREENS.home);
+      } catch (error) {
+        loginErrorMessage.textContent = 'Não foi possível conectar ao login. Tente novamente.';
+      } finally {
+        loginButton.disabled = false;
+      }
+    }
+
+    async function sairDaConta() {
+      await supabaseClient.auth.signOut();
+      usuarioLogado = null;
+      currentChecklist = null;
+      mostrarLogin();
+    }
+
+    async function inicializarAutenticacao() {
+      try {
+        const result = await supabaseClient.auth.getSession();
+        usuarioLogado = result.data.session ? result.data.session.user : null;
+
+        supabaseClient.auth.onAuthStateChange(function(event, session) {
+          usuarioLogado = session ? session.user : null;
+
+          if (usuarioLogado) {
+            atualizarInfoUsuario();
+            return;
+          }
+
+          mostrarLogin();
+        });
+
+        if (usuarioLogado) {
+          showScreen(SCREENS.home);
+          return;
+        }
+
+        mostrarLogin();
+      } catch (error) {
+        usuarioLogado = null;
+        mostrarLogin('Não foi possível verificar o login. Recarregue a página.');
+      }
     }
 
     // Prepara o código para ficar simples, sem acentos e sem caracteres especiais.
@@ -2279,6 +2466,14 @@
     }
 
     // Liga os botões e campos às funções acima.
+    loginButton.addEventListener('click', entrarComEmailSenha);
+    logoutButton.addEventListener('click', sairDaConta);
+    loginPasswordInput.addEventListener('keyup', function(event) {
+      if (event.key === 'Enter') {
+        entrarComEmailSenha();
+      }
+    });
+
     createNewButton.addEventListener('click', startNewChecklist);
     addTaskButton.addEventListener('click', addTask);
     saveChecklistButton.addEventListener('click', saveChecklist);
@@ -2325,6 +2520,7 @@
     });
 
     renderCreationTasks();
+    inicializarAutenticacao();
   </script>
 
   <!-- LOCALSTORAGE -->
