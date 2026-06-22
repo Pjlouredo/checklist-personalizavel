@@ -266,6 +266,15 @@
       margin-top: 3px;
     }
 
+    .inline-editor {
+      display: grid;
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
     .category-title {
       margin-top: 12px;
       border: 0;
@@ -1229,11 +1238,74 @@
       checklistTaskList.innerHTML = '';
 
       groupTasksByCategory(currentChecklist.tasks).forEach(function(group) {
+        const categoryHeader = document.createElement('div');
+        categoryHeader.className = 'history-actions';
+
         const categoryItems = document.createElement('div');
         categoryItems.className = 'category-items';
 
         const categoryTitle = createCollapsibleCategoryHeader(group.name, categoryItems);
-        checklistTaskList.appendChild(categoryTitle);
+        const editCategoryButton = document.createElement('button');
+        editCategoryButton.className = 'btn secondary small';
+        editCategoryButton.type = 'button';
+        editCategoryButton.textContent = 'Editar categoria';
+
+        const categoryEditor = document.createElement('div');
+        categoryEditor.className = 'inline-editor hidden';
+
+        const categoryLabel = document.createElement('label');
+        categoryLabel.textContent = 'Categoria';
+
+        const categoryInput = document.createElement('input');
+        categoryInput.type = 'text';
+        categoryInput.value = group.name;
+
+        const categoryActions = document.createElement('div');
+        categoryActions.className = 'history-actions';
+
+        const saveCategoryButton = document.createElement('button');
+        saveCategoryButton.className = 'btn small';
+        saveCategoryButton.type = 'button';
+        saveCategoryButton.textContent = 'Salvar categoria';
+
+        const cancelCategoryButton = document.createElement('button');
+        cancelCategoryButton.className = 'btn secondary small';
+        cancelCategoryButton.type = 'button';
+        cancelCategoryButton.textContent = 'Cancelar';
+
+        categoryLabel.appendChild(categoryInput);
+        categoryActions.appendChild(saveCategoryButton);
+        categoryActions.appendChild(cancelCategoryButton);
+        categoryEditor.appendChild(categoryLabel);
+        categoryEditor.appendChild(categoryActions);
+
+        editCategoryButton.addEventListener('click', function() {
+          categoryEditor.classList.remove('hidden');
+        });
+
+        cancelCategoryButton.addEventListener('click', function() {
+          categoryEditor.classList.add('hidden');
+          categoryInput.value = group.name;
+        });
+
+        saveCategoryButton.addEventListener('click', function() {
+          const newCategory = categoryInput.value.trim() || 'Sem categoria';
+
+          currentChecklist.tasks.forEach(function(task) {
+            if (getTaskCategory(task) === group.name) {
+              task.category = newCategory;
+            }
+          });
+
+          saveChecklistToLocalStorage(currentChecklist);
+          renderChecklist();
+          console.log('Categoria atualizada');
+        });
+
+        categoryHeader.appendChild(categoryTitle);
+        categoryHeader.appendChild(editCategoryButton);
+        checklistTaskList.appendChild(categoryHeader);
+        checklistTaskList.appendChild(categoryEditor);
         checklistTaskList.appendChild(categoryItems);
 
         group.tasks.forEach(function(item) {
@@ -1260,12 +1332,102 @@
           const points = document.createElement('strong');
           points.textContent = (task.done ? task.points : 0) + ' pts';
 
+          const editTaskButton = document.createElement('button');
+          editTaskButton.className = 'btn secondary small';
+          editTaskButton.type = 'button';
+          editTaskButton.textContent = 'Editar';
+
+          const taskEditor = document.createElement('div');
+          taskEditor.className = 'inline-editor hidden';
+
+          const taskNameLabel = document.createElement('label');
+          taskNameLabel.textContent = 'Nome da tarefa';
+
+          const taskNameInput = document.createElement('input');
+          taskNameInput.type = 'text';
+          taskNameInput.value = task.name;
+
+          const taskCategoryLabel = document.createElement('label');
+          taskCategoryLabel.textContent = 'Categoria da tarefa';
+
+          const taskCategoryInput = document.createElement('input');
+          taskCategoryInput.type = 'text';
+          taskCategoryInput.value = getTaskCategory(task);
+
+          const taskFrequencyLabel = document.createElement('label');
+          taskFrequencyLabel.textContent = 'Frequência da tarefa';
+
+          const taskFrequencySelect = document.createElement('select');
+          ['Diária', 'Semanal', 'Mensal', 'Única'].forEach(function(frequency) {
+            const option = document.createElement('option');
+            option.value = frequency;
+            option.textContent = frequency;
+            taskFrequencySelect.appendChild(option);
+          });
+          taskFrequencySelect.value = task.frequency;
+
+          const taskActions = document.createElement('div');
+          taskActions.className = 'history-actions';
+
+          const saveTaskButton = document.createElement('button');
+          saveTaskButton.className = 'btn small';
+          saveTaskButton.type = 'button';
+          saveTaskButton.textContent = 'Salvar tarefa';
+
+          const cancelTaskButton = document.createElement('button');
+          cancelTaskButton.className = 'btn secondary small';
+          cancelTaskButton.type = 'button';
+          cancelTaskButton.textContent = 'Cancelar';
+
+          taskNameLabel.appendChild(taskNameInput);
+          taskCategoryLabel.appendChild(taskCategoryInput);
+          taskFrequencyLabel.appendChild(taskFrequencySelect);
+          taskActions.appendChild(saveTaskButton);
+          taskActions.appendChild(cancelTaskButton);
+          taskEditor.appendChild(taskNameLabel);
+          taskEditor.appendChild(taskCategoryLabel);
+          taskEditor.appendChild(taskFrequencyLabel);
+          taskEditor.appendChild(taskActions);
+
+          editTaskButton.addEventListener('click', function() {
+            taskEditor.classList.remove('hidden');
+          });
+
+          cancelTaskButton.addEventListener('click', function() {
+            taskEditor.classList.add('hidden');
+            taskNameInput.value = task.name;
+            taskCategoryInput.value = getTaskCategory(task);
+            taskFrequencySelect.value = task.frequency;
+          });
+
+          saveTaskButton.addEventListener('click', function() {
+            const newName = taskNameInput.value.trim();
+
+            if (!newName) {
+              alert('Digite o nome da tarefa.');
+              return;
+            }
+
+            currentChecklist.tasks[index] = {
+              ...currentChecklist.tasks[index],
+              name: newName,
+              category: taskCategoryInput.value.trim() || 'Sem categoria',
+              frequency: taskFrequencySelect.value
+            };
+
+            saveChecklistToLocalStorage(currentChecklist);
+            renderChecklist();
+            console.log('Tarefa atualizada');
+          });
+
           textArea.appendChild(title);
           textArea.appendChild(createTaskMeta(task));
           taskCard.appendChild(statusButton);
           taskCard.appendChild(textArea);
           taskCard.appendChild(points);
+          taskCard.appendChild(editTaskButton);
           categoryItems.appendChild(taskCard);
+          categoryItems.appendChild(taskEditor);
         });
       });
 
