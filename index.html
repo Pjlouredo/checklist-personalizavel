@@ -1627,6 +1627,56 @@
       }
     }
 
+    // Teste manual de escrita no Supabase com um registro temporario.
+    async function testarEscritaSupabase() {
+      if (!SUPABASE_URL.trim() || !SUPABASE_ANON_KEY.trim()) {
+        console.log('Supabase não configurado para teste de escrita');
+        return;
+      }
+
+      const testCode = "__teste_conexao__";
+
+      try {
+        await supabaseRequest(SUPABASE_TABLE_CHECKLISTS, {
+          method: 'POST',
+          body: {
+            code: testCode,
+            person_name: 'Teste Supabase',
+            whatsapp: '',
+            checklist_name: 'Teste de escrita',
+            family_agreement: ''
+          }
+        });
+
+        await supabaseRequest(
+          SUPABASE_TABLE_CHECKLISTS + '?code=eq.' + encodeURIComponent(testCode),
+          {
+            method: 'PATCH',
+            body: {
+              checklist_name: 'Teste de escrita atualizado'
+            }
+          }
+        );
+
+        await supabaseRequest(
+          SUPABASE_TABLE_CHECKLISTS + '?code=eq.' + encodeURIComponent(testCode),
+          { method: 'DELETE' }
+        );
+
+        console.log('Teste de escrita Supabase OK');
+      } catch (error) {
+        console.log('Erro no teste de escrita Supabase');
+        if (error.status) {
+          console.log('Status HTTP:', error.status);
+        }
+        if (error.supabaseResponse) {
+          console.log('Resposta Supabase:', error.supabaseResponse);
+        }
+      }
+    }
+
+    // testarEscritaSupabase();
+
     // Envia uma requisição simples para o Supabase usando a API REST.
     async function supabaseRequest(path, options) {
       if (!SUPABASE_ANON_KEY) {
