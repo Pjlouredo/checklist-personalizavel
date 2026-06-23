@@ -926,11 +926,6 @@
               Nome do checklist
               <input id="editChecklistNameInput" type="text">
             </label>
-
-            <label>
-              Código personalizado
-              <input id="editAccessCodeInput" type="text" disabled>
-            </label>
           </div>
 
           <div class="history-actions">
@@ -1194,7 +1189,6 @@
     const editPersonNameInput = document.getElementById('editPersonNameInput');
     const editWhatsappInput = document.getElementById('editWhatsappInput');
     const editChecklistNameInput = document.getElementById('editChecklistNameInput');
-    const editAccessCodeInput = document.getElementById('editAccessCodeInput');
     const saveChecklistDataButton = document.getElementById('saveChecklistDataButton');
     const addChecklistTaskHeader = document.getElementById('addChecklistTaskHeader');
     const showAddCategoryButton = document.getElementById('showAddCategoryButton');
@@ -1903,7 +1897,7 @@
     // Mostra na tela as tarefas do checklist aberto.
     function renderChecklist() {
       checklistTitle.textContent = currentChecklist.checklistName;
-      checklistOwner.textContent = currentChecklist.personName + ' • Código: ' + currentChecklist.code;
+      checklistOwner.textContent = currentChecklist.personName;
       checklistTaskList.innerHTML = '';
 
       groupTasksByCategory(currentChecklist.tasks).forEach(function(group) {
@@ -2254,7 +2248,6 @@
         editPersonNameInput.value = currentChecklist.personName;
         editWhatsappInput.value = currentChecklist.whatsapp;
         editChecklistNameInput.value = currentChecklist.checklistName;
-        editAccessCodeInput.value = currentChecklist.code;
         editChecklistDataArea.classList.remove('hidden');
         addChecklistTaskHeader.classList.remove('hidden');
         renderChecklist();
