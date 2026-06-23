@@ -1576,9 +1576,23 @@
           abrirChecklistDaLista(checklist);
         });
 
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn-ghost danger';
+        deleteButton.type = 'button';
+        deleteButton.textContent = 'Excluir';
+        deleteButton.addEventListener('click', function(event) {
+          event.stopPropagation();
+          excluirChecklistDaLista(checklist);
+        });
+
+        const actions = document.createElement('div');
+        actions.className = 'history-actions';
+        actions.appendChild(button);
+        actions.appendChild(deleteButton);
+
         card.appendChild(title);
         card.appendChild(routine);
-        card.appendChild(button);
+        card.appendChild(actions);
         grid.appendChild(card);
       });
 
@@ -1603,6 +1617,57 @@
       }
 
       await openChecklist(code);
+    }
+
+    async function excluirChecklistDaLista(checklistSupabase) {
+      const code = checklistSupabase.code;
+      const checklistName = checklistSupabase.person_name || checklistSupabase.checklist_name || 'este checklist';
+
+      if (!code) {
+        console.warn('Checklist não excluído: código interno não encontrado.');
+        return;
+      }
+
+      const confirmed = confirm('Tem certeza que deseja excluir o checklist de ' + checklistName + '? Essa ação não poderá ser desfeita.');
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        const usuario = await obterUsuarioSupabaseLogado();
+
+        if (!usuario || !usuario.id) {
+          console.warn('Checklist não excluído: usuário não está logado.');
+          return;
+        }
+
+        const deleteTasksResult = await supabaseClient
+          .from(SUPABASE_TABLE_TAREFAS)
+          .delete()
+          .eq('user_id', usuario.id)
+          .eq('checklist_code', code);
+
+        if (deleteTasksResult.error) {
+          throw deleteTasksResult.error;
+        }
+
+        const deleteChecklistResult = await supabaseClient
+          .from(SUPABASE_TABLE_CHECKLISTS)
+          .delete()
+          .eq('user_id', usuario.id)
+          .eq('code', code);
+
+        if (deleteChecklistResult.error) {
+          throw deleteChecklistResult.error;
+        }
+
+        localStorage.removeItem(getStorageKey(code));
+        console.log('Checklist excluído com sucesso');
+        await carregarMeusChecklists();
+      } catch (error) {
+        mostrarErroSupabaseNoConsole('Erro ao excluir checklist', error);
+      }
     }
 
     // Retorna o valor positivo ou negativo salvo na tarefa do histórico.
