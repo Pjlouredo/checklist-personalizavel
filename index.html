@@ -840,24 +840,21 @@
 
         <div class="form-grid">
           <label>
-            Nome da pessoa
-            <input id="personNameInput" type="text" placeholder="Ex: Maria Silva">
+            Nome da criança
+            <input id="personNameInput" type="text" placeholder="Ex: Nicolas">
           </label>
 
           <label>
-            Telefone do WhatsApp
-            <input id="whatsappInput" type="tel" placeholder="Ex: 5511999999999">
+            WhatsApp do responsável
+            <input id="whatsappInput" type="tel" placeholder="Ex: 5599999999999">
           </label>
 
           <label>
-            Nome do checklist
-            <input id="checklistNameInput" type="text" placeholder="Ex: Rotina da semana">
+            Nome da rotina
+            <input id="checklistNameInput" type="text" placeholder="Ex: Rotina da manhã">
           </label>
 
-          <label>
-            Criar  usuário de acesso
-            <input id="customAccessCodeInput" type="text" placeholder="Ex: joao2026">
-          </label>
+          <input id="customAccessCodeInput" type="hidden">
         </div>
 
         <div class="task-form">
@@ -1373,6 +1370,37 @@
         .replace(/^-|-$/g, '');
     }
 
+    async function codigoChecklistExisteNoSupabase(code) {
+      if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !usuarioLogado || !usuarioLogado.id) {
+        return false;
+      }
+
+      try {
+        const result = await supabaseRequest(
+          SUPABASE_TABLE_CHECKLISTS + '?code=eq.' + encodeURIComponent(code) + '&user_id=eq.' + encodeURIComponent(usuarioLogado.id) + '&select=code',
+          {}
+        );
+
+        return Array.isArray(result) && result.length > 0;
+      } catch (error) {
+        console.warn('Não foi possível verificar o código no Supabase. Usando validação local.');
+        return false;
+      }
+    }
+
+    async function gerarCodigoChecklist(personName, checklistName) {
+      const baseCode = normalizeAccessCode(personName + '-' + checklistName) || 'checklist';
+      let code = baseCode;
+      let suffix = 2;
+
+      while (loadChecklistFromLocalStorage(code) || await codigoChecklistExisteNoSupabase(code)) {
+        code = baseCode + '-' + suffix;
+        suffix += 1;
+      }
+
+      return code;
+    }
+
     // Retorna a data de hoje no formato YYYY-MM-DD.
     function getTodayDate() {
       const today = new Date();
@@ -1484,10 +1512,6 @@
         routine.className = 'muted';
         routine.textContent = checklist.checklist_name ? 'Rotina: ' + checklist.checklist_name : 'Checklist';
 
-        const code = document.createElement('div');
-        code.className = 'checklist-code';
-        code.textContent = 'Código: ' + checklist.code;
-
         const button = document.createElement('button');
         button.className = 'btn secondary small';
         button.type = 'button';
@@ -1498,7 +1522,6 @@
 
         card.appendChild(title);
         card.appendChild(routine);
-        card.appendChild(code);
         card.appendChild(button);
         grid.appendChild(card);
       });
@@ -1747,23 +1770,14 @@
       const personName = personNameInput.value.trim();
       const whatsapp = whatsappInput.value.trim();
       const checklistName = checklistNameInput.value.trim();
-      const customAccessCode = normalizeAccessCode(customAccessCodeInput.value);
+
+      if (!personName || !checklistName) {
+        alert('Preencha nome da criança e nome da rotina.');
+        return;
+      }
+
+      const customAccessCode = await gerarCodigoChecklist(personName, checklistName);
       customAccessCodeInput.value = customAccessCode;
-
-      if (!personName || !whatsapp || !checklistName) {
-        alert('Preencha nome, WhatsApp e nome do checklist.');
-        return;
-      }
-
-      if (!customAccessCode) {
-        alert('Preencha um código de acesso personalizado.');
-        return;
-      }
-
-      if (MODO_DESENVOLVIMENTO && loadChecklistFromLocalStorage(customAccessCode)) {
-        alert('Este código de acesso já está em uso. Escolha outro código.');
-        return;
-      }
 
       if (tasksBeingCreated.length === 0) {
         alert('Adicione pelo menos uma tarefa.');
@@ -1783,9 +1797,9 @@
         currentChecklist = checklist;
         await salvarChecklist(checklist);
         await salvarTarefas(checklist);
-        generatedCodeBox.textContent = 'Código de acesso: ' + checklist.code;
+        generatedCodeBox.textContent = 'Checklist salvo com sucesso.';
         generatedCodeBox.classList.remove('hidden');
-        alert('Checklist salvo! Use o código ' + checklist.code + ' para abrir depois.');
+        alert('Checklist salvo!');
         await openChecklist(checklist.code);
       } catch (error) {
         alert(error.message);
