@@ -1370,18 +1370,58 @@
         .replace(/^-|-$/g, '');
     }
 
+    async function obterSessaoSupabaseAtual() {
+      const result = await supabaseClient.auth.getSession();
+      return result.data.session;
+    }
+
+    function mostrarErroSupabaseNoConsole(titulo, error) {
+      console.log(titulo);
+
+      if (error.status) {
+        console.log('Status HTTP:', error.status);
+      }
+
+      if (error.supabaseResponse) {
+        console.log('Resposta Supabase:', error.supabaseResponse);
+        return;
+      }
+
+      if (error.message || error.code || error.details || error.hint) {
+        console.log('Resposta Supabase:', JSON.stringify({
+          code: error.code || null,
+          details: error.details || null,
+          hint: error.hint || null,
+          message: error.message || null
+        }));
+      }
+    }
+
     async function codigoChecklistExisteNoSupabase(code) {
       if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !usuarioLogado || !usuarioLogado.id) {
         return false;
       }
 
       try {
-        const result = await supabaseRequest(
-          SUPABASE_TABLE_CHECKLISTS + '?code=eq.' + encodeURIComponent(code) + '&user_id=eq.' + encodeURIComponent(usuarioLogado.id) + '&select=code',
-          {}
-        );
+        const session = await obterSessaoSupabaseAtual();
 
-        return Array.isArray(result) && result.length > 0;
+        if (!session || !session.access_token) {
+          console.warn('Não foi possível verificar o código no Supabase: usuário sem sessão ativa.');
+          return false;
+        }
+
+        const result = await supabaseClient
+          .from(SUPABASE_TABLE_CHECKLISTS)
+          .select('code')
+          .eq('code', code)
+          .eq('user_id', usuarioLogado.id)
+          .limit(1);
+
+        if (result.error) {
+          throw result.error;
+        }
+
+        return Array.isArray(result.data) && result.data.length > 0;
       } catch (error) {
         console.warn('Não foi possível verificar o código no Supabase. Usando validação local.');
         return false;
@@ -1450,21 +1490,29 @@
       }
 
       try {
-        try {
-          meusChecklists = await supabaseRequest(
-            SUPABASE_TABLE_CHECKLISTS + '?user_id=eq.' + encodeURIComponent(usuarioLogado.id) + '&select=*&order=created_at.desc',
-            {}
-          );
-        } catch (error) {
-          meusChecklists = await supabaseRequest(
-            SUPABASE_TABLE_CHECKLISTS + '?user_id=eq.' + encodeURIComponent(usuarioLogado.id) + '&select=*',
-            {}
-          );
+        const session = await obterSessaoSupabaseAtual();
+
+        if (!session || !session.access_token) {
+          usuarioLogado = null;
+          mostrarLogin('Sua sessão expirou. Entre novamente.');
+          return;
         }
 
+        const result = await supabaseClient
+          .from(SUPABASE_TABLE_CHECKLISTS)
+          .select('*')
+          .eq('user_id', usuarioLogado.id)
+          .order('created_at', { ascending: false });
+
+        if (result.error) {
+          throw result.error;
+        }
+
+        meusChecklists = result.data || [];
         renderMeusChecklists();
         showScreen(SCREENS.myChecklists);
       } catch (error) {
+        console.error('Erro ao carregar checklists do usuário no Supabase:', error);
         meusChecklists = [];
         myChecklistsContent.innerHTML = '<div class="empty-state"><h2>Não foi possível carregar seus checklists</h2><p class="muted">Tente novamente em instantes.</p></div>';
         showScreen(SCREENS.myChecklists);
@@ -2758,16 +2806,18 @@
       }
 
       try {
-        await supabaseRequest(SUPABASE_TABLE_CHECKLISTS + '?select=*&limit=1', {});
+        const result = await supabaseClient
+          .from(SUPABASE_TABLE_CHECKLISTS)
+          .select('*')
+          .limit(1);
+
+        if (result.error) {
+          throw result.error;
+        }
+
         console.log('Conexão Supabase OK');
       } catch (error) {
-        console.log('Erro na conexão Supabase');
-        if (error.status) {
-          console.log('Status HTTP:', error.status);
-        }
-        if (error.supabaseResponse) {
-          console.log('Resposta Supabase:', error.supabaseResponse);
-        }
+        mostrarErroSupabaseNoConsole('Erro na conexão Supabase', error);
       }
     }
 
@@ -2832,6 +2882,13 @@
         return;
       }
 
+      const session = await obterSessaoSupabaseAtual();
+
+      if (!session || !session.access_token) {
+        console.warn('Checklist não espelhado no Supabase: usuário sem sessão ativa.');
+        return;
+      }
+
       const codeNormalizado = dadosChecklist.code || dadosChecklist.codigo || dadosChecklist.accessCode || '';
       const personNameNormalizado = dadosChecklist.person_name || dadosChecklist.personName || dadosChecklist.nomePessoa || '';
       const whatsappNormalizado = dadosChecklist.whatsapp || dadosChecklist.telefone || dadosChecklist.phone || '';
@@ -2853,10 +2910,17 @@
       };
 
       try {
-        const checklistRows = await supabaseRequest(
-          SUPABASE_TABLE_CHECKLISTS + '?code=eq.' + encodeURIComponent(codeNormalizado) + '&select=*',
-          {}
-        );
+        const checklistsResult = await supabaseClient
+          .from(SUPABASE_TABLE_CHECKLISTS)
+          .select('*')
+          .eq('code', codeNormalizado)
+          .or('user_id.eq.' + usuarioLogado.id + ',user_id.is.null');
+
+        if (checklistsResult.error) {
+          throw checklistsResult.error;
+        }
+
+        const checklistRows = checklistsResult.data || [];
 
         const checklistDoUsuario = checklistRows.find(function(row) {
           return row.user_id === usuarioLogado.id;
@@ -2864,44 +2928,45 @@
         const checklistSemDono = checklistRows.find(function(row) {
           return !row.user_id;
         });
-        const checklistDeOutroUsuario = checklistRows.find(function(row) {
-          return row.user_id && row.user_id !== usuarioLogado.id;
-        });
 
         if (checklistDoUsuario) {
-          await supabaseRequest(
-            SUPABASE_TABLE_CHECKLISTS + '?code=eq.' + encodeURIComponent(codeNormalizado) + '&user_id=eq.' + encodeURIComponent(usuarioLogado.id),
-            { method: 'PATCH', body: payload }
-          );
+          const updateResult = await supabaseClient
+            .from(SUPABASE_TABLE_CHECKLISTS)
+            .update(payload)
+            .eq('code', codeNormalizado)
+            .eq('user_id', usuarioLogado.id);
+
+          if (updateResult.error) {
+            throw updateResult.error;
+          }
         } else if (checklistSemDono) {
-          await supabaseRequest(
-            SUPABASE_TABLE_CHECKLISTS + '?code=eq.' + encodeURIComponent(codeNormalizado) + '&user_id=is.null',
-            { method: 'PATCH', body: payload }
-          );
-        } else if (checklistDeOutroUsuario) {
-          console.warn('Checklist não espelhado no Supabase: este código já pertence a outro usuário.');
-          return;
+          const updateLegacyResult = await supabaseClient
+            .from(SUPABASE_TABLE_CHECKLISTS)
+            .update(payload)
+            .eq('code', codeNormalizado)
+            .is('user_id', null);
+
+          if (updateLegacyResult.error) {
+            throw updateLegacyResult.error;
+          }
         } else {
-          await supabaseRequest(SUPABASE_TABLE_CHECKLISTS, {
-            method: 'POST',
-            body: payload
-          });
+          const insertResult = await supabaseClient
+            .from(SUPABASE_TABLE_CHECKLISTS)
+            .insert(payload);
+
+          if (insertResult.error) {
+            throw insertResult.error;
+          }
         }
 
         console.log('Checklist espelhado no Supabase OK');
       } catch (error) {
-        if (error.status === 409) {
+        if (error.status === 409 || error.code === '23505') {
           console.warn('Checklist não espelhado no Supabase: este código já pertence a outro usuário.');
           return;
         }
 
-        console.log('Erro ao espelhar checklist no Supabase');
-        if (error.status) {
-          console.log('Status HTTP:', error.status);
-        }
-        if (error.supabaseResponse) {
-          console.log('Resposta Supabase:', error.supabaseResponse);
-        }
+        mostrarErroSupabaseNoConsole('Erro ao espelhar checklist no Supabase', error);
       }
     }
 
@@ -2948,7 +3013,8 @@
         code: checklist.code,
         person_name: checklist.personName,
         whatsapp: checklist.whatsapp,
-        checklist_name: checklist.checklistName
+        checklist_name: checklist.checklistName,
+        family_agreement: normalizeFamilyAgreement(checklist.familyAgreement)
       };
     }
 
@@ -3070,13 +3136,20 @@
         return checklist;
       }
 
-      await supabaseRequest(SUPABASE_TABLE_CHECKLISTS + '?on_conflict=code', {
-        method: 'POST',
-        headers: {
-          Prefer: 'resolution=merge-duplicates,return=representation'
-        },
-        body: checklistToSupabaseRow(checklist)
-      });
+      if (!usuarioLogado || !usuarioLogado.id) {
+        throw new Error('Usuário não está logado.');
+      }
+
+      const result = await supabaseClient
+        .from(SUPABASE_TABLE_CHECKLISTS)
+        .upsert({
+          ...checklistToSupabaseRow(checklist),
+          user_id: usuarioLogado.id
+        }, { onConflict: 'code' });
+
+      if (result.error) {
+        throw result.error;
+      }
 
       return checklist;
     }
@@ -3087,17 +3160,27 @@
         return loadChecklistFromLocalStorage(code);
       }
 
-      const checklistRows = await supabaseRequest(
-        SUPABASE_TABLE_CHECKLISTS + '?code=eq.' + encodeURIComponent(code) + '&select=*',
-        {}
-      );
+      if (!usuarioLogado || !usuarioLogado.id) {
+        throw new Error('Usuário não está logado.');
+      }
 
-      if (!checklistRows || checklistRows.length === 0) {
+      const checklistResult = await supabaseClient
+        .from(SUPABASE_TABLE_CHECKLISTS)
+        .select('*')
+        .eq('code', code)
+        .eq('user_id', usuarioLogado.id)
+        .maybeSingle();
+
+      if (checklistResult.error) {
+        throw checklistResult.error;
+      }
+
+      if (!checklistResult.data) {
         return null;
       }
 
       const tasks = await buscarTarefas(code);
-      return checklistFromSupabaseRow(checklistRows[0], tasks);
+      return checklistFromSupabaseRow(checklistResult.data, tasks);
     }
 
     // Salva as tarefas do checklist.
