@@ -1375,6 +1375,20 @@
       return result.data.session;
     }
 
+    async function obterUsuarioSupabaseLogado() {
+      if (!usuarioLogado || !usuarioLogado.id) {
+        return null;
+      }
+
+      const session = await obterSessaoSupabaseAtual();
+
+      if (!session || !session.user || session.user.id !== usuarioLogado.id) {
+        return null;
+      }
+
+      return session.user;
+    }
+
     function mostrarErroSupabaseNoConsole(titulo, error) {
       console.log(titulo);
 
@@ -1983,7 +1997,7 @@
           categoryInput.value = group.name;
         });
 
-        saveCategoryButton.addEventListener('click', function() {
+        saveCategoryButton.addEventListener('click', async function() {
           const newCategory = categoryInput.value.trim() || 'Sem categoria';
 
           currentChecklist.tasks.forEach(function(task) {
@@ -1992,12 +2006,12 @@
             }
           });
 
-          saveChecklistToLocalStorage(currentChecklist);
+          await salvarTarefas(currentChecklist);
           renderChecklist();
           console.log('Categoria atualizada');
         });
 
-        deleteCategoryButton.addEventListener('click', function() {
+        deleteCategoryButton.addEventListener('click', async function() {
           const confirmed = confirm('Tem certeza que deseja apagar esta categoria? As tarefas desta categoria serão movidas para Sem categoria.');
 
           if (!confirmed) {
@@ -2010,7 +2024,7 @@
             }
           });
 
-          saveChecklistToLocalStorage(currentChecklist);
+          await salvarTarefas(currentChecklist);
           renderChecklist();
           console.log('Categoria apagada');
         });
@@ -2165,7 +2179,7 @@
             taskFrequencySelect.value = task.frequency;
           });
 
-          saveTaskButton.addEventListener('click', function() {
+          saveTaskButton.addEventListener('click', async function() {
             const newName = taskNameInput.value.trim();
             const newPoints = Number(taskPointsInput.value);
 
@@ -2187,20 +2201,22 @@
               frequency: taskFrequencySelect.value
             };
 
-            saveChecklistToLocalStorage(currentChecklist);
+            await salvarTarefas(currentChecklist);
             renderChecklist();
             console.log('Tarefa atualizada');
           });
 
-          deleteTaskButton.addEventListener('click', function() {
+          deleteTaskButton.addEventListener('click', async function() {
             const confirmed = confirm('Tem certeza que deseja apagar esta tarefa?');
 
             if (!confirmed) {
               return;
             }
 
+            const removedTask = currentChecklist.tasks[index];
             currentChecklist.tasks.splice(index, 1);
-            saveChecklistToLocalStorage(currentChecklist);
+            await salvarTarefas(currentChecklist);
+            await removerTarefaSupabaseEspelho(currentChecklist.code, removedTask.id);
             renderChecklist();
             console.log('Tarefa apagada');
           });
@@ -2871,6 +2887,91 @@
 
     // testarEscritaSupabase();
 
+    // Espelha uma tarefa no Supabase sem trocar a fonte principal do app.
+    async function salvarTarefaSupabaseEspelho(checklistCode, task) {
+      if (!SUPABASE_URL.trim() || !SUPABASE_ANON_KEY.trim()) {
+        return;
+      }
+
+      if (!checklistCode || !task || task.id === undefined || task.id === null) {
+        return;
+      }
+
+      try {
+        const usuario = await obterUsuarioSupabaseLogado();
+
+        if (!usuario || !usuario.id) {
+          console.warn('Tarefa não espelhada no Supabase: usuário não está logado.');
+          return;
+        }
+
+        const payload = {
+          user_id: usuario.id,
+          checklist_code: checklistCode,
+          task_id: task.id,
+          category: getTaskCategory(task),
+          name: task.name || '',
+          points: Number(task.points) || 0,
+          frequency: task.frequency || '',
+          done: task.done === true
+        };
+
+        const result = await supabaseClient
+          .from(SUPABASE_TABLE_TAREFAS)
+          .upsert(payload, { onConflict: 'user_id,checklist_code,task_id' });
+
+        if (result.error) {
+          throw result.error;
+        }
+      } catch (error) {
+        mostrarErroSupabaseNoConsole('Erro ao espelhar tarefa no Supabase', error);
+      }
+    }
+
+    // Espelha todas as tarefas atuais do checklist no Supabase.
+    async function salvarTodasTarefasSupabaseEspelho(checklist) {
+      if (!checklist || !checklist.code || !Array.isArray(checklist.tasks) || checklist.tasks.length === 0) {
+        return;
+      }
+
+      for (const task of checklist.tasks) {
+        await salvarTarefaSupabaseEspelho(checklist.code, task);
+      }
+    }
+
+    // Remove do espelho a tarefa apagada localmente.
+    async function removerTarefaSupabaseEspelho(checklistCode, taskId) {
+      if (!SUPABASE_URL.trim() || !SUPABASE_ANON_KEY.trim()) {
+        return;
+      }
+
+      if (!checklistCode || taskId === undefined || taskId === null) {
+        return;
+      }
+
+      try {
+        const usuario = await obterUsuarioSupabaseLogado();
+
+        if (!usuario || !usuario.id) {
+          console.warn('Tarefa não removida do Supabase: usuário não está logado.');
+          return;
+        }
+
+        const result = await supabaseClient
+          .from(SUPABASE_TABLE_TAREFAS)
+          .delete()
+          .eq('user_id', usuario.id)
+          .eq('checklist_code', checklistCode)
+          .eq('task_id', taskId);
+
+        if (result.error) {
+          throw result.error;
+        }
+      } catch (error) {
+        mostrarErroSupabaseNoConsole('Erro ao remover tarefa do Supabase', error);
+      }
+    }
+
     // Espelha somente o cadastro do checklist no Supabase, sem tarefas ou historico.
     async function salvarChecklistSupabaseEspelho(dadosChecklist) {
       if (!SUPABASE_URL.trim() || !SUPABASE_ANON_KEY.trim()) {
@@ -3132,7 +3233,7 @@
     async function salvarChecklist(checklist) {
       if (MODO_DESENVOLVIMENTO) {
         saveChecklistToLocalStorage(checklist);
-        salvarChecklistSupabaseEspelho(checklist);
+        await salvarChecklistSupabaseEspelho(checklist);
         return checklist;
       }
 
@@ -3187,6 +3288,7 @@
     async function salvarTarefas(checklist) {
       if (MODO_DESENVOLVIMENTO) {
         saveChecklistToLocalStorage(checklist);
+        salvarTodasTarefasSupabaseEspelho(checklist);
         return checklist.tasks;
       }
 
