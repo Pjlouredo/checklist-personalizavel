@@ -126,6 +126,45 @@
       max-width: 420px;
     }
 
+    .checklists-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .checklist-card {
+      display: grid;
+      gap: 8px;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #ffffff;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+    }
+
+    .checklist-card strong {
+      color: #102a43;
+      font-size: 1.05rem;
+    }
+
+    .checklist-code {
+      color: #64748b;
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .empty-state {
+      display: grid;
+      gap: 12px;
+      max-width: 460px;
+      margin-top: 22px;
+      padding: 20px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 10px;
+      background: #f8fafc;
+    }
+
     .login-card {
       display: grid;
       gap: 18px;
@@ -773,6 +812,21 @@
       </div>
     </section>
 
+    <!-- MEUS CHECKLISTS -->
+    <section class="screen" id="myChecklistsScreen">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Meus checklists</h2>
+            <p class="muted">Escolha uma rotina ou crie uma nova.</p>
+          </div>
+          <button class="btn" id="createChecklistFromListButton" type="button">+</button>
+        </div>
+
+        <div id="myChecklistsContent"></div>
+      </div>
+    </section>
+
     <!-- TELA CRIAR CHECKLIST -->
     <section class="screen" id="createScreen">
       <div class="panel">
@@ -1065,6 +1119,7 @@
     // Guarda os nomes das telas em um só lugar para evitar erros de digitação.
     const SCREENS = {
       home: 'home',
+      myChecklists: 'myChecklists',
       create: 'create',
       checklist: 'checklist',
       history: 'history',
@@ -1087,6 +1142,7 @@
 
     // Dados principais que ficam na memória enquanto a pessoa usa a página.
     let usuarioLogado = null;
+    let meusChecklists = [];
     let currentChecklist = null;
     let tasksBeingCreated = [];
     let currentHistory = [];
@@ -1102,6 +1158,9 @@
     const loggedUserEmail = document.getElementById('loggedUserEmail');
     const logoutButton = document.getElementById('logoutButton');
     const homeScreen = document.getElementById('homeScreen');
+    const myChecklistsScreen = document.getElementById('myChecklistsScreen');
+    const myChecklistsContent = document.getElementById('myChecklistsContent');
+    const createChecklistFromListButton = document.getElementById('createChecklistFromListButton');
     const createScreen = document.getElementById('createScreen');
     const checklistScreen = document.getElementById('checklistScreen');
     const historyScreen = document.getElementById('historyScreen');
@@ -1189,6 +1248,7 @@
       loginScreen.classList.add('active');
       appTopbar.classList.add('hidden');
       homeScreen.classList.remove('active');
+      myChecklistsScreen.classList.remove('active');
       createScreen.classList.remove('active');
       checklistScreen.classList.remove('active');
       historyScreen.classList.remove('active');
@@ -1216,18 +1276,20 @@
       loginScreen.classList.remove('active');
       appTopbar.classList.remove('hidden');
       homeScreen.classList.remove('active');
+      myChecklistsScreen.classList.remove('active');
       createScreen.classList.remove('active');
       checklistScreen.classList.remove('active');
       historyScreen.classList.remove('active');
       agreementsScreen.classList.remove('active');
 
       if (screenName === SCREENS.home) homeScreen.classList.add('active');
+      if (screenName === SCREENS.myChecklists) myChecklistsScreen.classList.add('active');
       if (screenName === SCREENS.create) createScreen.classList.add('active');
       if (screenName === SCREENS.checklist) checklistScreen.classList.add('active');
       if (screenName === SCREENS.history) historyScreen.classList.add('active');
       if (screenName === SCREENS.agreements) agreementsScreen.classList.add('active');
 
-      backHomeButton.classList.toggle('hidden', screenName === SCREENS.home);
+      backHomeButton.classList.toggle('hidden', screenName === SCREENS.myChecklists);
       atualizarInfoUsuario();
     }
 
@@ -1256,7 +1318,7 @@
 
         usuarioLogado = result.data.user;
         loginPasswordInput.value = '';
-        showScreen(SCREENS.home);
+        await carregarMeusChecklists();
       } catch (error) {
         loginErrorMessage.textContent = 'Não foi possível conectar ao login. Tente novamente.';
       } finally {
@@ -1288,7 +1350,7 @@
         });
 
         if (usuarioLogado) {
-          showScreen(SCREENS.home);
+          await carregarMeusChecklists();
           return;
         }
 
@@ -1351,6 +1413,117 @@
       });
 
       return groups;
+    }
+
+    async function carregarMeusChecklists() {
+      if (!usuarioLogado || !usuarioLogado.id) {
+        mostrarLogin();
+        return;
+      }
+
+      try {
+        try {
+          meusChecklists = await supabaseRequest(
+            SUPABASE_TABLE_CHECKLISTS + '?user_id=eq.' + encodeURIComponent(usuarioLogado.id) + '&select=*&order=created_at.desc',
+            {}
+          );
+        } catch (error) {
+          meusChecklists = await supabaseRequest(
+            SUPABASE_TABLE_CHECKLISTS + '?user_id=eq.' + encodeURIComponent(usuarioLogado.id) + '&select=*',
+            {}
+          );
+        }
+
+        renderMeusChecklists();
+        showScreen(SCREENS.myChecklists);
+      } catch (error) {
+        meusChecklists = [];
+        myChecklistsContent.innerHTML = '<div class="empty-state"><h2>Não foi possível carregar seus checklists</h2><p class="muted">Tente novamente em instantes.</p></div>';
+        showScreen(SCREENS.myChecklists);
+      }
+    }
+
+    function renderMeusChecklists() {
+      myChecklistsContent.innerHTML = '';
+
+      if (!meusChecklists || meusChecklists.length === 0) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty-state';
+
+        const title = document.createElement('h2');
+        title.textContent = 'Crie seu primeiro checklist';
+
+        const text = document.createElement('p');
+        text.className = 'muted';
+        text.textContent = 'Comece criando a primeira rotina da família.';
+
+        const button = document.createElement('button');
+        button.className = 'btn';
+        button.type = 'button';
+        button.textContent = 'Criar checklist';
+        button.addEventListener('click', startNewChecklist);
+
+        emptyState.appendChild(title);
+        emptyState.appendChild(text);
+        emptyState.appendChild(button);
+        myChecklistsContent.appendChild(emptyState);
+        return;
+      }
+
+      const grid = document.createElement('div');
+      grid.className = 'checklists-grid';
+
+      meusChecklists.forEach(function(checklist) {
+        const card = document.createElement('div');
+        card.className = 'checklist-card';
+
+        const title = document.createElement('strong');
+        title.textContent = checklist.person_name || checklist.checklist_name || 'Checklist sem nome';
+
+        const routine = document.createElement('div');
+        routine.className = 'muted';
+        routine.textContent = checklist.checklist_name ? 'Rotina: ' + checklist.checklist_name : 'Checklist';
+
+        const code = document.createElement('div');
+        code.className = 'checklist-code';
+        code.textContent = 'Código: ' + checklist.code;
+
+        const button = document.createElement('button');
+        button.className = 'btn secondary small';
+        button.type = 'button';
+        button.textContent = 'Abrir';
+        button.addEventListener('click', function() {
+          abrirChecklistDaLista(checklist);
+        });
+
+        card.appendChild(title);
+        card.appendChild(routine);
+        card.appendChild(code);
+        card.appendChild(button);
+        grid.appendChild(card);
+      });
+
+      myChecklistsContent.appendChild(grid);
+    }
+
+    async function abrirChecklistDaLista(checklistSupabase) {
+      const code = checklistSupabase.code;
+      let checklistLocal = loadChecklistFromLocalStorage(code);
+
+      if (!checklistLocal) {
+        checklistLocal = {
+          code: code,
+          personName: checklistSupabase.person_name || '',
+          whatsapp: checklistSupabase.whatsapp || '',
+          checklistName: checklistSupabase.checklist_name || '',
+          familyAgreement: normalizeFamilyAgreement(checklistSupabase.family_agreement),
+          tasks: []
+        };
+
+        saveChecklistToLocalStorage(checklistLocal);
+      }
+
+      await openChecklist(code);
     }
 
     // Retorna o valor positivo ou negativo salvo na tarefa do histórico.
@@ -2474,6 +2647,7 @@
       }
     });
 
+    createChecklistFromListButton.addEventListener('click', startNewChecklist);
     createNewButton.addEventListener('click', startNewChecklist);
     addTaskButton.addEventListener('click', addTask);
     saveChecklistButton.addEventListener('click', saveChecklist);
@@ -2489,7 +2663,7 @@
     viewHistoryButton.addEventListener('click', openHistory);
 
     backHomeButton.addEventListener('click', function() {
-      showScreen(SCREENS.home);
+      carregarMeusChecklists();
     });
 
     backToChecklistButton.addEventListener('click', function() {
