@@ -1949,6 +1949,7 @@
         return;
       }
 
+      checklist = await sincronizarTarefasAoAbrirChecklist(checklist);
       currentChecklist = checklist;
       checklistEditMode = false;
       editChecklistDataButton.textContent = 'Editar checklist';
@@ -2272,10 +2273,8 @@
               return;
             }
 
-            const removedTask = currentChecklist.tasks[index];
             currentChecklist.tasks.splice(index, 1);
             await salvarTarefas(currentChecklist);
-            await removerTarefaSupabaseEspelho(currentChecklist.code, removedTask.id);
             renderChecklist();
             console.log('Tarefa apagada');
           });
@@ -2945,65 +2944,95 @@
 
     // testarEscritaSupabase();
 
-    // Espelha uma tarefa no Supabase sem trocar a fonte principal do app.
-    async function salvarTarefaSupabaseEspelho(checklistCode, task) {
-      if (!SUPABASE_URL.trim() || !SUPABASE_ANON_KEY.trim()) {
+    function garantirTaskIdLocal(task) {
+      if (task.id !== undefined && task.id !== null) {
+        return task.id;
+      }
+
+      if (task.task_id !== undefined && task.task_id !== null) {
+        task.id = task.task_id;
+        return task.id;
+      }
+
+      task.id = Date.now() + Math.floor(Math.random() * 1000);
+      return task.id;
+    }
+
+    function garantirIdsTarefasChecklist(checklist) {
+      if (!checklist || !Array.isArray(checklist.tasks)) {
         return;
       }
 
-      if (!checklistCode || !task || task.id === undefined || task.id === null) {
-        return;
+      checklist.tasks.forEach(function(task) {
+        garantirTaskIdLocal(task);
+      });
+    }
+
+    function mapearTarefaSupabaseParaLocal(row) {
+      return {
+        id: row.task_id,
+        category: row.category || 'Sem categoria',
+        name: row.name || '',
+        points: Number(row.points) || 0,
+        frequency: row.frequency || 'Diária',
+        done: row.done === true
+      };
+    }
+
+    function mapearTarefaLocalParaSupabase(task, checklistCode, userId) {
+      return {
+        user_id: userId,
+        checklist_code: checklistCode,
+        task_id: garantirTaskIdLocal(task),
+        category: getTaskCategory(task),
+        name: task.name || '',
+        points: Number(task.points) || 0,
+        frequency: task.frequency || 'Diária',
+        done: task.done === true
+      };
+    }
+
+    async function carregarTarefasSupabase(checklistCode) {
+      if (!SUPABASE_URL.trim() || !SUPABASE_ANON_KEY.trim()) {
+        return null;
+      }
+
+      if (!checklistCode) {
+        return null;
       }
 
       try {
         const usuario = await obterUsuarioSupabaseLogado();
 
         if (!usuario || !usuario.id) {
-          console.warn('Tarefa não espelhada no Supabase: usuário não está logado.');
-          return;
+          console.warn('Tarefas não carregadas do Supabase: usuário não está logado.');
+          return null;
         }
-
-        const payload = {
-          user_id: usuario.id,
-          checklist_code: checklistCode,
-          task_id: task.id,
-          category: getTaskCategory(task),
-          name: task.name || '',
-          points: Number(task.points) || 0,
-          frequency: task.frequency || '',
-          done: task.done === true
-        };
 
         const result = await supabaseClient
           .from(SUPABASE_TABLE_TAREFAS)
-          .upsert(payload, { onConflict: 'user_id,checklist_code,task_id' });
+          .select('*')
+          .eq('user_id', usuario.id)
+          .eq('checklist_code', checklistCode)
+          .order('task_id', { ascending: true });
 
         if (result.error) {
           throw result.error;
         }
+
+        return (result.data || []).map(mapearTarefaSupabaseParaLocal);
       } catch (error) {
-        mostrarErroSupabaseNoConsole('Erro ao espelhar tarefa no Supabase', error);
+        mostrarErroSupabaseNoConsole('Erro ao carregar tarefas do Supabase', error);
+        return null;
       }
     }
 
-    // Espelha todas as tarefas atuais do checklist no Supabase.
-    async function salvarTodasTarefasSupabaseEspelho(checklist) {
-      if (!checklist || !checklist.code || !Array.isArray(checklist.tasks) || checklist.tasks.length === 0) {
-        return;
-      }
-
-      for (const task of checklist.tasks) {
-        await salvarTarefaSupabaseEspelho(checklist.code, task);
-      }
-    }
-
-    // Remove do espelho a tarefa apagada localmente.
-    async function removerTarefaSupabaseEspelho(checklistCode, taskId) {
+    async function salvarTarefasSupabase(checklistData) {
       if (!SUPABASE_URL.trim() || !SUPABASE_ANON_KEY.trim()) {
         return;
       }
 
-      if (!checklistCode || taskId === undefined || taskId === null) {
+      if (!checklistData || !checklistData.code) {
         return;
       }
 
@@ -3011,23 +3040,60 @@
         const usuario = await obterUsuarioSupabaseLogado();
 
         if (!usuario || !usuario.id) {
-          console.warn('Tarefa não removida do Supabase: usuário não está logado.');
+          console.warn('Tarefas não sincronizadas no Supabase: usuário não está logado.');
           return;
         }
 
-        const result = await supabaseClient
+        const deleteResult = await supabaseClient
           .from(SUPABASE_TABLE_TAREFAS)
           .delete()
           .eq('user_id', usuario.id)
-          .eq('checklist_code', checklistCode)
-          .eq('task_id', taskId);
+          .eq('checklist_code', checklistData.code);
 
-        if (result.error) {
-          throw result.error;
+        if (deleteResult.error) {
+          throw deleteResult.error;
+        }
+
+        if (!Array.isArray(checklistData.tasks) || checklistData.tasks.length === 0) {
+          return;
+        }
+
+        const rows = checklistData.tasks.map(function(task) {
+          return mapearTarefaLocalParaSupabase(task, checklistData.code, usuario.id);
+        });
+
+        const insertResult = await supabaseClient
+          .from(SUPABASE_TABLE_TAREFAS)
+          .insert(rows);
+
+        if (insertResult.error) {
+          throw insertResult.error;
         }
       } catch (error) {
-        mostrarErroSupabaseNoConsole('Erro ao remover tarefa do Supabase', error);
+        mostrarErroSupabaseNoConsole('Erro ao salvar tarefas no Supabase', error);
       }
+    }
+
+    async function sincronizarTarefasAoAbrirChecklist(checklist) {
+      if (!checklist || !checklist.code) {
+        return checklist;
+      }
+
+      const tarefasSupabase = await carregarTarefasSupabase(checklist.code);
+
+      if (Array.isArray(tarefasSupabase) && tarefasSupabase.length > 0) {
+        checklist.tasks = tarefasSupabase;
+        saveChecklistToLocalStorage(checklist);
+        return checklist;
+      }
+
+      if (Array.isArray(tarefasSupabase) && Array.isArray(checklist.tasks) && checklist.tasks.length > 0) {
+        garantirIdsTarefasChecklist(checklist);
+        saveChecklistToLocalStorage(checklist);
+        await salvarTarefasSupabase(checklist);
+      }
+
+      return checklist;
     }
 
     // Espelha somente o cadastro do checklist no Supabase, sem tarefas ou historico.
@@ -3188,31 +3254,6 @@
       };
     }
 
-    // Converte uma tarefa da tela para o formato esperado na tabela tarefas.
-    function taskToSupabaseRow(task, checklistCode) {
-      return {
-        checklist_code: checklistCode,
-        task_id: task.id,
-        category: getTaskCategory(task),
-        name: task.name,
-        points: task.points,
-        frequency: task.frequency,
-        done: task.done
-      };
-    }
-
-    // Converte uma linha da tabela tarefas para o formato usado pela tela.
-    function taskFromSupabaseRow(row) {
-      return {
-        id: row.task_id,
-        category: row.category || 'Sem categoria',
-        name: row.name,
-        points: row.points,
-        frequency: row.frequency,
-        done: row.done
-      };
-    }
-
     // Cria um registro com o progresso do dia atual.
     function createDailyProgressRecord(checklist) {
       const tasks = checklist.tasks.map(function(task) {
@@ -3344,30 +3385,15 @@
 
     // Salva as tarefas do checklist.
     async function salvarTarefas(checklist) {
+      garantirIdsTarefasChecklist(checklist);
+
       if (MODO_DESENVOLVIMENTO) {
         saveChecklistToLocalStorage(checklist);
-        salvarTodasTarefasSupabaseEspelho(checklist);
+        salvarTarefasSupabase(checklist);
         return checklist.tasks;
       }
 
-      await supabaseRequest(
-        SUPABASE_TABLE_TAREFAS + '?checklist_code=eq.' + encodeURIComponent(checklist.code),
-        { method: 'DELETE' }
-      );
-
-      if (checklist.tasks.length === 0) {
-        return [];
-      }
-
-      const taskRows = checklist.tasks.map(function(task) {
-        return taskToSupabaseRow(task, checklist.code);
-      });
-
-      await supabaseRequest(SUPABASE_TABLE_TAREFAS, {
-        method: 'POST',
-        body: taskRows
-      });
-
+      await salvarTarefasSupabase(checklist);
       return checklist.tasks;
     }
 
@@ -3378,12 +3404,8 @@
         return checklist ? checklist.tasks : [];
       }
 
-      const taskRows = await supabaseRequest(
-        SUPABASE_TABLE_TAREFAS + '?checklist_code=eq.' + encodeURIComponent(code) + '&select=*&order=task_id.asc',
-        {}
-      );
-
-      return taskRows.map(taskFromSupabaseRow);
+      const tarefasSupabase = await carregarTarefasSupabase(code);
+      return tarefasSupabase || [];
     }
 
     // Salva o progresso do dia. No mesmo dia, atualiza em vez de duplicar.
