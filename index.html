@@ -379,41 +379,63 @@
       background: #f8fafc;
     }
 
+    .child-mode-panel {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+      padding: 14px 16px;
+      border: 1px solid rgba(15, 118, 110, 0.16);
+      border-radius: 12px;
+      color: #0f766e;
+      background: #ecfdf5;
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
+    }
+
     .category-title {
       display: block;
+      width: 100%;
       margin-top: 0;
       border: 0;
       background: transparent;
       color: #0f766e;
-      font-size: 1rem;
-      font-weight: 800;
-      text-align: left;
+      font-size: 1.3rem;
+      font-weight: 900;
+      line-height: 1.2;
+      text-align: center;
       cursor: pointer;
     }
 
     .category-header {
       display: flex;
-      gap: 10px;
+      gap: 14px;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      margin-top: 18px;
-      padding: 10px 0 6px;
-      border-bottom: 1px solid #e2e8f0;
+      margin-top: 22px;
+      padding: 16px 18px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      border-radius: 12px;
+      background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
     }
 
     .category-summary {
       display: grid;
-      gap: 3px;
+      flex: 1;
+      gap: 6px;
       min-width: 180px;
+      text-align: center;
     }
 
     .category-count {
       display: block;
       color: #64748b;
-      font-size: 0.85rem;
-      font-weight: 700;
+      font-size: 0.9rem;
+      font-weight: 800;
       line-height: 1.2;
+      text-align: center;
     }
 
     .category-actions {
@@ -476,37 +498,48 @@
     .progress-area {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-      margin-bottom: 20px;
+      gap: 16px;
+      margin-bottom: 18px;
+      padding: 16px;
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      border-radius: 14px;
+      background: linear-gradient(135deg, #f8fafc 0%, #ecfeff 55%, #fff7ed 100%);
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.07);
     }
 
     .metric {
-      padding: 16px;
-      border: 1px solid #dbeafe;
-      border-radius: 8px;
-      background: #f8fafc;
+      min-height: 100px;
+      padding: 18px;
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+      text-align: center;
     }
 
     .metric span {
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       color: #64748b;
       font-size: 0.85rem;
-      font-weight: 700;
+      font-weight: 800;
       text-transform: uppercase;
     }
 
     .metric strong {
-      color: #0f172a;
-      font-size: 1.65rem;
+      color: #0f766e;
+      font-size: 2rem;
+      line-height: 1;
     }
 
     .progress-bar {
       overflow: hidden;
-      height: 12px;
-      margin-bottom: 20px;
+      height: 14px;
+      margin: 0 0 22px;
+      border: 1px solid rgba(15, 118, 110, 0.12);
       border-radius: 999px;
       background: #e2e8f0;
+      box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.1);
     }
 
     .progress-fill {
@@ -716,13 +749,19 @@
         flex-direction: column;
       }
 
+      .child-mode-panel {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
       .category-header {
-        align-items: flex-start;
+        align-items: center;
         flex-direction: column;
       }
 
       .category-actions {
         width: 100%;
+        justify-content: center;
       }
     }
   </style>
@@ -900,10 +939,19 @@
             <p class="muted" id="checklistOwner"></p>
           </div>
           <div class="history-actions">
+            <button class="btn secondary" id="activateChildModeButton" type="button">Modo criança</button>
             <button class="btn secondary" id="editChecklistDataButton" type="button">Editar checklist</button>
             <button class="btn secondary" id="familyAgreementsButton" type="button">📝 Combinados da família</button>
             <button class="btn secondary" id="viewHistoryButton" type="button">Ver histórico</button>
             <button class="btn" id="sendWhatsAppButton" type="button">Enviar relatório no WhatsApp</button>
+          </div>
+        </div>
+
+        <div class="child-mode-panel hidden" id="childModeControls">
+          <strong>Modo criança ativo</strong>
+          <div class="history-actions">
+            <button class="btn" id="finishChildModeTasksButton" type="button">Finalizar minhas tarefas</button>
+            <button class="btn secondary" id="exitChildModeButton" type="button">Sair do modo criança</button>
           </div>
         </div>
 
@@ -1139,6 +1187,7 @@
     let tasksBeingCreated = [];
     let currentHistory = [];
     let checklistEditMode = false;
+    let childModeActive = false;
 
     // Atalhos para encontrar os elementos da tela.
     const loginScreen = document.getElementById('loginScreen');
@@ -1183,6 +1232,10 @@
     const donePointsText = document.getElementById('donePointsText');
     const totalPointsText = document.getElementById('totalPointsText');
     const progressFill = document.getElementById('progressFill');
+    const activateChildModeButton = document.getElementById('activateChildModeButton');
+    const childModeControls = document.getElementById('childModeControls');
+    const finishChildModeTasksButton = document.getElementById('finishChildModeTasksButton');
+    const exitChildModeButton = document.getElementById('exitChildModeButton');
     const sendWhatsAppButton = document.getElementById('sendWhatsAppButton');
     const editChecklistDataButton = document.getElementById('editChecklistDataButton');
     const editChecklistDataArea = document.getElementById('editChecklistDataArea');
@@ -1281,6 +1334,12 @@
       if (screenName === SCREENS.agreements) agreementsScreen.classList.add('active');
 
       backHomeButton.classList.toggle('hidden', screenName === SCREENS.myChecklists);
+      if (!childModeActive) {
+        logoutButton.classList.remove('hidden');
+      }
+      if (currentChecklist) {
+        renderModoCriancaControles();
+      }
       atualizarInfoUsuario();
     }
 
@@ -1321,6 +1380,8 @@
       await supabaseClient.auth.signOut();
       usuarioLogado = null;
       currentChecklist = null;
+      childModeActive = false;
+      logoutButton.classList.remove('hidden');
       mostrarLogin();
     }
 
@@ -1489,6 +1550,124 @@
       });
 
       return groups;
+    }
+
+    function getChildModePinKey(code) {
+      return 'childModePin:' + code;
+    }
+
+    function getChildModeActiveKey(code) {
+      return 'childModeActive:' + code;
+    }
+
+    function obterPinModoCrianca() {
+      if (!currentChecklist || !currentChecklist.code) {
+        return '';
+      }
+
+      return localStorage.getItem(getChildModePinKey(currentChecklist.code)) || '';
+    }
+
+    function definirPinModoCriancaSeNecessario() {
+      if (obterPinModoCrianca()) {
+        return true;
+      }
+
+      const newPin = prompt('Crie um PIN de 4 números para sair do Modo criança');
+
+      if (newPin === null) {
+        return false;
+      }
+
+      if (!/^\d{4}$/.test(newPin.trim())) {
+        alert('O PIN deve ter 4 números.');
+        return false;
+      }
+
+      localStorage.setItem(getChildModePinKey(currentChecklist.code), newPin.trim());
+      return true;
+    }
+
+    function renderModoCriancaControles() {
+      const active = childModeActive === true;
+
+      activateChildModeButton.classList.toggle('hidden', active);
+      editChecklistDataButton.classList.toggle('hidden', active);
+      familyAgreementsButton.classList.toggle('hidden', active);
+      viewHistoryButton.classList.toggle('hidden', active);
+      sendWhatsAppButton.classList.toggle('hidden', active);
+      childModeControls.classList.toggle('hidden', !active);
+      logoutButton.classList.toggle('hidden', active);
+
+      if (currentChecklist && checklistScreen.classList.contains('active')) {
+        backHomeButton.classList.toggle('hidden', active);
+      }
+    }
+
+    function carregarEstadoModoCrianca(checklistCode) {
+      childModeActive = localStorage.getItem(getChildModeActiveKey(checklistCode)) === 'true';
+    }
+
+    function ativarModoCrianca() {
+      if (!currentChecklist || !currentChecklist.code) {
+        return;
+      }
+
+      if (!definirPinModoCriancaSeNecessario()) {
+        return;
+      }
+
+      childModeActive = true;
+      checklistEditMode = false;
+      localStorage.setItem(getChildModeActiveKey(currentChecklist.code), 'true');
+      editChecklistDataButton.textContent = 'Editar checklist';
+      editChecklistDataArea.classList.add('hidden');
+      addChecklistTaskHeader.classList.add('hidden');
+      cancelAddCategory();
+      cancelAddChecklistTask();
+      renderChecklist();
+    }
+
+    function desativarModoCriancaComPin() {
+      if (!currentChecklist || !currentChecklist.code) {
+        return;
+      }
+
+      const pin = prompt('Digite o PIN dos pais');
+
+      if (pin === null) {
+        return;
+      }
+
+      if (pin.trim() !== obterPinModoCrianca()) {
+        alert('PIN incorreto.');
+        return;
+      }
+
+      childModeActive = false;
+      localStorage.setItem(getChildModeActiveKey(currentChecklist.code), 'false');
+      renderChecklist();
+    }
+
+    async function finalizarTarefasModoCrianca() {
+      if (!currentChecklist) {
+        return;
+      }
+
+      const phone = (currentChecklist.whatsapp || '').replace(/\D/g, '');
+
+      if (!phone) {
+        alert('Não há WhatsApp cadastrado para este checklist.');
+        return;
+      }
+
+      const confirmed = confirm('Deseja enviar o relatório para o responsável? Depois disso, as tarefas do dia serão reiniciadas.');
+
+      if (!confirmed) {
+        return;
+      }
+
+      await sendWhatsAppReport();
     }
 
     async function carregarMeusChecklists() {
@@ -1951,6 +2130,7 @@
 
       checklist = await sincronizarTarefasAoAbrirChecklist(checklist);
       currentChecklist = checklist;
+      carregarEstadoModoCrianca(currentChecklist.code);
       checklistEditMode = false;
       editChecklistDataButton.textContent = 'Editar checklist';
       editChecklistDataArea.classList.add('hidden');
@@ -2094,13 +2274,13 @@
         });
 
         categoryHeader.appendChild(categorySummary);
-        if (checklistEditMode) {
+        if (checklistEditMode && !childModeActive) {
           categoryHeaderActions.appendChild(addTaskToCategoryButton);
           categoryHeaderActions.appendChild(categoryOptionsButton);
           categoryHeader.appendChild(categoryHeaderActions);
         }
         checklistTaskList.appendChild(categoryHeader);
-        if (checklistEditMode) {
+        if (checklistEditMode && !childModeActive) {
           checklistTaskList.appendChild(categoryOptions);
           checklistTaskList.appendChild(categoryEditor);
         }
@@ -2284,24 +2464,29 @@
           taskCard.appendChild(statusButton);
           taskCard.appendChild(textArea);
           taskCard.appendChild(points);
-          if (checklistEditMode) {
+          if (checklistEditMode && !childModeActive) {
             taskCardActions.appendChild(taskOptionsButton);
             taskCard.appendChild(taskCardActions);
             taskCard.appendChild(taskOptions);
           }
           categoryItems.appendChild(taskCard);
-          if (checklistEditMode) {
+          if (checklistEditMode && !childModeActive) {
             categoryItems.appendChild(taskEditor);
           }
         });
       });
 
       updateProgress();
+      renderModoCriancaControles();
     }
 
     // Abre ou fecha a area simples para editar os dados principais.
     function toggleChecklistDataEditor() {
       if (!currentChecklist) {
+        return;
+      }
+
+      if (childModeActive) {
         return;
       }
 
@@ -2786,6 +2971,9 @@
     createNewButton.addEventListener('click', startNewChecklist);
     addTaskButton.addEventListener('click', addTask);
     saveChecklistButton.addEventListener('click', saveChecklist);
+    activateChildModeButton.addEventListener('click', ativarModoCrianca);
+    finishChildModeTasksButton.addEventListener('click', finalizarTarefasModoCrianca);
+    exitChildModeButton.addEventListener('click', desativarModoCriancaComPin);
     sendWhatsAppButton.addEventListener('click', sendWhatsAppReport);
     editChecklistDataButton.addEventListener('click', toggleChecklistDataEditor);
     saveChecklistDataButton.addEventListener('click', saveChecklistDataChanges);
