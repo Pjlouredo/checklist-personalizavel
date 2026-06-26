@@ -66,6 +66,129 @@
       font-weight: 700;
     }
 
+    .notification-bell {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      border-radius: 14px;
+      background: #ccfbf1;
+      color: #0f766e;
+      font-size: 1.2rem;
+      font-weight: 900;
+      box-shadow: 0 10px 24px rgba(15, 118, 110, 0.16);
+    }
+
+    .notification-bell:hover {
+      background: #99f6e4;
+      transform: translateY(-1px);
+    }
+
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: #f97316;
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 900;
+      line-height: 20px;
+      text-align: center;
+      box-shadow: 0 6px 14px rgba(249, 115, 22, 0.28);
+    }
+
+    .notification-panel {
+      position: fixed;
+      top: 76px;
+      right: 16px;
+      z-index: 50;
+      display: grid;
+      gap: 12px;
+      width: min(360px, calc(100vw - 32px));
+      max-height: 70vh;
+      overflow: auto;
+      padding: 14px;
+      border: 1px solid rgba(15, 118, 110, 0.18);
+      border-radius: 18px;
+      background: #ffffff;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+    }
+
+    .notification-panel-title {
+      display: grid;
+      gap: 4px;
+      color: #102a43;
+      font-weight: 900;
+    }
+
+    .notification-panel-title span {
+      color: #64748b;
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .notification-empty {
+      padding: 12px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 12px;
+      color: #64748b;
+      background: #f8fafc;
+      font-weight: 700;
+    }
+
+    .notification-item {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid #dbeafe;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #f8fafc, #ecfeff);
+    }
+
+    .notification-item-title {
+      color: #102a43;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .notification-item-meta {
+      color: #64748b;
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .notification-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .notification-action-approve,
+    .notification-action-reject {
+      min-height: 34px;
+      padding: 7px 10px;
+      border-radius: 10px;
+      font-size: 0.86rem;
+      font-weight: 900;
+    }
+
+    .notification-action-approve {
+      color: #0f766e;
+      background: #ccfbf1;
+    }
+
+    .notification-action-reject {
+      color: #991b1b;
+      background: #fee2e2;
+    }
+
     .brand-mark {
       display: grid;
       width: 42px;
@@ -897,6 +1020,110 @@
       text-transform: uppercase;
     }
 
+    .extra-mission-panel {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 18px;
+      padding: 18px;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 16px;
+      background:
+        radial-gradient(circle at top right, rgba(250, 204, 21, 0.22), transparent 34%),
+        linear-gradient(135deg, #eff6ff 0%, #ffffff 52%, #ecfdf5 100%);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    .extra-mission-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .extra-mission-title {
+      color: #1d4ed8;
+      font-size: 1.2rem;
+      font-weight: 900;
+    }
+
+    .extra-mission-text {
+      color: #526173;
+      line-height: 1.5;
+    }
+
+    .extra-mission-form {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.86);
+    }
+
+    .extra-mission-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .extra-mission-item,
+    .history-extra-mission-card {
+      display: grid;
+      gap: 7px;
+      padding: 12px;
+      border: 1px solid rgba(59, 130, 246, 0.14);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+    }
+
+    .extra-mission-status {
+      width: fit-content;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 900;
+    }
+
+    .extra-mission-status.pending {
+      color: #92400e;
+      background: #fef3c7;
+    }
+
+    .extra-mission-status.approved {
+      color: #166534;
+      background: #dcfce7;
+    }
+
+    .extra-mission-status.rejected {
+      color: #991b1b;
+      background: #fee2e2;
+    }
+
+    .extra-mission-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .proactivity-settings-panel {
+      padding: 20px;
+      border: 1px solid rgba(59, 130, 246, 0.16);
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ffffff 0%, #eff6ff 68%, #ecfdf5 100%);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+    }
+
+    .history-extra-missions {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 12px;
+      border: 1px solid rgba(59, 130, 246, 0.12);
+      border-radius: 12px;
+      background: #eff6ff;
+    }
+
     .category-title {
       display: block;
       width: 100%;
@@ -1394,8 +1621,13 @@
       </div>
       <div class="auth-info">
         <span id="loggedUserEmail"></span>
+        <button class="notification-bell hidden" id="notificationBellButton" type="button" aria-label="Notificações">
+          🔔
+          <span class="notification-badge hidden" id="notificationBadge">0</span>
+        </button>
         <button class="btn-ghost" id="logoutButton" type="button">Sair</button>
       </div>
+      <div class="notification-panel hidden" id="notificationPanel"></div>
       <button class="btn secondary small hidden" id="backHomeButton" type="button">Voltar ao início</button>
     </header>
 
@@ -1570,6 +1802,7 @@
         </div>
 
         <div class="motivation-banner" id="motivationBanner"></div>
+        <div class="extra-mission-panel hidden" id="extraMissionPanel"></div>
 
         <div class="progress-area">
           <div class="metric">
@@ -1770,6 +2003,31 @@
           </div>
         </div>
 
+        <div class="agreements-section proactivity-settings-panel">
+          <div>
+            <h3 class="agreements-section-title">🌟 Bônus de Proatividade</h3>
+            <p class="muted">Defina como reconhecer atitudes que a criança fez sem precisar pedir.</p>
+          </div>
+
+          <div class="form-grid">
+            <label>
+              Bônus por missão reconhecida
+              <input id="proactivityBonusInput" type="number" min="1" value="1">
+              <span class="muted">Aura Coin</span>
+            </label>
+
+            <label>
+              Limite de registros por dia
+              <input id="proactivityDailyLimitInput" type="number" min="1" value="3">
+              <span class="muted">missões extras</span>
+            </label>
+          </div>
+
+          <div class="rewards-editor-actions">
+            <button class="btn" id="saveProactivitySettingsButton" type="button">Salvar bônus de proatividade</button>
+          </div>
+        </div>
+
         <div class="agreements-section rewards-panel">
           <div>
             <h3 class="agreements-section-title">🎁 Recompensas da família</h3>
@@ -1827,6 +2085,7 @@
     let checklistEditMode = false;
     let childModeActive = false;
     let lastCompletedTaskAnimationId = null;
+    let notificationRenderVersion = 0;
 
     // Atalhos para encontrar os elementos da tela.
     const loginScreen = document.getElementById('loginScreen');
@@ -1836,6 +2095,9 @@
     const loginButton = document.getElementById('loginButton');
     const loginErrorMessage = document.getElementById('loginErrorMessage');
     const loggedUserEmail = document.getElementById('loggedUserEmail');
+    const notificationBellButton = document.getElementById('notificationBellButton');
+    const notificationBadge = document.getElementById('notificationBadge');
+    const notificationPanel = document.getElementById('notificationPanel');
     const logoutButton = document.getElementById('logoutButton');
     const homeScreen = document.getElementById('homeScreen');
     const myChecklistsScreen = document.getElementById('myChecklistsScreen');
@@ -1867,6 +2129,7 @@
     const checklistTitle = document.getElementById('checklistTitle');
     const checklistOwner = document.getElementById('checklistOwner');
     const motivationBanner = document.getElementById('motivationBanner');
+    const extraMissionPanel = document.getElementById('extraMissionPanel');
     const checklistTaskList = document.getElementById('checklistTaskList');
     const progressText = document.getElementById('progressText');
     const donePointsText = document.getElementById('donePointsText');
@@ -1920,6 +2183,9 @@
     const consequencesEditorList = document.getElementById('consequencesEditorList');
     const addConsequenceButton = document.getElementById('addConsequenceButton');
     const saveConsequencesButton = document.getElementById('saveConsequencesButton');
+    const proactivityBonusInput = document.getElementById('proactivityBonusInput');
+    const proactivityDailyLimitInput = document.getElementById('proactivityDailyLimitInput');
+    const saveProactivitySettingsButton = document.getElementById('saveProactivitySettingsButton');
     const rewardsEditorList = document.getElementById('rewardsEditorList');
     const addRewardButton = document.getElementById('addRewardButton');
     const saveRewardsButton = document.getElementById('saveRewardsButton');
@@ -1936,6 +2202,226 @@
       loggedUserEmail.textContent = usuarioLogado ? usuarioLogado.email : '';
     }
 
+    function hideNotificationPanel() {
+      notificationPanel.classList.add('hidden');
+    }
+
+    function getExtraMissionStatusClass(status) {
+      if (status === 'approved' || status === 'aprovada' || status === 'reconhecida') {
+        return 'approved';
+      }
+
+      if (status === 'rejected' || status === 'recusada') {
+        return 'rejected';
+      }
+
+      return 'pending';
+    }
+
+    function isPendingExtraMission(mission) {
+      if (!mission) {
+        return false;
+      }
+
+      if (mission.tipo && mission.tipo !== 'missao_extra') {
+        return false;
+      }
+
+      const status = mission.status || 'pending';
+      return status === 'pending' || status === 'pendente';
+    }
+
+    function isApprovedExtraMission(mission) {
+      if (!mission) {
+        return false;
+      }
+
+      return mission.status === 'approved' || mission.status === 'aprovada' || mission.status === 'reconhecida';
+    }
+
+    function getExtraMissionTitle(mission) {
+      return mission ? (mission.title || mission.titulo || mission.descricao || mission.description || '') : '';
+    }
+
+    async function getPendingExtraMissions() {
+      if (!currentChecklist || !currentChecklist.code) {
+        return [];
+      }
+
+      const history = await buscarHistorico(currentChecklist.code);
+      const pendingMissions = [];
+      const addedMissionKeys = new Set();
+      const userId = usuarioLogado && usuarioLogado.id ? usuarioLogado.id : null;
+
+      function addPendingMission(recordDate, mission, source) {
+        const missionChecklistCode = mission.checklist_code || mission.checklistCode || mission.code || currentChecklist.code;
+        const missionUserId = mission.user_id || mission.userId || null;
+        const missionTitle = getExtraMissionTitle(mission);
+        const missionId = mission.id;
+
+        if (
+          !isPendingExtraMission(mission) ||
+          missionChecklistCode !== currentChecklist.code ||
+          (userId && missionUserId && missionUserId !== userId) ||
+          !missionId ||
+          !missionTitle
+        ) {
+          return;
+        }
+
+        const missionKey = recordDate + ':' + missionId;
+
+        if (addedMissionKeys.has(missionKey)) {
+          return;
+        }
+
+        addedMissionKeys.add(missionKey);
+        pendingMissions.push({
+          recordDate: recordDate,
+          missionId: missionId,
+          title: missionTitle,
+          createdAt: mission.createdAt || mission.criadoEm || '',
+          bonusAuraCoins: mission.bonusAuraCoins || 1,
+          source: source
+        });
+      }
+
+      loadAllExtraMissionsDrafts(currentChecklist.code).forEach(function(draftRecord) {
+        draftRecord.missions.forEach(function(mission) {
+          addPendingMission(draftRecord.date, mission, 'draft');
+        });
+      });
+
+      history.forEach(function(record) {
+        if (!Array.isArray(record.extraMissions)) {
+          return;
+        }
+
+        record.extraMissions.forEach(function(mission) {
+          addPendingMission(record.date, mission, 'history');
+        });
+      });
+
+      return pendingMissions;
+    }
+
+    async function renderNotificationBell() {
+      const renderVersion = ++notificationRenderVersion;
+
+      if (
+        !currentChecklist ||
+        childModeActive === true ||
+        loginScreen.classList.contains('active') ||
+        appTopbar.classList.contains('hidden')
+      ) {
+        notificationBellButton.classList.add('hidden');
+        notificationBadge.classList.add('hidden');
+        hideNotificationPanel();
+        notificationPanel.textContent = '';
+        return;
+      }
+
+      notificationBellButton.classList.remove('hidden');
+
+      let pendingMissions = [];
+
+      try {
+        pendingMissions = await getPendingExtraMissions();
+      } catch (error) {
+        console.warn('NÃ£o foi possÃ­vel carregar notificaÃ§Ãµes:', error);
+      }
+
+      if (renderVersion !== notificationRenderVersion) {
+        return;
+      }
+
+      notificationPanel.textContent = '';
+
+      if (pendingMissions.length > 0) {
+        notificationBadge.textContent = pendingMissions.length;
+        notificationBadge.classList.remove('hidden');
+      } else {
+        notificationBadge.textContent = '0';
+        notificationBadge.classList.add('hidden');
+      }
+
+      const title = document.createElement('div');
+      title.className = 'notification-panel-title';
+      title.textContent = '🔔 Notificações';
+
+      const subtitle = document.createElement('span');
+      subtitle.textContent = 'Missões extras aguardando reconhecimento';
+      title.appendChild(subtitle);
+      notificationPanel.appendChild(title);
+
+      if (pendingMissions.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'notification-empty';
+        empty.textContent = 'Nenhuma notificação pendente.';
+        notificationPanel.appendChild(empty);
+        return;
+      }
+
+      pendingMissions.forEach(function(mission) {
+        const item = document.createElement('div');
+        item.className = 'notification-item';
+
+        const kind = document.createElement('div');
+        kind.className = 'notification-item-meta';
+        kind.textContent = '🚀 Fiz algo a mais';
+
+        const missionTitle = document.createElement('div');
+        missionTitle.className = 'notification-item-title';
+        missionTitle.textContent = '"' + getExtraMissionTitle(mission) + '"';
+
+        const date = document.createElement('div');
+        date.className = 'notification-item-meta';
+        date.textContent = 'Data: ' + mission.recordDate;
+
+        const bonus = document.createElement('div');
+        bonus.className = 'notification-item-meta';
+        bonus.textContent = 'Bônus: +' + formatAuraCoinsLabel(Number(mission.bonusAuraCoins) || 1);
+
+        const actions = document.createElement('div');
+        actions.className = 'notification-actions';
+
+        const approveButton = document.createElement('button');
+        approveButton.className = 'notification-action-approve';
+        approveButton.type = 'button';
+        approveButton.textContent = 'Reconhecer';
+        approveButton.addEventListener('click', async function() {
+          await approveExtraMission(mission.recordDate, mission.missionId);
+          renderNotificationBell();
+          renderMotivationBanner();
+          if (historyScreen.classList.contains('active')) {
+            openHistory();
+          }
+        });
+
+        const rejectButton = document.createElement('button');
+        rejectButton.className = 'notification-action-reject';
+        rejectButton.type = 'button';
+        rejectButton.textContent = 'Recusar';
+        rejectButton.addEventListener('click', async function() {
+          await rejectExtraMission(mission.recordDate, mission.missionId);
+          renderNotificationBell();
+          renderMotivationBanner();
+          if (historyScreen.classList.contains('active')) {
+            openHistory();
+          }
+        });
+
+        actions.appendChild(approveButton);
+        actions.appendChild(rejectButton);
+        item.appendChild(kind);
+        item.appendChild(missionTitle);
+        item.appendChild(date);
+        item.appendChild(bonus);
+        item.appendChild(actions);
+        notificationPanel.appendChild(item);
+      });
+    }
+
     function mostrarLogin(message) {
       loginScreen.classList.add('active');
       appTopbar.classList.add('hidden');
@@ -1946,6 +2432,8 @@
       historyScreen.classList.remove('active');
       agreementsScreen.classList.remove('active');
       backHomeButton.classList.add('hidden');
+      notificationBellButton.classList.add('hidden');
+      hideNotificationPanel();
       loginErrorMessage.textContent = message || '';
       atualizarInfoUsuario();
     }
@@ -1982,6 +2470,7 @@
       if (screenName === SCREENS.agreements) agreementsScreen.classList.add('active');
 
       backHomeButton.classList.toggle('hidden', screenName === SCREENS.myChecklists);
+      hideNotificationPanel();
       if (!childModeActive) {
         logoutButton.classList.remove('hidden');
       }
@@ -1989,6 +2478,7 @@
         renderModoCriancaControles();
       }
       atualizarInfoUsuario();
+      renderNotificationBell();
     }
 
     async function entrarComEmailSenha() {
@@ -2227,6 +2717,113 @@
       return 'childModeActive:' + code;
     }
 
+    function getDefaultProactivitySettings() {
+      return {
+        bonusAuraCoins: 1,
+        dailyLimit: 3
+      };
+    }
+
+    function ensureProactivitySettings() {
+      if (!currentChecklist) {
+        return getDefaultProactivitySettings();
+      }
+
+      if (!currentChecklist.proactivitySettings) {
+        currentChecklist.proactivitySettings = getDefaultProactivitySettings();
+      }
+
+      const bonusAuraCoins = Number(currentChecklist.proactivitySettings.bonusAuraCoins);
+      const dailyLimit = Number(currentChecklist.proactivitySettings.dailyLimit);
+
+      currentChecklist.proactivitySettings.bonusAuraCoins = bonusAuraCoins > 0 ? bonusAuraCoins : 1;
+      currentChecklist.proactivitySettings.dailyLimit = dailyLimit > 0 ? dailyLimit : 3;
+
+      return currentChecklist.proactivitySettings;
+    }
+
+    function getExtraMissionsStorageKey(code, date) {
+      return 'checklist-extra-missions-' + code + '-' + date;
+    }
+
+    function getExtraMissionsStoragePrefix(code) {
+      return 'checklist-extra-missions-' + code + '-';
+    }
+
+    function loadExtraMissionsDraft(code, date) {
+      const savedData = localStorage.getItem(getExtraMissionsStorageKey(code, date));
+      return savedData ? JSON.parse(savedData) : [];
+    }
+
+    function loadAllExtraMissionsDrafts(code) {
+      const prefix = getExtraMissionsStoragePrefix(code);
+      const draftRecords = [];
+
+      for (let index = 0; index < localStorage.length; index += 1) {
+        const key = localStorage.key(index);
+
+        if (!key || !key.startsWith(prefix)) {
+          continue;
+        }
+
+        const date = key.slice(prefix.length);
+        const missions = loadExtraMissionsDraft(code, date);
+
+        if (Array.isArray(missions) && missions.length > 0) {
+          draftRecords.push({
+            date: date,
+            missions: missions
+          });
+        }
+      }
+
+      return draftRecords;
+    }
+
+    function saveExtraMissionsDraft(code, date, missions) {
+      localStorage.setItem(getExtraMissionsStorageKey(code, date), JSON.stringify(missions));
+    }
+
+    function clearExtraMissionsDraft(code, date) {
+      localStorage.removeItem(getExtraMissionsStorageKey(code, date));
+    }
+
+    function getExtraMissionStatusLabel(status) {
+      if (status === 'approved' || status === 'aprovada' || status === 'reconhecida') {
+        return 'Reconhecida';
+      }
+
+      if (status === 'rejected' || status === 'recusada') {
+        return 'Não reconhecida';
+      }
+
+      return 'Aguardando reconhecimento do responsável';
+    }
+
+    function updateExtraMissionDraftStatus(recordDate, missionId, status) {
+      if (!currentChecklist || !currentChecklist.code) {
+        return false;
+      }
+
+      const missions = loadExtraMissionsDraft(currentChecklist.code, recordDate);
+      const mission = missions.find(function(item) {
+        return String(item.id) === String(missionId);
+      });
+
+      if (!mission) {
+        return false;
+      }
+
+      mission.status = status;
+
+      if (status === 'approved' || status === 'aprovada' || status === 'reconhecida') {
+        mission.bonusAuraCoins = Number(mission.bonusAuraCoins) || 1;
+      }
+
+      saveExtraMissionsDraft(currentChecklist.code, recordDate, missions);
+      return true;
+    }
+
     function obterPinModoCrianca() {
       if (!currentChecklist || !currentChecklist.code) {
         return '';
@@ -2298,6 +2895,14 @@
       if (currentChecklist && checklistScreen.classList.contains('active')) {
         backHomeButton.classList.toggle('hidden', active);
       }
+
+      if (active) {
+        notificationBellButton.classList.add('hidden');
+        hideNotificationPanel();
+        return;
+      }
+
+      renderNotificationBell();
     }
 
     function carregarEstadoModoCrianca(checklistCode) {
@@ -2364,6 +2969,175 @@
       }
 
       await sendWhatsAppReport();
+    }
+
+    function renderExtraMissionPanel() {
+      extraMissionPanel.textContent = '';
+
+      if (!currentChecklist || childModeActive !== true) {
+        extraMissionPanel.classList.add('hidden');
+        return;
+      }
+
+      extraMissionPanel.classList.remove('hidden');
+
+      const settings = ensureProactivitySettings();
+      const today = getTodayDate();
+      const missions = loadExtraMissionsDraft(currentChecklist.code, today);
+      const usedCount = missions.length;
+      const limit = Number(settings.dailyLimit) || 3;
+      const bonus = Number(settings.bonusAuraCoins) || 1;
+
+      const header = document.createElement('div');
+      header.className = 'extra-mission-header';
+
+      const intro = document.createElement('div');
+
+      const title = document.createElement('div');
+      title.className = 'extra-mission-title';
+      title.textContent = '🚀 Fiz algo a mais';
+
+      const text = document.createElement('p');
+      text.className = 'extra-mission-text';
+      text.textContent = 'Fez alguma coisa boa sem ninguém pedir? Registre aqui. O responsável vai ver depois e pode reconhecer com um bônus.';
+
+      const meta = document.createElement('div');
+      meta.className = 'task-meta';
+      meta.textContent = 'Se o responsável reconhecer: +' + formatAuraCoinsLabel(bonus) + ' • Registros de hoje: ' + usedCount + '/' + limit;
+
+      intro.appendChild(title);
+      intro.appendChild(text);
+      intro.appendChild(meta);
+
+      const addButton = document.createElement('button');
+      addButton.className = 'btn secondary small';
+      addButton.type = 'button';
+      addButton.textContent = '+ Registrar missão extra';
+
+      header.appendChild(intro);
+      header.appendChild(addButton);
+      extraMissionPanel.appendChild(header);
+
+      const form = document.createElement('div');
+      form.className = 'extra-mission-form hidden';
+
+      const label = document.createElement('label');
+      label.textContent = 'O que você fez?';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Ex: Guardei os brinquedos do meu irmão';
+
+      const actions = document.createElement('div');
+      actions.className = 'extra-mission-actions';
+
+      const saveButton = document.createElement('button');
+      saveButton.className = 'btn small';
+      saveButton.type = 'button';
+      saveButton.textContent = 'Registrar';
+
+      const cancelButton = document.createElement('button');
+      cancelButton.className = 'btn-ghost';
+      cancelButton.type = 'button';
+      cancelButton.textContent = 'Cancelar';
+
+      label.appendChild(input);
+      actions.appendChild(saveButton);
+      actions.appendChild(cancelButton);
+      form.appendChild(label);
+      form.appendChild(actions);
+      extraMissionPanel.appendChild(form);
+
+      addButton.addEventListener('click', function() {
+        form.classList.remove('hidden');
+        input.focus();
+      });
+
+      cancelButton.addEventListener('click', function() {
+        form.classList.add('hidden');
+        input.value = '';
+      });
+
+      saveButton.addEventListener('click', function() {
+        addExtraMission(input.value);
+      });
+
+      if (usedCount >= limit) {
+        addButton.disabled = true;
+        addButton.classList.add('secondary');
+        const limitMessage = document.createElement('div');
+        limitMessage.className = 'task-meta';
+        limitMessage.textContent = 'Você já registrou suas missões extras de hoje. Amanhã tem mais!';
+        extraMissionPanel.appendChild(limitMessage);
+      }
+
+      if (missions.length > 0) {
+        const list = document.createElement('div');
+        list.className = 'extra-mission-list';
+
+        missions.forEach(function(mission) {
+          const item = document.createElement('div');
+          item.className = 'extra-mission-item';
+
+          const missionTitle = document.createElement('div');
+          missionTitle.className = 'task-title';
+          missionTitle.textContent = '🌟 ' + getExtraMissionTitle(mission);
+
+          const status = document.createElement('div');
+          status.className = 'extra-mission-status ' + getExtraMissionStatusClass(mission.status);
+          status.textContent = 'Status: ' + getExtraMissionStatusLabel(mission.status);
+
+          item.appendChild(missionTitle);
+          item.appendChild(status);
+          list.appendChild(item);
+        });
+
+        extraMissionPanel.appendChild(list);
+      }
+    }
+
+    function addExtraMission(title) {
+      if (!currentChecklist || !currentChecklist.code) {
+        return;
+      }
+
+      const cleanTitle = title.trim();
+
+      if (!cleanTitle) {
+        alert('Conte o que você fez.');
+        return;
+      }
+
+      const settings = ensureProactivitySettings();
+      const today = getTodayDate();
+      const missions = loadExtraMissionsDraft(currentChecklist.code, today);
+      const limit = Number(settings.dailyLimit) || 3;
+
+      if (missions.length >= limit) {
+        alert('Você já registrou suas missões extras de hoje.');
+        return;
+      }
+
+      missions.push({
+        id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+        tipo: 'missao_extra',
+        origem: 'modo_crianca',
+        checklist_code: currentChecklist.code,
+        code: currentChecklist.code,
+        user_id: usuarioLogado && usuarioLogado.id ? usuarioLogado.id : null,
+        title: cleanTitle,
+        titulo: cleanTitle,
+        descricao: cleanTitle,
+        status: 'pendente',
+        createdDate: today,
+        bonusAuraCoins: Number(settings.bonusAuraCoins) || 1,
+        createdAt: new Date().toISOString()
+      });
+
+      saveExtraMissionsDraft(currentChecklist.code, today, missions);
+      renderExtraMissionPanel();
+      renderNotificationBell();
+      alert('Missão extra registrada!');
     }
 
     async function carregarMeusChecklists() {
@@ -2682,7 +3456,17 @@
         return Math.max(0, record.dailyAuraCoins);
       }
 
-      return Math.max(0, getRecordCompletedCount(record));
+      const proactivityBonusAuraCoins = Array.isArray(record.extraMissions)
+        ? record.extraMissions.reduce(function(sum, mission) {
+          if (isApprovedExtraMission(mission)) {
+            return sum + (Number(mission.bonusAuraCoins) || 1);
+          }
+
+          return sum;
+        }, 0)
+        : 0;
+
+      return Math.max(0, getRecordCompletedCount(record) + proactivityBonusAuraCoins);
     }
 
     // Trata checklists antigos que salvaram o texto do placeholder como valor real.
@@ -2900,6 +3684,7 @@
       cancelAddChecklistTask();
       renderChecklist();
       showScreen(SCREENS.checklist);
+      renderNotificationBell();
     }
 
     function createMotivationStatCard(labelText, valueText) {
@@ -3438,7 +4223,9 @@
 
       updateProgress();
       renderMotivationBanner();
+      renderExtraMissionPanel();
       renderModoCriancaControles();
+      renderNotificationBell();
     }
 
     // Abre ou fecha a area simples para editar os dados principais.
@@ -3705,6 +4492,12 @@
         return group.name + '\n' + lines;
       }).join('\n\n');
 
+      const extraMissionLines = Array.isArray(todayHistory.extraMissions) && todayHistory.extraMissions.length > 0
+        ? '\n\n🌟 Missões extras registradas:\n' + todayHistory.extraMissions.map(function(mission) {
+          return '- ' + getExtraMissionTitle(mission) + ' (aguardando reconhecimento, bônus sugerido: +' + formatAuraCoinsLabel(Number(mission.bonusAuraCoins) || 1) + ')';
+        }).join('\n')
+        : '';
+
       const message =
         'Relatório do checklist: ' + currentChecklist.checklistName + '\n' +
         'Pessoa: ' + currentChecklist.personName + '\n' +
@@ -3717,13 +4510,16 @@
         'Saldo de pontos do dia: ' + getRecordBalance(todayHistory) + '\n' +
         'Aura Coins acumuladas: ' + todayHistory.auraCoins + '\n' +
         'Combinado da família: ' + getRecordFamilyAgreement(todayHistory) + '\n\n' +
-        taskLines;
+        taskLines +
+        extraMissionLines;
 
       const phone = currentChecklist.whatsapp.replace(/\D/g, '');
       const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(message);
       window.open(url, '_blank');
 
+      clearExtraMissionsDraft(currentChecklist.code, todayHistory.date);
       await resetDailyTasks();
+      renderNotificationBell();
     }
 
     // Depois do relatório, desmarca as tarefas sem apagar os dados do checklist.
@@ -3964,6 +4760,34 @@
       }
     }
 
+    async function saveProactivitySettings() {
+      const bonusAuraCoins = Number(proactivityBonusInput.value);
+      const dailyLimit = Number(proactivityDailyLimitInput.value);
+
+      if (!bonusAuraCoins || bonusAuraCoins < 1) {
+        alert('Informe um bônus maior que zero.');
+        return;
+      }
+
+      if (!dailyLimit || dailyLimit < 1) {
+        alert('Informe um limite diário maior que zero.');
+        return;
+      }
+
+      currentChecklist.proactivitySettings = {
+        bonusAuraCoins: bonusAuraCoins,
+        dailyLimit: dailyLimit
+      };
+
+      try {
+        await salvarChecklist(currentChecklist);
+        renderExtraMissionPanel();
+        alert('Bônus de proatividade salvo!');
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
     function readRewardsEditorValues(shouldValidate) {
       const cards = Array.from(rewardsEditorList.querySelectorAll('.reward-editor-card'));
 
@@ -4094,6 +4918,9 @@
       familyAgreementInput.value = getFamilyAgreement(currentChecklist);
       ensureChecklistConsequences();
       renderConsequencesEditor();
+      const proactivitySettings = ensureProactivitySettings();
+      proactivityBonusInput.value = proactivitySettings.bonusAuraCoins;
+      proactivityDailyLimitInput.value = proactivitySettings.dailyLimit;
       ensureChecklistRewards();
       renderRewardsEditor();
       showScreen(SCREENS.agreements);
@@ -4138,7 +4965,17 @@
       }, 0);
 
       const balance = gains - losses;
-      const dailyAuraCoins = completedCount;
+      const proactivityBonusAuraCoins = Array.isArray(record.extraMissions)
+        ? record.extraMissions.reduce(function(sum, mission) {
+          if (isApprovedExtraMission(mission)) {
+            return sum + (Number(mission.bonusAuraCoins) || 1);
+          }
+
+          return sum;
+        }, 0)
+        : 0;
+
+      const dailyAuraCoins = completedCount + proactivityBonusAuraCoins;
 
       return {
         ...record,
@@ -4148,6 +4985,7 @@
         losses: losses,
         balance: balance,
         dayPoints: balance,
+        proactivityBonusAuraCoins: proactivityBonusAuraCoins,
         dailyAuraCoins: dailyAuraCoins,
         earnedAuraCoins: dailyAuraCoins,
         penaltyApplied: true
@@ -4187,6 +5025,119 @@
       renderizarHistorico(currentHistory);
       renderMotivationBanner();
       alert('Histórico corrigido!');
+    }
+
+    async function approveExtraMission(recordDate, missionId) {
+      const confirmed = confirm('Reconhecer esta missão extra e adicionar o bônus de proatividade?');
+
+      if (!confirmed) {
+        return;
+      }
+
+      if (!MODO_DESENVOLVIMENTO) {
+        alert('Aprovação de missão extra no Supabase ainda não implementada.');
+        return;
+      }
+
+      const history = await buscarHistorico(currentChecklist.code);
+      const record = history.find(function(item) {
+        return item.date === recordDate;
+      });
+
+      if ((!record || !Array.isArray(record.extraMissions)) && updateExtraMissionDraftStatus(recordDate, missionId, 'approved')) {
+        renderExtraMissionPanel();
+        renderNotificationBell();
+        alert('Bonus de proatividade reconhecido!');
+        return;
+      }
+
+      if (!record || !Array.isArray(record.extraMissions)) {
+        alert('Missão extra não encontrada.');
+        return;
+      }
+
+      const mission = record.extraMissions.find(function(item) {
+        return String(item.id) === String(missionId);
+      });
+
+      if (!mission && updateExtraMissionDraftStatus(recordDate, missionId, 'approved')) {
+        renderExtraMissionPanel();
+        renderNotificationBell();
+        alert('Bonus de proatividade reconhecido!');
+        return;
+      }
+
+      if (!mission) {
+        alert('Missão extra não encontrada.');
+        return;
+      }
+
+      mission.status = 'approved';
+      mission.bonusAuraCoins = Number(mission.bonusAuraCoins) || 1;
+
+      const updatedHistory = recalculateAuraCoins(history);
+      saveHistoryToLocalStorage(currentChecklist.code, updatedHistory);
+      currentHistory = updatedHistory;
+      renderizarHistorico(currentHistory);
+      renderMotivationBanner();
+      renderNotificationBell();
+      alert('Bônus de proatividade reconhecido!');
+    }
+
+    async function rejectExtraMission(recordDate, missionId) {
+      const confirmed = confirm('Recusar esta missão extra?');
+
+      if (!confirmed) {
+        return;
+      }
+
+      if (!MODO_DESENVOLVIMENTO) {
+        alert('Aprovação de missão extra no Supabase ainda não implementada.');
+        return;
+      }
+
+      const history = await buscarHistorico(currentChecklist.code);
+      const record = history.find(function(item) {
+        return item.date === recordDate;
+      });
+
+      if ((!record || !Array.isArray(record.extraMissions)) && updateExtraMissionDraftStatus(recordDate, missionId, 'rejected')) {
+        renderExtraMissionPanel();
+        renderNotificationBell();
+        alert('Missao extra marcada como nao reconhecida.');
+        return;
+      }
+
+      if (!record || !Array.isArray(record.extraMissions)) {
+        alert('Missão extra não encontrada.');
+        return;
+      }
+
+      const mission = record.extraMissions.find(function(item) {
+        return String(item.id) === String(missionId);
+      });
+
+      if (!mission && updateExtraMissionDraftStatus(recordDate, missionId, 'rejected')) {
+        renderExtraMissionPanel();
+        renderNotificationBell();
+        alert('Missao extra marcada como nao reconhecida.');
+        return;
+      }
+
+      if (!mission) {
+        alert('Missão extra não encontrada.');
+        return;
+      }
+
+      mission.status = 'rejected';
+
+      const updatedHistory = recalculateAuraCoins(history);
+      saveHistoryToLocalStorage(currentChecklist.code, updatedHistory);
+      currentHistory = updatedHistory;
+      renderizarHistorico(currentHistory);
+      renderMotivationBanner();
+      renderNotificationBell();
+      alert('Missão extra marcada como não reconhecida.');
     }
 
     // Mostra o histórico salvo na tela.
@@ -4249,6 +5200,73 @@
         dayArea.appendChild(auraLine);
         dayArea.appendChild(agreementTitle);
         dayArea.appendChild(agreementText);
+
+        if (Array.isArray(record.extraMissions) && record.extraMissions.length > 0) {
+          const extraArea = document.createElement('div');
+          extraArea.className = 'history-extra-missions';
+
+          const extraTitle = document.createElement('div');
+          extraTitle.className = 'task-title';
+          extraTitle.textContent = '🚀 Fiz algo a mais';
+          extraArea.appendChild(extraTitle);
+
+          record.extraMissions.forEach(function(mission) {
+            const missionCard = document.createElement('div');
+            missionCard.className = 'history-extra-mission-card';
+
+            const missionTitle = document.createElement('div');
+            missionTitle.className = 'task-title';
+            missionTitle.textContent = '🌟 ' + getExtraMissionTitle(mission);
+
+            const missionStatus = document.createElement('div');
+            missionStatus.className = 'extra-mission-status ' + getExtraMissionStatusClass(mission.status);
+            missionStatus.textContent = getExtraMissionStatusLabel(mission.status);
+
+            const missionBonus = document.createElement('div');
+            missionBonus.className = 'task-meta';
+
+            if (isApprovedExtraMission(mission)) {
+              missionBonus.textContent = '+' + formatAuraCoinsLabel(Number(mission.bonusAuraCoins) || 1);
+            } else if (getExtraMissionStatusClass(mission.status) === 'rejected') {
+              missionBonus.textContent = '0 Aura Coin';
+            } else {
+              missionBonus.textContent = 'Bônus sugerido: +' + formatAuraCoinsLabel(Number(mission.bonusAuraCoins) || 1);
+            }
+
+            missionCard.appendChild(missionTitle);
+            missionCard.appendChild(missionStatus);
+            missionCard.appendChild(missionBonus);
+
+            if (!childModeActive && isPendingExtraMission(mission)) {
+              const missionActions = document.createElement('div');
+              missionActions.className = 'extra-mission-actions';
+
+              const approveButton = document.createElement('button');
+              approveButton.className = 'btn secondary small';
+              approveButton.type = 'button';
+              approveButton.textContent = 'Reconhecer +' + formatAuraCoinsLabel(Number(mission.bonusAuraCoins) || 1);
+              approveButton.addEventListener('click', function() {
+                approveExtraMission(record.date, mission.id);
+              });
+
+              const rejectButton = document.createElement('button');
+              rejectButton.className = 'btn-ghost danger';
+              rejectButton.type = 'button';
+              rejectButton.textContent = 'Recusar';
+              rejectButton.addEventListener('click', function() {
+                rejectExtraMission(record.date, mission.id);
+              });
+
+              missionActions.appendChild(approveButton);
+              missionActions.appendChild(rejectButton);
+              missionCard.appendChild(missionActions);
+            }
+
+            extraArea.appendChild(missionCard);
+          });
+
+          dayArea.appendChild(extraArea);
+        }
 
         groupTasksByCategory(record.tasks).forEach(function(group) {
           const categoryItems = document.createElement('div');
@@ -4398,8 +5416,13 @@
     viewHistoryButton.addEventListener('click', openHistory);
     addConsequenceButton.addEventListener('click', addConsequence);
     saveConsequencesButton.addEventListener('click', saveConsequences);
+    saveProactivitySettingsButton.addEventListener('click', saveProactivitySettings);
     addRewardButton.addEventListener('click', addReward);
     saveRewardsButton.addEventListener('click', saveRewards);
+
+    notificationBellButton.addEventListener('click', function() {
+      notificationPanel.classList.toggle('hidden');
+    });
 
     backHomeButton.addEventListener('click', function() {
       carregarMeusChecklists();
@@ -4888,7 +5911,9 @@
         return task.done;
       }).length;
       const incompleteCount = tasks.length - completedCount;
-      const dailyAuraCoins = completedCount;
+      const extraMissions = loadExtraMissionsDraft(checklist.code, getTodayDate());
+      const proactivityBonusAuraCoins = 0;
+      const dailyAuraCoins = completedCount + proactivityBonusAuraCoins;
 
       return {
         date: getTodayDate(),
@@ -4896,6 +5921,8 @@
         tasks: tasks,
         completedCount: completedCount,
         incompleteCount: incompleteCount,
+        extraMissions: extraMissions,
+        proactivityBonusAuraCoins: proactivityBonusAuraCoins,
         dailyAuraCoins: dailyAuraCoins,
         earnedAuraCoins: dailyAuraCoins,
         familyAgreement: getFamilyAgreement(checklist),
@@ -4917,20 +5944,14 @@
           return first.date.localeCompare(second.date);
         })
         .map(function(record) {
-          const dailyAuraCoins = Math.max(0, getRecordDailyAuraCoins(record));
+          const recalculatedRecord = recalcularRegistroHistorico(record);
+          const dailyAuraCoins = Math.max(0, getRecordDailyAuraCoins(recalculatedRecord));
           total = Math.max(0, total + dailyAuraCoins);
           return {
-            ...record,
-            completedCount: getRecordCompletedCount(record),
-            incompleteCount: getRecordIncompleteCount(record),
+            ...recalculatedRecord,
             dailyAuraCoins: dailyAuraCoins,
             earnedAuraCoins: dailyAuraCoins,
-            familyAgreement: getRecordFamilyAgreement(record),
-            gains: getRecordGains(record),
-            losses: getRecordLosses(record),
-            balance: getRecordBalance(record),
-            dayPoints: getRecordBalance(record),
-            penaltyApplied: record.penaltyApplied === true || typeof record.losses === 'number' || typeof record.balance === 'number',
+            familyAgreement: getRecordFamilyAgreement(recalculatedRecord),
             auraCoins: Math.max(0, total)
           };
         });
