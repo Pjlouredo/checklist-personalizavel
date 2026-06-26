@@ -165,6 +165,474 @@
       background: #f8fafc;
     }
 
+    .welcome-empty {
+      display: grid;
+      gap: 22px;
+      max-width: 720px;
+      margin: 24px auto 0;
+      padding: 28px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      border-radius: 12px;
+      background:
+        linear-gradient(135deg, rgba(240, 253, 250, 0.94), rgba(255, 255, 255, 0.98) 46%, rgba(255, 247, 237, 0.62));
+      box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+    }
+
+    .welcome-badge {
+      width: fit-content;
+      padding: 6px 10px;
+      border: 1px solid rgba(15, 118, 110, 0.16);
+      border-radius: 999px;
+      color: #0f766e;
+      background: #ccfbf1;
+      font-size: 0.78rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .template-card {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border: 1px solid #dbeafe;
+      border-radius: 10px;
+      background: #ffffff;
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
+    }
+
+    .template-card-header {
+      display: grid;
+      gap: 5px;
+    }
+
+    .template-preview-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .template-preview-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 42px;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      color: #334155;
+      background: #f8fafc;
+      font-weight: 800;
+    }
+
+    .template-preview-item::before {
+      content: "✓";
+      display: grid;
+      width: 22px;
+      height: 22px;
+      min-width: 22px;
+      place-items: center;
+      border-radius: 7px;
+      color: #ffffff;
+      background: #0f766e;
+      font-size: 0.82rem;
+      line-height: 1;
+    }
+
+    .welcome-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .welcome-note {
+      color: #64748b;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .agreements-intro {
+      max-width: 620px;
+      margin-top: 8px;
+      color: #526173;
+      line-height: 1.6;
+    }
+
+    .agreements-section {
+      display: grid;
+      gap: 16px;
+      margin-top: 22px;
+      padding-top: 22px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .agreements-section:first-of-type {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .agreements-section-title {
+      margin: 0 0 6px;
+      color: #102a43;
+      font-size: 1.2rem;
+    }
+
+    .rewards-panel {
+      padding: 20px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 62%, #fff7ed 100%);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+    }
+
+    .consequences-panel {
+      padding: 20px;
+      border: 1px solid rgba(245, 158, 11, 0.18);
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ffffff 0%, #fff7ed 70%, #fef2f2 100%);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+    }
+
+    .rewards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .reward-card {
+      display: grid;
+      gap: 7px;
+      min-height: 128px;
+      padding: 16px;
+      border: 1px solid #dbeafe;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+    }
+
+    .reward-price {
+      width: fit-content;
+      padding: 5px 9px;
+      border-radius: 999px;
+      color: #0f766e;
+      background: #ccfbf1;
+      font-size: 0.8rem;
+      font-weight: 900;
+    }
+
+    .reward-title {
+      color: #102a43;
+      font-weight: 900;
+      line-height: 1.3;
+    }
+
+    .reward-description {
+      color: #64748b;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .rewards-editor-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .consequences-editor-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .consequences-editor-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .reward-editor-card {
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+      border: 1px solid #dbeafe;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+    }
+
+    .consequence-editor-card {
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+      border: 1px solid rgba(245, 158, 11, 0.22);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+    }
+
+    .reward-editor-grid {
+      display: grid;
+      grid-template-columns: 0.65fr 1.4fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .consequence-editor-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .reward-editor-remove {
+      justify-self: end;
+    }
+
+    .consequence-remove-button {
+      justify-self: end;
+    }
+
+    .reward-editor-label {
+      display: grid;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .consequence-editor-label {
+      display: grid;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .reward-editor-input,
+    .reward-editor-description,
+    .consequence-title-input,
+    .consequence-description-input {
+      min-height: 44px;
+    }
+
+    .reward-editor-description {
+      grid-column: 1 / -1;
+    }
+
+    .consequence-preview-card {
+      padding: 12px;
+      border-radius: 10px;
+      background: #fff7ed;
+      color: #92400e;
+      font-weight: 800;
+    }
+
+    .motivation-banner {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 18px;
+      padding: 22px;
+      border: 1px solid rgba(15, 118, 110, 0.18);
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at top right, rgba(245, 158, 11, 0.18), transparent 34%),
+        linear-gradient(135deg, #ecfdf5 0%, #ffffff 46%, #e0f2fe 100%);
+      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.1);
+      overflow: hidden;
+    }
+
+    .motivation-banner-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .motivation-banner-title {
+      color: #0f766e;
+      font-size: 1.35rem;
+      font-weight: 900;
+    }
+
+    .motivation-banner-subtitle {
+      margin-top: 5px;
+      color: #526173;
+      line-height: 1.55;
+    }
+
+    .motivation-banner-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.7fr) minmax(220px, 0.8fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .motivation-reward-hero {
+      display: grid;
+      gap: 12px;
+      min-height: 178px;
+      padding: 18px;
+      border: 1px solid rgba(15, 118, 110, 0.16);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 14px 26px rgba(15, 23, 42, 0.08);
+    }
+
+    .motivation-reward-badge {
+      width: fit-content;
+      padding: 7px 11px;
+      border-radius: 999px;
+      color: #92400e;
+      background: #fef3c7;
+      font-size: 0.84rem;
+      font-weight: 900;
+    }
+
+    .motivation-reward-title {
+      color: #102a43;
+      font-size: 1.25rem;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .motivation-reward-description {
+      color: #526173;
+      line-height: 1.5;
+    }
+
+    .motivation-progress {
+      display: grid;
+      gap: 8px;
+      align-self: end;
+    }
+
+    .motivation-progress-label {
+      color: #0f766e;
+      font-size: 0.9rem;
+      font-weight: 900;
+    }
+
+    .motivation-progress-bar {
+      overflow: hidden;
+      height: 14px;
+      border-radius: 999px;
+      background: #dbeafe;
+      box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.12);
+    }
+
+    .motivation-progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #14b8a6, #f59e0b);
+      transition: width 0.25s ease;
+    }
+
+    .motivation-stats {
+      display: grid;
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .motivation-stat-card {
+      display: grid;
+      align-content: center;
+      gap: 6px;
+      min-height: 82px;
+      padding: 14px;
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.82);
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+    }
+
+    .motivation-stat-value {
+      color: #0f766e;
+      font-size: 1.55rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .motivation-stat-label {
+      color: #64748b;
+      font-size: 0.84rem;
+      font-weight: 900;
+    }
+
+    .motivation-missing-value {
+      color: #0f766e;
+      font-size: 1.45rem;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+
+    .motivation-missing-label {
+      color: #64748b;
+      font-size: 0.84rem;
+      font-weight: 900;
+      line-height: 1.3;
+    }
+
+    .motivation-agreement {
+      padding: 15px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      border-radius: 14px;
+      color: #334155;
+      background: rgba(240, 253, 250, 0.72);
+      line-height: 1.5;
+    }
+
+    .motivation-agreement strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #0f766e;
+    }
+
+    .motivation-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .motivation-edit-button {
+      box-shadow: none;
+    }
+
+    .advanced-settings {
+      display: grid;
+      gap: 12px;
+      margin-top: 28px;
+      padding-top: 22px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .advanced-settings h3 {
+      margin: 0;
+      color: #475569;
+      font-size: 1rem;
+    }
+
+    .danger-zone {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px;
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      background: #fff7f7;
+    }
+
+    .danger-zone-title {
+      color: #991b1b;
+      font-weight: 900;
+    }
+
+    .danger-zone-text {
+      margin-top: 4px;
+      color: #7f1d1d;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
     .login-card {
       display: grid;
       gap: 18px;
@@ -330,6 +798,12 @@
       box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
     }
 
+    .child-mode-active .task-card {
+      border-radius: 16px;
+      font-size: 1.12rem;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+    }
+
     .task-content {
       min-width: 0;
     }
@@ -363,6 +837,28 @@
       overflow-wrap: anywhere;
     }
 
+    .child-mode-active .task-title {
+      font-size: 1.12rem;
+    }
+
+    .task-done-animation {
+      animation: taskDone 0.6s ease;
+    }
+
+    @keyframes taskDone {
+      0% {
+        transform: scale(1);
+      }
+
+      45% {
+        transform: scale(1.045);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
     .task-meta {
       color: #64748b;
       font-size: 0.9rem;
@@ -393,6 +889,14 @@
       box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
     }
 
+    .child-server-label {
+      color: #0f766e;
+      font-size: 0.88rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
     .category-title {
       display: block;
       width: 100%;
@@ -419,6 +923,21 @@
       border-radius: 12px;
       background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
       box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .child-mode-active .category-header {
+      border-color: rgba(20, 184, 166, 0.45);
+      animation: childCategoryGlow 2.4s ease-in-out infinite;
+    }
+
+    @keyframes childCategoryGlow {
+      0%, 100% {
+        box-shadow: 0 8px 22px rgba(20, 184, 166, 0.08);
+      }
+
+      50% {
+        box-shadow: 0 12px 30px rgba(20, 184, 166, 0.22);
+      }
     }
 
     .category-summary {
@@ -543,11 +1062,38 @@
     }
 
     .progress-fill {
+      position: relative;
       width: 0%;
       height: 100%;
       border-radius: inherit;
       background: linear-gradient(90deg, #0f766e, #f59e0b);
       transition: width 0.25s ease;
+    }
+
+    .progress-fill::after {
+      content: '⚡';
+      position: absolute;
+      right: -10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      filter: drop-shadow(0 2px 3px rgba(15, 23, 42, 0.25));
+    }
+
+    .progress-fill.progress-empty::after {
+      display: none;
+    }
+
+    .progress-fill.progress-low {
+      background: linear-gradient(90deg, #f97316, #facc15);
+    }
+
+    .progress-fill.progress-mid {
+      background: linear-gradient(90deg, #facc15, #84cc16);
+    }
+
+    .progress-fill.progress-high {
+      background: linear-gradient(90deg, #22c55e, #14b8a6);
     }
 
     .btn {
@@ -704,6 +1250,17 @@
       font-weight: 800;
     }
 
+    .history-task-correction {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .history-correction-button {
+      min-height: 30px;
+      padding: 5px 9px;
+      font-size: 0.82rem;
+    }
+
     .hidden {
       display: none;
     }
@@ -762,6 +1319,37 @@
       .category-actions {
         width: 100%;
         justify-content: center;
+      }
+
+      .welcome-empty {
+        padding: 22px;
+      }
+
+      .template-preview-list,
+      .welcome-actions,
+      .rewards-grid,
+      .reward-editor-grid,
+      .consequence-editor-grid,
+      .motivation-banner-hero {
+        grid-template-columns: 1fr;
+      }
+
+      .template-preview-list {
+        display: grid;
+      }
+
+      .welcome-actions {
+        display: grid;
+        align-items: stretch;
+      }
+
+      .danger-zone {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .motivation-actions {
+        justify-content: stretch;
       }
     }
   </style>
@@ -941,7 +1529,7 @@
           <div class="history-actions">
             <button class="btn secondary" id="activateChildModeButton" type="button">Modo criança</button>
             <button class="btn secondary" id="editChecklistDataButton" type="button">Editar checklist</button>
-            <button class="btn secondary" id="familyAgreementsButton" type="button">📝 Combinados da família</button>
+            <button class="btn secondary" id="familyAgreementsButton" type="button">📝 Combinados e recompensas</button>
             <button class="btn secondary" id="viewHistoryButton" type="button">Ver histórico</button>
             <button class="btn" id="sendWhatsAppButton" type="button">Enviar relatório no WhatsApp</button>
           </div>
@@ -981,17 +1569,19 @@
           </div>
         </div>
 
+        <div class="motivation-banner" id="motivationBanner"></div>
+
         <div class="progress-area">
           <div class="metric">
             <span>Progresso</span>
             <strong id="progressText">0%</strong>
           </div>
           <div class="metric">
-            <span>Pontos feitos</span>
+            <span>Pontos concluídos hoje</span>
             <strong id="donePointsText">0</strong>
           </div>
           <div class="metric">
-            <span>Pontos totais</span>
+            <span>Meta de pontos do dia</span>
             <strong id="totalPointsText">0</strong>
           </div>
         </div>
@@ -1074,6 +1664,20 @@
         </div>
 
         <div class="task-list" id="checklistTaskList"></div>
+
+        <div class="advanced-settings" id="advancedSettings">
+          <h3>Configurações avançadas</h3>
+
+          <div class="danger-zone">
+            <div>
+              <div class="danger-zone-title">Zona de perigo</div>
+              <p class="danger-zone-text">
+                Excluir este checklist apagará a rotina e suas tarefas. Essa ação não pode ser desfeita.
+              </p>
+            </div>
+            <button class="btn danger small" id="deleteCurrentChecklistButton" type="button">Excluir checklist</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1098,15 +1702,15 @@
             <strong id="historyGainsText">0</strong>
           </div>
           <div class="metric">
-            <span>Não feitas</span>
+            <span>Tarefas não concluídas</span>
             <strong id="historyLossesText">0</strong>
           </div>
           <div class="metric">
-            <span>Aura Coins do dia</span>
+            <span>Aura Coins ganhas</span>
             <strong id="historyBalanceText">0</strong>
           </div>
           <div class="metric">
-            <span>Aura Coins</span>
+            <span>Aura Coins acumuladas</span>
             <strong id="historyAuraCoinsText">0</strong>
           </div>
         </div>
@@ -1134,19 +1738,53 @@
       <div class="panel">
         <div class="panel-header">
           <div>
-            <h2>📝 Combinados da família</h2>
+            <h2>📝 Combinados e recompensas</h2>
             <p class="muted" id="agreementsOwner"></p>
+            <p class="agreements-intro">Defina combinados claros para a rotina e também recompensas positivas para incentivar a criança.</p>
           </div>
           <button class="btn secondary" id="backFromAgreementsButton" type="button">Voltar</button>
         </div>
 
-        <label>
-          Quando uma tarefa não for concluída:
-          <textarea id="familyAgreementInput" placeholder="Sem combinado definido"></textarea>
-        </label>
+        <div class="agreements-section consequences-panel">
+          <div>
+            <h3 class="agreements-section-title">📌 Consequências combinadas</h3>
+            <p class="muted">
+              Defina o que acontece quando a rotina não for concluída. A ideia é deixar as regras claras antes, sem surpresa.
+            </p>
+          </div>
 
-        <div class="home-actions">
-          <button class="btn" id="saveFamilyAgreementButton" type="button">Salvar</button>
+          <label class="hidden">
+            Quando uma tarefa não for concluída:
+            <textarea id="familyAgreementInput" placeholder="Sem combinado definido"></textarea>
+          </label>
+
+          <div class="consequences-editor-list" id="consequencesEditorList"></div>
+
+          <div class="consequences-editor-actions">
+            <button class="btn secondary" id="addConsequenceButton" type="button">+ Adicionar consequência</button>
+            <button class="btn" id="saveConsequencesButton" type="button">Salvar consequências</button>
+          </div>
+
+          <div class="home-actions hidden">
+            <button class="btn" id="saveFamilyAgreementButton" type="button">Salvar</button>
+          </div>
+        </div>
+
+        <div class="agreements-section rewards-panel">
+          <div>
+            <h3 class="agreements-section-title">🎁 Recompensas da família</h3>
+            <p class="muted">
+              Use as Aura Coins para combinar recompensas positivas. Você pode editar, adicionar ou remover
+              recompensas conforme a rotina da sua família.
+            </p>
+          </div>
+
+          <div class="rewards-grid" id="rewardsEditorList"></div>
+
+          <div class="rewards-editor-actions">
+            <button class="btn secondary" id="addRewardButton" type="button">+ Adicionar recompensa</button>
+            <button class="btn" id="saveRewardsButton" type="button">Salvar recompensas</button>
+          </div>
         </div>
       </div>
     </section>
@@ -1188,6 +1826,7 @@
     let currentHistory = [];
     let checklistEditMode = false;
     let childModeActive = false;
+    let lastCompletedTaskAnimationId = null;
 
     // Atalhos para encontrar os elementos da tela.
     const loginScreen = document.getElementById('loginScreen');
@@ -1227,6 +1866,7 @@
 
     const checklistTitle = document.getElementById('checklistTitle');
     const checklistOwner = document.getElementById('checklistOwner');
+    const motivationBanner = document.getElementById('motivationBanner');
     const checklistTaskList = document.getElementById('checklistTaskList');
     const progressText = document.getElementById('progressText');
     const donePointsText = document.getElementById('donePointsText');
@@ -1239,6 +1879,8 @@
     const sendWhatsAppButton = document.getElementById('sendWhatsAppButton');
     const editChecklistDataButton = document.getElementById('editChecklistDataButton');
     const editChecklistDataArea = document.getElementById('editChecklistDataArea');
+    const advancedSettings = document.getElementById('advancedSettings');
+    const deleteCurrentChecklistButton = document.getElementById('deleteCurrentChecklistButton');
     const editPersonNameInput = document.getElementById('editPersonNameInput');
     const editWhatsappInput = document.getElementById('editWhatsappInput');
     const editChecklistNameInput = document.getElementById('editChecklistNameInput');
@@ -1275,6 +1917,12 @@
     const agreementsOwner = document.getElementById('agreementsOwner');
     const familyAgreementInput = document.getElementById('familyAgreementInput');
     const saveFamilyAgreementButton = document.getElementById('saveFamilyAgreementButton');
+    const consequencesEditorList = document.getElementById('consequencesEditorList');
+    const addConsequenceButton = document.getElementById('addConsequenceButton');
+    const saveConsequencesButton = document.getElementById('saveConsequencesButton');
+    const rewardsEditorList = document.getElementById('rewardsEditorList');
+    const addRewardButton = document.getElementById('addRewardButton');
+    const saveRewardsButton = document.getElementById('saveRewardsButton');
     const backFromAgreementsButton = document.getElementById('backFromAgreementsButton');
   </script>
 
@@ -1525,6 +2173,25 @@
       return task.category || 'Sem categoria';
     }
 
+    function getCategoryEmoji(categoryName) {
+      const name = String(categoryName || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+      if (name.includes('quarto')) return '🛏️';
+      if (name.includes('sala')) return '🛋️';
+      if (name.includes('cozinha')) return '🍽️';
+      if (name.includes('banheiro')) return '🚿';
+      if (name.includes('escola') || name.includes('estudo')) return '📚';
+      if (name.includes('jardim')) return '🌱';
+      if (name.includes('roupa')) return '👕';
+      if (name.includes('brinquedo')) return '🧸';
+      if (name.includes('higiene')) return '🪥';
+
+      return '📋';
+    }
+
     // Agrupa tarefas por categoria, mantendo também o índice original da tarefa.
     function groupTasksByCategory(tasks) {
       const groups = [];
@@ -1590,14 +2257,43 @@
 
     function renderModoCriancaControles() {
       const active = childModeActive === true;
+      const appBrandText = document.querySelector('#appTopbar .brand span');
+      let childServerLabel = childModeControls.querySelector('.child-server-label');
 
+      document.body.classList.toggle('child-mode-active', active);
       activateChildModeButton.classList.toggle('hidden', active);
       editChecklistDataButton.classList.toggle('hidden', active);
       familyAgreementsButton.classList.toggle('hidden', active);
       viewHistoryButton.classList.toggle('hidden', active);
       sendWhatsAppButton.classList.toggle('hidden', active);
+      advancedSettings.classList.toggle('hidden', active);
       childModeControls.classList.toggle('hidden', !active);
       logoutButton.classList.toggle('hidden', active);
+      finishChildModeTasksButton.textContent = active ? '🚀 Finalizar minhas tarefas' : 'Finalizar minhas tarefas';
+
+      if (appBrandText) {
+        appBrandText.textContent = active && currentChecklist
+          ? 'MISSÃO: ' + currentChecklist.checklistName + ' 🎮'
+          : 'Checklist Personalizável';
+      }
+
+      if (active && currentChecklist) {
+        const dateText = new Date().toLocaleDateString('pt-BR', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long'
+        });
+
+        if (!childServerLabel) {
+          childServerLabel = document.createElement('div');
+          childServerLabel.className = 'child-server-label';
+          childModeControls.insertBefore(childServerLabel, childModeControls.firstChild);
+        }
+
+        childServerLabel.textContent = 'MISSÃO: ' + currentChecklist.checklistName.toUpperCase() + ' • ' + dateText;
+      } else if (childServerLabel) {
+        childServerLabel.remove();
+      }
 
       if (currentChecklist && checklistScreen.classList.contains('active')) {
         backHomeButton.classList.toggle('hidden', active);
@@ -1710,28 +2406,81 @@
       myChecklistsContent.innerHTML = '';
 
       if (!meusChecklists || meusChecklists.length === 0) {
-        const emptyState = document.createElement('div');
-        emptyState.className = 'empty-state';
+        createChecklistFromListButton.classList.add('hidden');
+
+        const welcomeEmpty = document.createElement('div');
+        welcomeEmpty.className = 'welcome-empty';
+
+        const badge = document.createElement('div');
+        badge.className = 'welcome-badge';
+        badge.textContent = 'Modelo pronto';
 
         const title = document.createElement('h2');
-        title.textContent = 'Crie seu primeiro checklist';
+        title.textContent = 'Comece pela primeira rotina';
 
         const text = document.createElement('p');
         text.className = 'muted';
-        text.textContent = 'Comece criando a primeira rotina da família.';
+        text.textContent = 'Use um modelo pronto para entender como o app funciona. Depois você pode editar tudo do seu jeito.';
 
-        const button = document.createElement('button');
-        button.className = 'btn';
-        button.type = 'button';
-        button.textContent = 'Criar checklist';
-        button.addEventListener('click', startNewChecklist);
+        const templateCard = document.createElement('div');
+        templateCard.className = 'template-card';
 
-        emptyState.appendChild(title);
-        emptyState.appendChild(text);
-        emptyState.appendChild(button);
-        myChecklistsContent.appendChild(emptyState);
+        const templateHeader = document.createElement('div');
+        templateHeader.className = 'template-card-header';
+
+        const templateTitle = document.createElement('strong');
+        templateTitle.textContent = 'Modelo de rotina infantil';
+
+        const templateText = document.createElement('p');
+        templateText.className = 'muted';
+        templateText.textContent = 'Categorias prontas para testar: Quarto, Sala, Cozinha e Banheiro.';
+
+        const previewList = document.createElement('div');
+        previewList.className = 'template-preview-list';
+
+        ['Quarto', 'Sala', 'Cozinha', 'Banheiro'].forEach(function(category) {
+          const item = document.createElement('div');
+          item.className = 'template-preview-item';
+          item.textContent = category;
+          previewList.appendChild(item);
+        });
+
+        const actions = document.createElement('div');
+        actions.className = 'welcome-actions';
+
+        const templateButton = document.createElement('button');
+        templateButton.className = 'btn';
+        templateButton.type = 'button';
+        templateButton.textContent = 'Usar modelo de rotina infantil';
+        templateButton.addEventListener('click', startChecklistFromTemplate);
+
+        const blankButton = document.createElement('button');
+        blankButton.className = 'btn secondary';
+        blankButton.type = 'button';
+        blankButton.textContent = 'Criar do zero';
+        blankButton.addEventListener('click', startNewChecklist);
+
+        const note = document.createElement('p');
+        note.className = 'welcome-note';
+        note.textContent = 'Nada será salvo automaticamente. Você confere e salva só quando estiver tudo pronto.';
+
+        templateHeader.appendChild(templateTitle);
+        templateHeader.appendChild(templateText);
+        templateCard.appendChild(templateHeader);
+        templateCard.appendChild(previewList);
+        actions.appendChild(templateButton);
+        actions.appendChild(blankButton);
+        welcomeEmpty.appendChild(badge);
+        welcomeEmpty.appendChild(title);
+        welcomeEmpty.appendChild(text);
+        welcomeEmpty.appendChild(templateCard);
+        welcomeEmpty.appendChild(actions);
+        welcomeEmpty.appendChild(note);
+        myChecklistsContent.appendChild(welcomeEmpty);
         return;
       }
+
+      createChecklistFromListButton.classList.remove('hidden');
 
       const grid = document.createElement('div');
       grid.className = 'checklists-grid';
@@ -1755,19 +2504,9 @@
           abrirChecklistDaLista(checklist);
         });
 
-        const deleteButton = document.createElement('button');
-        deleteButton.className = 'btn-ghost danger';
-        deleteButton.type = 'button';
-        deleteButton.textContent = 'Excluir';
-        deleteButton.addEventListener('click', function(event) {
-          event.stopPropagation();
-          excluirChecklistDaLista(checklist);
-        });
-
         const actions = document.createElement('div');
         actions.className = 'history-actions';
         actions.appendChild(button);
-        actions.appendChild(deleteButton);
 
         card.appendChild(title);
         card.appendChild(routine);
@@ -1849,6 +2588,18 @@
       }
     }
 
+    async function excluirChecklistAtual() {
+      if (!currentChecklist || !currentChecklist.code) {
+        return;
+      }
+
+      await excluirChecklistDaLista({
+        code: currentChecklist.code,
+        person_name: currentChecklist.personName,
+        checklist_name: currentChecklist.checklistName
+      });
+    }
+
     // Retorna o valor positivo ou negativo salvo na tarefa do histórico.
     function getTaskHistoryValue(task, record) {
       if (typeof task.historyValue === 'number') {
@@ -1921,13 +2672,17 @@
       }).length;
     }
 
-    // Calcula Aura Coins automáticas do dia: feitas menos não feitas.
+    // Calcula Aura Coins ganhas no dia: cada tarefa concluída vale 1 moeda.
     function getRecordDailyAuraCoins(record) {
-      if (typeof record.dailyAuraCoins === 'number') {
-        return record.dailyAuraCoins;
+      if (typeof record.earnedAuraCoins === 'number') {
+        return Math.max(0, record.earnedAuraCoins);
       }
 
-      return getRecordCompletedCount(record) - getRecordIncompleteCount(record);
+      if (typeof record.dailyAuraCoins === 'number') {
+        return Math.max(0, record.dailyAuraCoins);
+      }
+
+      return Math.max(0, getRecordCompletedCount(record));
     }
 
     // Trata checklists antigos que salvaram o texto do placeholder como valor real.
@@ -1943,6 +2698,12 @@
 
     // Retorna o combinado salvo.
     function getFamilyAgreement(checklist) {
+      const consequencesText = getConsequencesText(checklist);
+
+      if (consequencesText) {
+        return consequencesText;
+      }
+
       return normalizeFamilyAgreement(checklist.familyAgreement);
     }
 
@@ -1951,11 +2712,12 @@
       const categoryTitle = document.createElement('button');
       categoryTitle.className = 'category-title';
       categoryTitle.type = 'button';
-      categoryTitle.textContent = '▼ ' + categoryName;
+      const titleText = getCategoryEmoji(categoryName) + ' ' + categoryName;
+      categoryTitle.textContent = '▼ ' + titleText;
 
       categoryTitle.addEventListener('click', function() {
         const isHidden = itemsArea.classList.toggle('hidden');
-        categoryTitle.textContent = (isHidden ? '▶ ' : '▼ ') + categoryName;
+        categoryTitle.textContent = (isHidden ? '▶ ' : '▼ ') + titleText;
       });
 
       return categoryTitle;
@@ -2140,6 +2902,196 @@
       showScreen(SCREENS.checklist);
     }
 
+    function createMotivationStatCard(labelText, valueText) {
+      const card = document.createElement('div');
+      card.className = 'motivation-stat-card';
+
+      const value = document.createElement('div');
+      value.className = 'motivation-stat-value';
+      value.textContent = valueText;
+
+      const label = document.createElement('div');
+      label.className = 'motivation-stat-label';
+      label.textContent = labelText;
+
+      card.appendChild(value);
+      card.appendChild(label);
+      return card;
+    }
+
+    function formatAuraCoinsLabel(value) {
+      return value === 1 ? '1 Aura Coin' : value + ' Aura Coins';
+    }
+
+    function createMotivationMissingCard(missingCoins, hasReward) {
+      const card = document.createElement('div');
+      card.className = 'motivation-stat-card';
+
+      const value = document.createElement('div');
+      value.className = 'motivation-missing-value';
+
+      const label = document.createElement('div');
+      label.className = 'motivation-missing-label';
+
+      if (!hasReward) {
+        value.textContent = 'Sem meta';
+        label.textContent = 'Cadastre uma recompensa';
+      } else if (missingCoins <= 0) {
+        value.textContent = 'Meta alcançada!';
+        label.textContent = 'Você já pode combinar o resgate';
+      } else {
+        value.textContent = (missingCoins === 1 ? 'Falta ' : 'Faltam ') + missingCoins;
+        label.textContent = missingCoins === 1 ? 'Aura Coin para o prêmio' : 'Aura Coins para o prêmio';
+      }
+
+      card.appendChild(value);
+      card.appendChild(label);
+      return card;
+    }
+
+    async function renderMotivationBanner() {
+      motivationBanner.textContent = '';
+
+      if (!currentChecklist || !currentChecklist.code) {
+        motivationBanner.classList.add('hidden');
+        return;
+      }
+
+      motivationBanner.classList.remove('hidden');
+
+      let auraCoins = 0;
+
+      try {
+        const history = await buscarHistorico(currentChecklist.code);
+        const lastRecord = Array.isArray(history) && history.length > 0 ? history[history.length - 1] : null;
+        auraCoins = lastRecord && typeof lastRecord.auraCoins === 'number' ? Math.max(0, lastRecord.auraCoins) : 0;
+      } catch (error) {
+        console.warn('Banner motivacional sem histórico disponível:', error);
+      }
+
+      const rewards = (typeof ensureChecklistRewards === 'function'
+        ? ensureChecklistRewards()
+        : (Array.isArray(currentChecklist.rewards) ? currentChecklist.rewards : []))
+        .filter(function(reward) {
+          return reward && Number(reward.cost) > 0 && reward.title;
+        })
+        .sort(function(first, second) {
+          return Number(first.cost) - Number(second.cost);
+        });
+
+      const nextReward = rewards.find(function(reward) {
+        return Number(reward.cost) > auraCoins;
+      });
+      const highestReward = rewards.length > 0 ? rewards[rewards.length - 1] : null;
+      const selectedReward = nextReward || highestReward;
+      const rewardCost = selectedReward ? Number(selectedReward.cost) : 0;
+      const missingCoins = selectedReward ? Math.max(rewardCost - auraCoins, 0) : 0;
+      const progressPercent = rewardCost > 0 ? Math.min(100, Math.round((auraCoins / rewardCost) * 100)) : 0;
+      const agreement = getConsequencesText(currentChecklist);
+
+      const top = document.createElement('div');
+      top.className = 'motivation-banner-top';
+
+      const intro = document.createElement('div');
+
+      const title = document.createElement('div');
+      title.className = 'motivation-banner-title';
+      title.textContent = '🎯 Missão da rotina';
+
+      const subtitle = document.createElement('p');
+      subtitle.className = 'motivation-banner-subtitle';
+      subtitle.textContent = selectedReward
+        ? (nextReward
+          ? 'Junte Aura Coins e conquiste sua próxima recompensa!'
+          : 'Você já alcançou esta recompensa! Combine uma nova meta.')
+        : 'Cadastre recompensas em Combinados e recompensas para deixar a rotina mais motivadora.';
+
+      intro.appendChild(title);
+      intro.appendChild(subtitle);
+      top.appendChild(intro);
+
+      if (!childModeActive) {
+        const actions = document.createElement('div');
+        actions.className = 'motivation-actions';
+
+        const editButton = document.createElement('button');
+        editButton.className = 'btn secondary small motivation-edit-button';
+        editButton.type = 'button';
+        editButton.textContent = 'Editar recompensas';
+        editButton.addEventListener('click', openFamilyAgreements);
+
+        actions.appendChild(editButton);
+        top.appendChild(actions);
+      }
+
+      const hero = document.createElement('div');
+      hero.className = 'motivation-banner-hero';
+
+      const rewardHero = document.createElement('div');
+      rewardHero.className = 'motivation-reward-hero';
+
+      const rewardBadge = document.createElement('div');
+      rewardBadge.className = 'motivation-reward-badge';
+      rewardBadge.textContent = selectedReward ? '⭐ ' + rewardCost + ' Aura Coins' : '⭐ Recompensa';
+
+      const rewardTitle = document.createElement('div');
+      rewardTitle.className = 'motivation-reward-title';
+      rewardTitle.textContent = selectedReward ? selectedReward.title : 'Nenhuma recompensa cadastrada';
+
+      const rewardDescription = document.createElement('p');
+      rewardDescription.className = 'motivation-reward-description';
+      rewardDescription.textContent = selectedReward
+        ? (selectedReward.description || (nextReward ? 'Continue a rotina para chegar nessa conquista.' : 'Você já pode combinar uma nova meta.'))
+        : 'Cadastre recompensas para deixar a rotina mais divertida.';
+
+      const progressArea = document.createElement('div');
+      progressArea.className = 'motivation-progress';
+
+      const progressLabel = document.createElement('div');
+      progressLabel.className = 'motivation-progress-label';
+      progressLabel.textContent = selectedReward
+        ? Math.min(auraCoins, rewardCost) + ' de ' + rewardCost + ' Aura Coins'
+        : '0 de 0 Aura Coins';
+
+      const progressBar = document.createElement('div');
+      progressBar.className = 'motivation-progress-bar';
+
+      const progressFill = document.createElement('div');
+      progressFill.className = 'motivation-progress-fill';
+      progressFill.style.width = progressPercent + '%';
+
+      progressBar.appendChild(progressFill);
+      progressArea.appendChild(progressLabel);
+      progressArea.appendChild(progressBar);
+      rewardHero.appendChild(rewardBadge);
+      rewardHero.appendChild(rewardTitle);
+      rewardHero.appendChild(rewardDescription);
+      rewardHero.appendChild(progressArea);
+
+      const stats = document.createElement('div');
+      stats.className = 'motivation-stats';
+      stats.appendChild(createMotivationStatCard('Cofrinho Aura', formatAuraCoinsLabel(auraCoins)));
+      stats.appendChild(createMotivationMissingCard(missingCoins, Boolean(selectedReward)));
+
+      hero.appendChild(rewardHero);
+      hero.appendChild(stats);
+
+      const agreementBox = document.createElement('div');
+      agreementBox.className = 'motivation-agreement';
+
+      const agreementTitle = document.createElement('strong');
+      agreementTitle.textContent = '📌 Combinado se não concluir';
+
+      const agreementText = document.createElement('div');
+      agreementText.textContent = agreement || 'Nenhuma consequência combinada definida ainda.';
+
+      agreementBox.appendChild(agreementTitle);
+      agreementBox.appendChild(agreementText);
+      motivationBanner.appendChild(top);
+      motivationBanner.appendChild(hero);
+      motivationBanner.appendChild(agreementBox);
+    }
+
     // Mostra na tela as tarefas do checklist aberto.
     function renderChecklist() {
       checklistTitle.textContent = currentChecklist.checklistName;
@@ -2291,6 +3243,14 @@
           const index = item.index;
           const taskCard = document.createElement('div');
           taskCard.className = 'task-card';
+
+          if (task.id === lastCompletedTaskAnimationId) {
+            taskCard.classList.add('task-done-animation');
+            setTimeout(function() {
+              taskCard.classList.remove('task-done-animation');
+            }, 650);
+            lastCompletedTaskAnimationId = null;
+          }
 
           const statusButton = document.createElement('button');
           statusButton.className = 'task-status ' + (task.done ? 'done' : 'pending');
@@ -2477,6 +3437,7 @@
       });
 
       updateProgress();
+      renderMotivationBanner();
       renderModoCriancaControles();
     }
 
@@ -2672,6 +3633,8 @@
     // Marca ou desmarca uma tarefa e salva a alteração.
     async function toggleTask(index) {
       currentChecklist.tasks[index].done = !currentChecklist.tasks[index].done;
+      const taskWasMarkedDone = currentChecklist.tasks[index].done === true;
+      lastCompletedTaskAnimationId = taskWasMarkedDone ? currentChecklist.tasks[index].id : null;
 
       try {
         await salvarTarefas(currentChecklist);
@@ -2679,6 +3642,7 @@
         renderChecklist();
       } catch (error) {
         currentChecklist.tasks[index].done = !currentChecklist.tasks[index].done;
+        lastCompletedTaskAnimationId = null;
         alert(error.message);
         renderChecklist();
       }
@@ -2705,6 +3669,17 @@
       donePointsText.textContent = donePoints;
       totalPointsText.textContent = totalPoints;
       progressFill.style.width = progress + '%';
+      progressFill.classList.remove('progress-empty', 'progress-low', 'progress-mid', 'progress-high');
+
+      if (progress === 0) {
+        progressFill.classList.add('progress-empty');
+      } else if (progress < 33) {
+        progressFill.classList.add('progress-low');
+      } else if (progress < 66) {
+        progressFill.classList.add('progress-mid');
+      } else {
+        progressFill.classList.add('progress-high');
+      }
     }
 
     // Monta o relatório e abre o WhatsApp em uma nova aba.
@@ -2722,7 +3697,7 @@
         const lines = group.tasks.map(function(item) {
           const task = item.task;
           const historyValue = getTaskHistoryValue(task, todayHistory);
-          const valueText = (historyValue > 0 ? '+' : '') + historyValue + ' Aura Coins';
+          const valueText = (historyValue > 0 ? '+' : '') + historyValue + ' pontos';
 
           return (task.done ? '✅ ' : '❌ ') + task.name + ' (' + valueText + ')';
         }).join('\n');
@@ -2735,11 +3710,11 @@
         'Pessoa: ' + currentChecklist.personName + '\n' +
         'Data: ' + todayHistory.date + '\n' +
         'Feitas: ' + getRecordCompletedCount(todayHistory) + '\n' +
-        'Não feitas: ' + getRecordIncompleteCount(todayHistory) + '\n' +
-        'Aura Coins do dia: ' + getRecordDailyAuraCoins(todayHistory) + '\n' +
-        'Ganhos: +' + getRecordGains(todayHistory) + '\n' +
-        'Perdas: -' + getRecordLosses(todayHistory) + '\n' +
-        'Saldo: ' + getRecordBalance(todayHistory) + '\n' +
+        'Tarefas não concluídas: ' + getRecordIncompleteCount(todayHistory) + '\n' +
+        'Aura Coins ganhas: +' + getRecordDailyAuraCoins(todayHistory) + '\n' +
+        'Pontos concluídos: +' + getRecordGains(todayHistory) + '\n' +
+        'Pontos não conquistados: ' + getRecordLosses(todayHistory) + '\n' +
+        'Saldo de pontos do dia: ' + getRecordBalance(todayHistory) + '\n' +
         'Aura Coins acumuladas: ' + todayHistory.auraCoins + '\n' +
         'Combinado da família: ' + getRecordFamilyAgreement(todayHistory) + '\n\n' +
         taskLines;
@@ -2799,24 +3774,334 @@
       renderizarHistorico(currentHistory);
     }
 
-    // Abre a tela para editar o combinado da família.
+    // Recompensas editáveis da tela de combinados.
+    function getDefaultRewards() {
+      return [
+        {
+          cost: 5,
+          title: 'Escolher uma sobremesa',
+          description: 'Um prêmio simples para reforçar pequenas conquistas.'
+        },
+        {
+          cost: 10,
+          title: '30 minutos de videogame, desenho ou brincadeira escolhida',
+          description: 'Um tempo especial escolhido pela criança.'
+        },
+        {
+          cost: 20,
+          title: 'Passeio especial em família',
+          description: 'Uma experiência positiva para celebrar a rotina.'
+        },
+        {
+          cost: 30,
+          title: 'Escolher uma atividade especial no fim de semana',
+          description: 'Uma recompensa maior para metas acumuladas.'
+        }
+      ];
+    }
+
+    function ensureChecklistRewards() {
+      if (!currentChecklist) {
+        return [];
+      }
+
+      if (!Array.isArray(currentChecklist.rewards) || currentChecklist.rewards.length === 0) {
+        currentChecklist.rewards = getDefaultRewards();
+      }
+
+      return currentChecklist.rewards;
+    }
+
+    function ensureChecklistConsequences() {
+      if (!currentChecklist) {
+        return [];
+      }
+
+      if (Array.isArray(currentChecklist.consequences)) {
+        return currentChecklist.consequences;
+      }
+
+      const oldAgreement = normalizeFamilyAgreement(currentChecklist.familyAgreement);
+
+      if (oldAgreement) {
+        currentChecklist.consequences = [{
+          title: 'Combinado atual',
+          description: oldAgreement
+        }];
+      } else {
+        currentChecklist.consequences = [];
+      }
+
+      return currentChecklist.consequences;
+    }
+
+    function getConsequencesText(checklist) {
+      if (!checklist) {
+        return '';
+      }
+
+      if (Array.isArray(checklist.consequences) && checklist.consequences.length > 0) {
+        return checklist.consequences
+          .map(function(consequence) {
+            const title = (consequence.title || '').trim();
+            const description = (consequence.description || '').trim();
+
+            if (title && description) {
+              return title + ': ' + description;
+            }
+
+            return title || description;
+          })
+          .filter(Boolean)
+          .join('\n');
+      }
+
+      return normalizeFamilyAgreement(checklist.familyAgreement);
+    }
+
+    function readConsequencesEditorValues(shouldValidate) {
+      const cards = Array.from(consequencesEditorList.querySelectorAll('.consequence-editor-card'));
+
+      return cards.map(function(card) {
+        const titleInput = card.querySelector('[data-field="title"]');
+        const descriptionInput = card.querySelector('[data-field="description"]');
+        const title = titleInput.value.trim();
+
+        if (shouldValidate && !title) {
+          throw new Error('Informe o título da consequência combinada.');
+        }
+
+        return {
+          title: title || 'Nova consequência',
+          description: descriptionInput.value.trim()
+        };
+      });
+    }
+
+    function renderConsequencesEditor() {
+      consequencesEditorList.innerHTML = '';
+
+      ensureChecklistConsequences().forEach(function(consequence, index) {
+        const card = document.createElement('div');
+        card.className = 'consequence-editor-card';
+
+        const grid = document.createElement('div');
+        grid.className = 'consequence-editor-grid';
+
+        const titleLabel = document.createElement('label');
+        titleLabel.className = 'consequence-editor-label';
+        titleLabel.textContent = 'Título da consequência';
+
+        const titleInput = document.createElement('input');
+        titleInput.className = 'consequence-title-input';
+        titleInput.type = 'text';
+        titleInput.value = consequence.title || '';
+        titleInput.dataset.index = index;
+        titleInput.dataset.field = 'title';
+
+        const descriptionLabel = document.createElement('label');
+        descriptionLabel.className = 'consequence-editor-label';
+        descriptionLabel.textContent = 'Descrição do combinado';
+
+        const descriptionInput = document.createElement('textarea');
+        descriptionInput.className = 'consequence-description-input';
+        descriptionInput.value = consequence.description || '';
+        descriptionInput.dataset.index = index;
+        descriptionInput.dataset.field = 'description';
+
+        const removeButton = document.createElement('button');
+        removeButton.className = 'btn-ghost danger consequence-remove-button';
+        removeButton.type = 'button';
+        removeButton.textContent = 'Remover';
+        removeButton.addEventListener('click', function() {
+          removeConsequence(index);
+        });
+
+        titleLabel.appendChild(titleInput);
+        descriptionLabel.appendChild(descriptionInput);
+        grid.appendChild(titleLabel);
+        grid.appendChild(descriptionLabel);
+        card.appendChild(grid);
+        card.appendChild(removeButton);
+        consequencesEditorList.appendChild(card);
+      });
+    }
+
+    function addConsequence() {
+      ensureChecklistConsequences();
+      currentChecklist.consequences = readConsequencesEditorValues(false);
+      currentChecklist.consequences.push({
+        title: 'Nova consequência',
+        description: 'Descreva o combinado quando a rotina não for concluída.'
+      });
+      renderConsequencesEditor();
+    }
+
+    function removeConsequence(index) {
+      const confirmed = confirm('Deseja remover esta consequência combinada?');
+
+      if (!confirmed) {
+        return;
+      }
+
+      ensureChecklistConsequences();
+      currentChecklist.consequences = readConsequencesEditorValues(false);
+      currentChecklist.consequences.splice(index, 1);
+      renderConsequencesEditor();
+    }
+
+    async function saveConsequences() {
+      try {
+        const consequences = readConsequencesEditorValues(true);
+        currentChecklist.consequences = consequences;
+        currentChecklist.familyAgreement = getConsequencesText(currentChecklist);
+        familyAgreementInput.value = currentChecklist.familyAgreement;
+        await salvarChecklist(currentChecklist);
+        renderMotivationBanner();
+        alert('Consequências salvas!');
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    function readRewardsEditorValues(shouldValidate) {
+      const cards = Array.from(rewardsEditorList.querySelectorAll('.reward-editor-card'));
+
+      return cards.map(function(card) {
+        const costInput = card.querySelector('[data-field="cost"]');
+        const titleInput = card.querySelector('[data-field="title"]');
+        const descriptionInput = card.querySelector('[data-field="description"]');
+        const cost = Number(costInput.value);
+        const title = titleInput.value.trim();
+
+        if (shouldValidate && (!cost || cost < 1)) {
+          throw new Error('Informe uma quantidade de Aura Coins maior que zero.');
+        }
+
+        if (shouldValidate && !title) {
+          throw new Error('Informe o nome da recompensa.');
+        }
+
+        return {
+          cost: cost && cost > 0 ? cost : 5,
+          title: title || 'Nova recompensa',
+          description: descriptionInput.value.trim()
+        };
+      });
+    }
+
+    function renderRewardsEditor() {
+      rewardsEditorList.innerHTML = '';
+
+      ensureChecklistRewards().forEach(function(reward, index) {
+        const card = document.createElement('div');
+        card.className = 'reward-editor-card';
+
+        const grid = document.createElement('div');
+        grid.className = 'reward-editor-grid';
+
+        const costLabel = document.createElement('label');
+        costLabel.className = 'reward-editor-label';
+        costLabel.textContent = 'Aura Coins';
+
+        const costInput = document.createElement('input');
+        costInput.className = 'reward-editor-input';
+        costInput.type = 'number';
+        costInput.min = '1';
+        costInput.value = reward.cost;
+        costInput.dataset.index = index;
+        costInput.dataset.field = 'cost';
+
+        const titleLabel = document.createElement('label');
+        titleLabel.className = 'reward-editor-label';
+        titleLabel.textContent = 'Recompensa';
+
+        const titleInput = document.createElement('input');
+        titleInput.className = 'reward-editor-input';
+        titleInput.type = 'text';
+        titleInput.value = reward.title || '';
+        titleInput.dataset.index = index;
+        titleInput.dataset.field = 'title';
+
+        const descriptionLabel = document.createElement('label');
+        descriptionLabel.className = 'reward-editor-label reward-editor-description';
+        descriptionLabel.textContent = 'Descrição';
+
+        const descriptionInput = document.createElement('textarea');
+        descriptionInput.className = 'reward-editor-description';
+        descriptionInput.value = reward.description || '';
+        descriptionInput.dataset.index = index;
+        descriptionInput.dataset.field = 'description';
+
+        const removeButton = document.createElement('button');
+        removeButton.className = 'btn-ghost danger reward-editor-remove';
+        removeButton.type = 'button';
+        removeButton.textContent = 'Remover';
+        removeButton.addEventListener('click', function() {
+          removeReward(index);
+        });
+
+        costLabel.appendChild(costInput);
+        titleLabel.appendChild(titleInput);
+        descriptionLabel.appendChild(descriptionInput);
+        grid.appendChild(costLabel);
+        grid.appendChild(titleLabel);
+        grid.appendChild(descriptionLabel);
+        card.appendChild(grid);
+        card.appendChild(removeButton);
+        rewardsEditorList.appendChild(card);
+      });
+    }
+
+    function addReward() {
+      ensureChecklistRewards();
+      currentChecklist.rewards = readRewardsEditorValues(false);
+      currentChecklist.rewards.push({
+        cost: 5,
+        title: 'Nova recompensa',
+        description: 'Descreva o combinado desta recompensa.'
+      });
+      renderRewardsEditor();
+    }
+
+    function removeReward(index) {
+      const confirmed = confirm('Deseja remover esta recompensa?');
+
+      if (!confirmed) {
+        return;
+      }
+
+      ensureChecklistRewards();
+      currentChecklist.rewards = readRewardsEditorValues(false);
+      currentChecklist.rewards.splice(index, 1);
+      renderRewardsEditor();
+    }
+
+    async function saveRewards() {
+      try {
+        const rewards = readRewardsEditorValues(true);
+        currentChecklist.rewards = rewards;
+        await salvarChecklist(currentChecklist);
+        renderMotivationBanner();
+        alert('Recompensas salvas!');
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
     function openFamilyAgreements() {
-      agreementsOwner.textContent = currentChecklist.checklistName + ' • Código: ' + currentChecklist.code;
+      agreementsOwner.textContent = 'Rotina de ' + currentChecklist.personName + ' • ' + currentChecklist.checklistName;
       familyAgreementInput.value = getFamilyAgreement(currentChecklist);
+      ensureChecklistConsequences();
+      renderConsequencesEditor();
+      ensureChecklistRewards();
+      renderRewardsEditor();
       showScreen(SCREENS.agreements);
     }
 
     // Salva o combinado no checklist atual.
     async function saveFamilyAgreement() {
-      currentChecklist.familyAgreement = normalizeFamilyAgreement(familyAgreementInput.value);
-
-      try {
-        await salvarChecklist(currentChecklist);
-        alert('Combinado salvo!');
-        showScreen(SCREENS.checklist);
-      } catch (error) {
-        alert(error.message);
-      }
+      await saveConsequences();
     }
 
     // Apaga somente o histórico do checklist aberto.
@@ -2835,6 +4120,73 @@
       } catch (error) {
         alert(error.message);
       }
+    }
+
+    function recalcularRegistroHistorico(record) {
+      const completedCount = record.tasks.filter(function(task) {
+        return task.done;
+      }).length;
+
+      const incompleteCount = record.tasks.length - completedCount;
+
+      const gains = record.tasks.reduce(function(sum, task) {
+        return task.done ? sum + Number(task.points || 0) : sum;
+      }, 0);
+
+      const losses = record.tasks.reduce(function(sum, task) {
+        return task.done ? sum : sum + Number(task.points || 0);
+      }, 0);
+
+      const balance = gains - losses;
+      const dailyAuraCoins = completedCount;
+
+      return {
+        ...record,
+        completedCount: completedCount,
+        incompleteCount: incompleteCount,
+        gains: gains,
+        losses: losses,
+        balance: balance,
+        dayPoints: balance,
+        dailyAuraCoins: dailyAuraCoins,
+        earnedAuraCoins: dailyAuraCoins,
+        penaltyApplied: true
+      };
+    }
+
+    async function corrigirTarefaHistorico(recordDate, taskIndex) {
+      const confirmed = confirm('Deseja corrigir esta tarefa no histórico? As Aura Coins serão recalculadas.');
+
+      if (!confirmed) {
+        return;
+      }
+
+      if (!MODO_DESENVOLVIMENTO) {
+        alert('Correção de histórico no Supabase ainda não implementada.');
+        return;
+      }
+
+      const history = await buscarHistorico(currentChecklist.code);
+      const recordIndex = history.findIndex(function(record) {
+        return record.date === recordDate;
+      });
+
+      if (recordIndex === -1 || !history[recordIndex].tasks || !history[recordIndex].tasks[taskIndex]) {
+        alert('Registro do histórico não encontrado.');
+        return;
+      }
+
+      const task = history[recordIndex].tasks[taskIndex];
+      task.done = !task.done;
+      task.historyValue = task.done ? Number(task.points || 0) : -Number(task.points || 0);
+      history[recordIndex] = recalcularRegistroHistorico(history[recordIndex]);
+
+      const updatedHistory = recalculateAuraCoins(history);
+      saveHistoryToLocalStorage(currentChecklist.code, updatedHistory);
+      currentHistory = updatedHistory;
+      renderizarHistorico(currentHistory);
+      renderMotivationBanner();
+      alert('Histórico corrigido!');
     }
 
     // Mostra o histórico salvo na tela.
@@ -2878,11 +4230,11 @@
 
         const incompleteLine = document.createElement('div');
         incompleteLine.className = 'task-meta';
-        incompleteLine.textContent = '❌ Não feitas: ' + getRecordIncompleteCount(record);
+        incompleteLine.textContent = '❌ Tarefas não concluídas: ' + getRecordIncompleteCount(record);
 
         const auraLine = document.createElement('div');
         auraLine.className = 'task-meta';
-        auraLine.textContent = '🪙 Aura Coins: ' + getRecordDailyAuraCoins(record);
+        auraLine.textContent = '🪙 Aura Coins ganhas: +' + getRecordDailyAuraCoins(record);
 
         const agreementTitle = document.createElement('div');
         agreementTitle.className = 'task-title';
@@ -2908,6 +4260,7 @@
 
           group.tasks.forEach(function(item) {
             const task = item.task;
+            const index = item.index;
             const taskCard = document.createElement('div');
             taskCard.className = 'task-card';
 
@@ -2929,17 +4282,75 @@
             const points = document.createElement('strong');
             points.textContent = (historyValue > 0 ? '+' : '') + historyValue;
 
+            const correctionArea = document.createElement('div');
+            correctionArea.className = 'history-task-correction';
+
+            const correctionButton = document.createElement('button');
+            correctionButton.className = 'btn-ghost history-correction-button';
+            correctionButton.type = 'button';
+            correctionButton.textContent = 'Corrigir';
+            correctionButton.addEventListener('click', function() {
+              corrigirTarefaHistorico(record.date, index);
+            });
+
             textArea.appendChild(title);
             textArea.appendChild(meta);
             taskCard.appendChild(icon);
             taskCard.appendChild(textArea);
             taskCard.appendChild(points);
+            if (currentChecklist && !childModeActive) {
+              correctionArea.appendChild(correctionButton);
+              taskCard.appendChild(correctionArea);
+            }
             categoryItems.appendChild(taskCard);
           });
         });
 
         historyList.appendChild(dayArea);
       });
+    }
+
+    function getDefaultChecklistTemplateTasks() {
+      const templateTasks = [
+        { category: 'Quarto', name: 'Arrumar a cama', points: 10, frequency: 'Diária' },
+        { category: 'Quarto', name: 'Guardar roupas espalhadas', points: 10, frequency: 'Diária' },
+        { category: 'Quarto', name: 'Organizar brinquedos ou objetos pessoais', points: 10, frequency: 'Diária' },
+        { category: 'Sala', name: 'Recolher objetos fora do lugar', points: 10, frequency: 'Diária' },
+        { category: 'Sala', name: 'Ajudar a manter o sofá organizado', points: 5, frequency: 'Diária' },
+        { category: 'Sala', name: 'Desligar TV ou videogame quando terminar', points: 5, frequency: 'Diária' },
+        { category: 'Cozinha', name: 'Levar copo, prato ou talher para a pia', points: 10, frequency: 'Diária' },
+        { category: 'Cozinha', name: 'Jogar lixo pequeno no lixo correto', points: 5, frequency: 'Diária' },
+        { category: 'Cozinha', name: 'Ajudar a guardar algo simples da cozinha', points: 10, frequency: 'Diária' },
+        { category: 'Banheiro', name: 'Escovar os dentes', points: 10, frequency: 'Diária' },
+        { category: 'Banheiro', name: 'Pendurar a toalha após o banho', points: 10, frequency: 'Diária' },
+        { category: 'Banheiro', name: 'Manter a pia limpa depois de usar', points: 5, frequency: 'Diária' }
+      ];
+
+      return templateTasks.map(function(task, index) {
+        return {
+          id: Date.now() + index,
+          category: task.category,
+          name: task.name,
+          points: task.points,
+          frequency: task.frequency,
+          done: false
+        };
+      });
+    }
+
+    function startChecklistFromTemplate() {
+      personNameInput.value = '';
+      whatsappInput.value = '';
+      customAccessCodeInput.value = '';
+      checklistNameInput.value = 'Rotina infantil diária';
+      taskCategoryInput.value = '';
+      taskNameInput.value = '';
+      taskPointsInput.value = '10';
+      taskFrequencyInput.value = 'Diária';
+      tasksBeingCreated = getDefaultChecklistTemplateTasks();
+      generatedCodeBox.classList.add('hidden');
+      renderCreationTasks();
+      showScreen(SCREENS.create);
     }
 
     // Limpa o formulário e começa um checklist novo.
@@ -2983,7 +4394,12 @@
     saveNewChecklistTaskButton.addEventListener('click', saveNewChecklistTask);
     cancelNewChecklistTaskButton.addEventListener('click', cancelAddChecklistTask);
     familyAgreementsButton.addEventListener('click', openFamilyAgreements);
+    deleteCurrentChecklistButton.addEventListener('click', excluirChecklistAtual);
     viewHistoryButton.addEventListener('click', openHistory);
+    addConsequenceButton.addEventListener('click', addConsequence);
+    saveConsequencesButton.addEventListener('click', saveConsequences);
+    addRewardButton.addEventListener('click', addReward);
+    saveRewardsButton.addEventListener('click', saveRewards);
 
     backHomeButton.addEventListener('click', function() {
       carregarMeusChecklists();
@@ -2994,6 +4410,7 @@
     });
 
     backFromAgreementsButton.addEventListener('click', function() {
+      renderMotivationBanner();
       showScreen(SCREENS.checklist);
     });
 
@@ -3471,7 +4888,7 @@
         return task.done;
       }).length;
       const incompleteCount = tasks.length - completedCount;
-      const dailyAuraCoins = completedCount - incompleteCount;
+      const dailyAuraCoins = completedCount;
 
       return {
         date: getTodayDate(),
@@ -3480,6 +4897,7 @@
         completedCount: completedCount,
         incompleteCount: incompleteCount,
         dailyAuraCoins: dailyAuraCoins,
+        earnedAuraCoins: dailyAuraCoins,
         familyAgreement: getFamilyAgreement(checklist),
         dayPoints: balance,
         gains: gains,
@@ -3499,19 +4917,21 @@
           return first.date.localeCompare(second.date);
         })
         .map(function(record) {
-          total = total + getRecordDailyAuraCoins(record);
+          const dailyAuraCoins = Math.max(0, getRecordDailyAuraCoins(record));
+          total = Math.max(0, total + dailyAuraCoins);
           return {
             ...record,
             completedCount: getRecordCompletedCount(record),
             incompleteCount: getRecordIncompleteCount(record),
-            dailyAuraCoins: getRecordDailyAuraCoins(record),
+            dailyAuraCoins: dailyAuraCoins,
+            earnedAuraCoins: dailyAuraCoins,
             familyAgreement: getRecordFamilyAgreement(record),
             gains: getRecordGains(record),
             losses: getRecordLosses(record),
             balance: getRecordBalance(record),
             dayPoints: getRecordBalance(record),
             penaltyApplied: record.penaltyApplied === true || typeof record.losses === 'number' || typeof record.balance === 'number',
-            auraCoins: total
+            auraCoins: Math.max(0, total)
           };
         });
     }
