@@ -902,6 +902,11 @@
       border-top: 1px solid #e2e8f0;
     }
 
+    .task-steps-field,
+    .form-grid .full-width {
+      grid-column: 1 / -1;
+    }
+
     .task-list {
       display: grid;
       gap: 10px;
@@ -986,6 +991,36 @@
       color: #64748b;
       font-size: 0.9rem;
       margin-top: 3px;
+    }
+
+    .task-steps {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-left: 3px solid #99f6e4;
+      border-radius: 8px;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .task-steps-title {
+      margin-bottom: 4px;
+      color: #334155;
+      font-weight: 800;
+    }
+
+    .task-steps-list {
+      display: grid;
+      gap: 3px;
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .child-mode-active .task-steps {
+      border-left-color: #14b8a6;
+      background: #ecfeff;
+      font-size: 0.95rem;
     }
 
     .inline-editor {
@@ -1742,6 +1777,11 @@
             </select>
           </label>
 
+          <label class="task-steps-field">
+            Passos da tarefa
+            <textarea id="taskStepsInput" rows="4" placeholder="Digite um passo por linha&#10;Ex:&#10;Arrumar a cama&#10;Guardar roupas espalhadas&#10;Organizar brinquedos"></textarea>
+          </label>
+
           <button class="btn secondary" id="addTaskButton" type="button">Adicionar tarefa</button>
         </div>
 
@@ -1854,6 +1894,11 @@
               Pontos
               <input id="newCategoryTaskPointsInput" type="number" min="1" value="10">
             </label>
+
+            <label class="full-width">
+              Passos da tarefa
+              <textarea id="newCategoryTaskStepsInput" rows="4" placeholder="Digite um passo por linha&#10;Ex:&#10;Arrumar a cama&#10;Guardar roupas espalhadas&#10;Organizar brinquedos"></textarea>
+            </label>
           </div>
 
           <div class="history-actions">
@@ -1887,6 +1932,11 @@
                 <option value="Mensal">Mensal</option>
                 <option value="Única">Única</option>
               </select>
+            </label>
+
+            <label class="full-width">
+              Passos da tarefa
+              <textarea id="newChecklistTaskStepsInput" rows="4" placeholder="Digite um passo por linha&#10;Ex:&#10;Arrumar a cama&#10;Guardar roupas espalhadas&#10;Organizar brinquedos"></textarea>
             </label>
           </div>
 
@@ -2121,6 +2171,7 @@
     const taskNameInput = document.getElementById('taskNameInput');
     const taskPointsInput = document.getElementById('taskPointsInput');
     const taskFrequencyInput = document.getElementById('taskFrequencyInput');
+    const taskStepsInput = document.getElementById('taskStepsInput');
     const addTaskButton = document.getElementById('addTaskButton');
     const saveChecklistButton = document.getElementById('saveChecklistButton');
     const creationTaskList = document.getElementById('creationTaskList');
@@ -2155,6 +2206,7 @@
     const newCategoryTaskNameInput = document.getElementById('newCategoryTaskNameInput');
     const newCategoryTaskFrequencyInput = document.getElementById('newCategoryTaskFrequencyInput');
     const newCategoryTaskPointsInput = document.getElementById('newCategoryTaskPointsInput');
+    const newCategoryTaskStepsInput = document.getElementById('newCategoryTaskStepsInput');
     const saveNewCategoryButton = document.getElementById('saveNewCategoryButton');
     const cancelNewCategoryButton = document.getElementById('cancelNewCategoryButton');
     const addChecklistTaskArea = document.getElementById('addChecklistTaskArea');
@@ -2162,6 +2214,7 @@
     const newChecklistTaskNameInput = document.getElementById('newChecklistTaskNameInput');
     const newChecklistTaskPointsInput = document.getElementById('newChecklistTaskPointsInput');
     const newChecklistTaskFrequencyInput = document.getElementById('newChecklistTaskFrequencyInput');
+    const newChecklistTaskStepsInput = document.getElementById('newChecklistTaskStepsInput');
     const saveNewChecklistTaskButton = document.getElementById('saveNewChecklistTaskButton');
     const cancelNewChecklistTaskButton = document.getElementById('cancelNewChecklistTaskButton');
     const familyAgreementsButton = document.getElementById('familyAgreementsButton');
@@ -3868,6 +3921,74 @@
       return meta;
     }
 
+    function normalizarPassosTarefa(valor) {
+      const linhas = Array.isArray(valor)
+        ? valor
+        : (typeof valor === 'string' ? valor.split(/\r?\n/) : []);
+
+      return linhas
+        .map(function(passo) {
+          return String(passo).trim();
+        })
+        .filter(function(passo) {
+          return passo.length > 0;
+        });
+    }
+
+    function obterPassosTarefa(tarefa) {
+      if (!tarefa) {
+        return [];
+      }
+
+      const fontes = [
+        tarefa.passos,
+        tarefa.passosTarefa,
+        tarefa.descricaoPassos,
+        tarefa.detalhes
+      ];
+
+      for (let index = 0; index < fontes.length; index += 1) {
+        const passos = normalizarPassosTarefa(fontes[index]);
+        if (passos.length > 0) {
+          return passos;
+        }
+      }
+
+      return [];
+    }
+
+    function passosTarefaParaTexto(tarefa) {
+      return obterPassosTarefa(tarefa).join('\n');
+    }
+
+    function renderizarPassosTarefa(tarefa, titulo) {
+      const passos = obterPassosTarefa(tarefa);
+
+      if (passos.length === 0) {
+        return null;
+      }
+
+      const container = document.createElement('div');
+      container.className = 'task-steps';
+
+      const title = document.createElement('div');
+      title.className = 'task-steps-title';
+      title.textContent = titulo;
+
+      const list = document.createElement('ul');
+      list.className = 'task-steps-list';
+
+      passos.forEach(function(passo) {
+        const item = document.createElement('li');
+        item.textContent = passo;
+        list.appendChild(item);
+      });
+
+      container.appendChild(title);
+      container.appendChild(list);
+      return container;
+    }
+
     // Mostra as tarefas adicionadas enquanto o checklist está sendo criado.
     function renderCreationTasks() {
       creationTaskList.innerHTML = '';
@@ -3909,6 +4030,10 @@
 
           textArea.appendChild(title);
           textArea.appendChild(createTaskMeta(task));
+          const taskSteps = renderizarPassosTarefa(task, 'Passos:');
+          if (taskSteps) {
+            textArea.appendChild(taskSteps);
+          }
           taskCard.appendChild(icon);
           taskCard.appendChild(textArea);
           taskCard.appendChild(removeButton);
@@ -3929,6 +4054,7 @@
       const name = taskNameInput.value.trim();
       const points = Number(taskPointsInput.value);
       const frequency = taskFrequencyInput.value;
+      const passos = normalizarPassosTarefa(taskStepsInput.value);
 
       if (!name) {
         alert('Digite o nome da tarefa.');
@@ -3946,6 +4072,7 @@
         name: name,
         points: points,
         frequency: frequency,
+        passos: passos,
         done: false
       });
 
@@ -3953,6 +4080,7 @@
       taskNameInput.value = '';
       taskPointsInput.value = '10';
       taskFrequencyInput.value = 'Diária';
+      taskStepsInput.value = '';
       renderCreationTasks();
     }
 
@@ -4464,6 +4592,14 @@
           });
           taskFrequencySelect.value = task.frequency;
 
+          const taskStepsLabel = document.createElement('label');
+          taskStepsLabel.textContent = 'Passos da tarefa';
+
+          const taskStepsTextarea = document.createElement('textarea');
+          taskStepsTextarea.rows = '4';
+          taskStepsTextarea.placeholder = 'Digite um passo por linha';
+          taskStepsTextarea.value = passosTarefaParaTexto(task);
+
           const taskActions = document.createElement('div');
           taskActions.className = 'history-actions';
 
@@ -4481,12 +4617,14 @@
           taskCategoryLabel.appendChild(taskCategoryInput);
           taskPointsLabel.appendChild(taskPointsInput);
           taskFrequencyLabel.appendChild(taskFrequencySelect);
+          taskStepsLabel.appendChild(taskStepsTextarea);
           taskActions.appendChild(saveTaskButton);
           taskActions.appendChild(cancelTaskButton);
           taskEditor.appendChild(taskNameLabel);
           taskEditor.appendChild(taskCategoryLabel);
           taskEditor.appendChild(taskPointsLabel);
           taskEditor.appendChild(taskFrequencyLabel);
+          taskEditor.appendChild(taskStepsLabel);
           taskEditor.appendChild(taskActions);
 
           taskOptions.appendChild(editTaskButton);
@@ -4507,6 +4645,7 @@
             taskCategoryInput.value = getTaskCategory(task);
             taskPointsInput.value = task.points;
             taskFrequencySelect.value = task.frequency;
+            taskStepsTextarea.value = passosTarefaParaTexto(task);
           });
 
           saveTaskButton.addEventListener('click', async function() {
@@ -4528,7 +4667,8 @@
               name: newName,
               category: taskCategoryInput.value.trim() || 'Sem categoria',
               points: newPoints,
-              frequency: taskFrequencySelect.value
+              frequency: taskFrequencySelect.value,
+              passos: normalizarPassosTarefa(taskStepsTextarea.value)
             };
 
             await salvarTarefas(currentChecklist);
@@ -4551,6 +4691,13 @@
 
           textArea.appendChild(title);
           textArea.appendChild(createTaskMeta(task));
+          const taskSteps = renderizarPassosTarefa(
+            task,
+            childModeActive ? 'Antes de finalizar, confira:' : 'O que precisa ser feito:'
+          );
+          if (taskSteps) {
+            textArea.appendChild(taskSteps);
+          }
           taskCard.appendChild(statusButton);
           taskCard.appendChild(textArea);
           taskCard.appendChild(points);
@@ -4642,6 +4789,7 @@
       newChecklistTaskNameInput.value = '';
       newChecklistTaskPointsInput.value = '10';
       newChecklistTaskFrequencyInput.value = 'Diária';
+      newChecklistTaskStepsInput.value = '';
       if (categoryItems) {
         categoryItems.insertBefore(addChecklistTaskArea, categoryItems.firstChild);
       }
@@ -4659,6 +4807,7 @@
       newCategoryTaskNameInput.value = '';
       newCategoryTaskFrequencyInput.value = 'Diária';
       newCategoryTaskPointsInput.value = '10';
+      newCategoryTaskStepsInput.value = '';
       addCategoryArea.classList.remove('hidden');
     }
 
@@ -4669,6 +4818,7 @@
       newChecklistTaskNameInput.value = '';
       newChecklistTaskPointsInput.value = '10';
       newChecklistTaskFrequencyInput.value = 'Diária';
+      newChecklistTaskStepsInput.value = '';
     }
 
     // Cancela a criacao da categoria sem alterar o checklist.
@@ -4678,6 +4828,7 @@
       newCategoryTaskNameInput.value = '';
       newCategoryTaskFrequencyInput.value = 'Diária';
       newCategoryTaskPointsInput.value = '10';
+      newCategoryTaskStepsInput.value = '';
     }
 
     // Adiciona uma nova tarefa ao checklist atual sem mexer no historico.
@@ -4690,6 +4841,7 @@
       const name = newChecklistTaskNameInput.value.trim();
       const points = Number(newChecklistTaskPointsInput.value);
       const frequency = newChecklistTaskFrequencyInput.value;
+      const passos = normalizarPassosTarefa(newChecklistTaskStepsInput.value);
 
       if (!name) {
         alert('Digite o nome da tarefa.');
@@ -4707,6 +4859,7 @@
         name: name,
         points: points,
         frequency: frequency,
+        passos: passos,
         done: false
       });
 
@@ -4731,6 +4884,7 @@
       const name = newCategoryTaskNameInput.value.trim();
       const frequency = newCategoryTaskFrequencyInput.value;
       const points = Number(newCategoryTaskPointsInput.value);
+      const passos = normalizarPassosTarefa(newCategoryTaskStepsInput.value);
 
       if (!name) {
         alert('Digite o nome da tarefa.');
@@ -4748,6 +4902,7 @@
         name: name,
         points: points,
         frequency: frequency,
+        passos: passos,
         done: false
       });
 
@@ -5795,6 +5950,7 @@
       taskNameInput.value = '';
       taskPointsInput.value = '10';
       taskFrequencyInput.value = 'Diária';
+      taskStepsInput.value = '';
       tasksBeingCreated = getDefaultChecklistTemplateTasks();
       generatedCodeBox.classList.add('hidden');
       renderCreationTasks();
@@ -5812,6 +5968,7 @@
       taskNameInput.value = '';
       taskPointsInput.value = '10';
       taskFrequencyInput.value = 'Diária';
+      taskStepsInput.value = '';
       generatedCodeBox.classList.add('hidden');
       renderCreationTasks();
       showScreen(SCREENS.create);
@@ -6026,6 +6183,35 @@
       });
     }
 
+    function mesclarPassosLocaisNasTarefasSupabase(tarefasSupabase, tarefasLocais) {
+      if (!Array.isArray(tarefasSupabase) || !Array.isArray(tarefasLocais)) {
+        return tarefasSupabase;
+      }
+
+      const passosPorId = {};
+
+      tarefasLocais.forEach(function(task) {
+        const passos = obterPassosTarefa(task);
+
+        if (passos.length > 0) {
+          passosPorId[String(garantirTaskIdLocal(task))] = passos;
+        }
+      });
+
+      return tarefasSupabase.map(function(task) {
+        const passos = passosPorId[String(garantirTaskIdLocal(task))];
+
+        if (!passos || passos.length === 0) {
+          return task;
+        }
+
+        return {
+          ...task,
+          passos: passos
+        };
+      });
+    }
+
     function mapearTarefaSupabaseParaLocal(row) {
       return {
         id: row.task_id,
@@ -6140,7 +6326,7 @@
       const tarefasSupabase = await carregarTarefasSupabase(checklist.code);
 
       if (Array.isArray(tarefasSupabase) && tarefasSupabase.length > 0) {
-        checklist.tasks = tarefasSupabase;
+        checklist.tasks = mesclarPassosLocaisNasTarefasSupabase(tarefasSupabase, checklist.tasks);
         saveChecklistToLocalStorage(checklist);
         return checklist;
       }
