@@ -4221,6 +4221,132 @@
       return 'fluxos-da-casa-' + userId + '-' + checklistCode + '-' + suffix;
     }
 
+    function getFluxosUserIdSeguro() {
+      return usuarioLogado && usuarioLogado.id ? String(usuarioLogado.id) : null;
+    }
+
+    function getFluxosPinModoCriancaKey() {
+      const userId = getFluxosUserIdSeguro();
+      return userId ? 'fluxos-casa-pin-crianca-' + userId : null;
+    }
+
+    function getFluxosEstadoModoCriancaKey() {
+      const userId = getFluxosUserIdSeguro();
+      return userId ? 'fluxos-casa-modo-crianca-' + userId : null;
+    }
+
+    function carregarPinModoCrianca() {
+      const key = getFluxosPinModoCriancaKey();
+      return key ? (localStorage.getItem(key) || '') : '';
+    }
+
+    function salvarPinModoCrianca(pin) {
+      const key = getFluxosPinModoCriancaKey();
+      const cleanPin = String(pin || '').trim();
+
+      if (!key || !cleanPin) {
+        return false;
+      }
+
+      localStorage.setItem(key, cleanPin);
+      return true;
+    }
+
+    function validarPinModoCrianca(pinDigitado) {
+      const savedPin = carregarPinModoCrianca();
+      return Boolean(savedPin) && String(pinDigitado || '').trim() === savedPin;
+    }
+
+    function alterarPinModoCrianca() {
+      const newPin = prompt('Digite o PIN do responsável');
+
+      if (newPin === null) {
+        return false;
+      }
+
+      const cleanPin = newPin.trim();
+
+      if (!cleanPin) {
+        alert('O PIN não pode ficar vazio.');
+        return false;
+      }
+
+      const confirmation = prompt('Confirme o PIN do responsável');
+
+      if (confirmation === null) {
+        return false;
+      }
+
+      if (confirmation.trim() !== cleanPin) {
+        alert('Os PINs não conferem.');
+        return false;
+      }
+
+      if (!salvarPinModoCrianca(cleanPin)) {
+        alert('Não foi possível salvar o PIN agora.');
+        return false;
+      }
+
+      alert('PIN do Modo Criança salvo.');
+      return true;
+    }
+
+    function garantirPinModoCrianca() {
+      if (carregarPinModoCrianca()) {
+        return true;
+      }
+
+      alert('Configure um PIN para proteger a saída do Modo Criança.');
+      return alterarPinModoCrianca();
+    }
+
+    function carregarEstadoModoCriancaFluxos() {
+      const key = getFluxosEstadoModoCriancaKey();
+
+      if (!key) {
+        return {
+          ativo: false,
+          criancaId: null
+        };
+      }
+
+      try {
+        const savedData = localStorage.getItem(key);
+        const state = savedData ? JSON.parse(savedData) : {};
+        return {
+          ativo: state.ativo === true,
+          criancaId: state.criancaId || null
+        };
+      } catch (error) {
+        console.warn('Estado do Modo Criança não carregado:', error);
+        return {
+          ativo: false,
+          criancaId: null
+        };
+      }
+    }
+
+    function salvarEstadoModoCrianca(estado) {
+      const key = getFluxosEstadoModoCriancaKey();
+
+      if (!key) {
+        return;
+      }
+
+      localStorage.setItem(key, JSON.stringify({
+        ativo: estado && estado.ativo === true,
+        criancaId: estado && estado.criancaId ? estado.criancaId : null
+      }));
+    }
+
+    function limparEstadoModoCrianca() {
+      const key = getFluxosEstadoModoCriancaKey();
+
+      if (key) {
+        localStorage.removeItem(key);
+      }
+    }
+
     function getFluxosTasksDefault() {
       const baseId = Date.now();
       let index = 0;
@@ -4466,7 +4592,8 @@
       fluxosContent.innerHTML = '';
       notificationBellButton.classList.add('hidden');
       hideNotificationPanel();
-      document.body.classList.remove('child-mode-active');
+      document.body.classList.toggle('child-mode-active', childModeActive === true);
+      logoutButton.classList.toggle('hidden', childModeActive === true);
       backHomeButton.classList.add('hidden');
     }
 
@@ -4503,6 +4630,8 @@
     }
 
     function renderTelaInicialFluxos() {
+      childModeActive = false;
+      fluxosCriancaSelecionadaId = null;
       limparFluxosContent();
       appTopbar.querySelector('.brand span').textContent = 'Fluxos da Casa';
 
@@ -4519,6 +4648,10 @@
       childButton.type = 'button';
       childButton.textContent = 'Modo Criança';
       childButton.addEventListener('click', function() {
+        if (!garantirPinModoCrianca()) {
+          return;
+        }
+
         fluxosCriancaSelecionadaId = null;
         renderModoCriancaFluxos();
       });
@@ -4536,8 +4669,26 @@
     }
 
     function renderModoCriancaFluxos() {
+      if (!garantirPinModoCrianca()) {
+        renderTelaInicialFluxos();
+        return;
+      }
+
+      childModeActive = true;
       limparFluxosContent();
-      fluxosContent.appendChild(criarFluxosHeader('Modo Criança', 'Escolha quem está usando agora.', true));
+      const header = criarFluxosHeader('Modo Criança', 'Escolha quem está usando agora.', false);
+      const actions = document.createElement('div');
+      actions.className = 'fluxos-toolbar';
+
+      const exitButton = document.createElement('button');
+      exitButton.className = 'btn secondary small';
+      exitButton.type = 'button';
+      exitButton.textContent = 'Sair do Modo Criança';
+      exitButton.addEventListener('click', sairModoCriancaComPin);
+
+      actions.appendChild(exitButton);
+      header.appendChild(actions);
+      fluxosContent.appendChild(header);
       renderEscolhaCrianca();
     }
 
@@ -4559,6 +4710,7 @@
         button.textContent = crianca.nome;
         button.addEventListener('click', function() {
           fluxosCriancaSelecionadaId = crianca.id;
+          ativarModoCriancaFluxos(crianca.id);
           renderFluxosCriancaSelecionada();
         });
         grid.appendChild(button);
@@ -4567,6 +4719,33 @@
       card.appendChild(title);
       card.appendChild(grid);
       fluxosContent.appendChild(card);
+    }
+
+    function ativarModoCriancaFluxos(criancaId) {
+      childModeActive = true;
+      fluxosCriancaSelecionadaId = criancaId;
+      salvarEstadoModoCrianca({
+        ativo: true,
+        criancaId: criancaId
+      });
+    }
+
+    function sairModoCriancaComPin() {
+      const pin = prompt('Digite o PIN do responsável');
+
+      if (pin === null) {
+        return;
+      }
+
+      if (!validarPinModoCrianca(pin)) {
+        alert('PIN incorreto.');
+        return;
+      }
+
+      limparEstadoModoCrianca();
+      childModeActive = false;
+      fluxosCriancaSelecionadaId = null;
+      renderTelaInicialFluxos();
     }
 
     function renderFluxosCriancaSelecionada() {
@@ -4582,7 +4761,19 @@
       const escolhas = carregarEscolhasSemana();
       const categoryId = obterCategoriaDaCriancaNaSemana(crianca.id, escolhas);
 
-      fluxosContent.appendChild(criarFluxosHeader(crianca.nome, 'Semana: ' + escolhas.semana, true));
+      const header = criarFluxosHeader(crianca.nome, 'Semana: ' + escolhas.semana, false);
+      const actions = document.createElement('div');
+      actions.className = 'fluxos-toolbar';
+
+      const exitButton = document.createElement('button');
+      exitButton.className = 'btn secondary small';
+      exitButton.type = 'button';
+      exitButton.textContent = 'Sair do Modo Criança';
+      exitButton.addEventListener('click', sairModoCriancaComPin);
+
+      actions.appendChild(exitButton);
+      header.appendChild(actions);
+      fluxosContent.appendChild(header);
 
       if (!categoryId) {
         renderEscolhaCategoriaSemana(crianca, escolhas);
@@ -4727,12 +4918,44 @@
     }
 
     function renderModoResponsavelFluxos() {
+      childModeActive = false;
       limparFluxosContent();
       fluxosContent.appendChild(criarFluxosHeader('Modo Responsável', 'Acompanhe a escala da semana e ajuste a rotina.', true));
 
+      renderPinModoCriancaFluxos();
       renderEscalaResponsavelFluxos();
       renderEditorCriancasFluxos();
       renderEditorTarefasFluxos();
+    }
+
+    function renderPinModoCriancaFluxos() {
+      const card = document.createElement('div');
+      card.className = 'fluxos-card';
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-card-title';
+      title.textContent = 'PIN do Modo Criança';
+
+      const text = document.createElement('p');
+      text.className = 'muted';
+      text.textContent = carregarPinModoCrianca()
+        ? 'PIN configurado para proteger a saída do Modo Criança neste dispositivo.'
+        : 'Configure um PIN para proteger a saída do Modo Criança.';
+
+      const button = document.createElement('button');
+      button.className = 'btn secondary small';
+      button.type = 'button';
+      button.textContent = carregarPinModoCrianca() ? 'Alterar PIN' : 'Criar PIN';
+      button.addEventListener('click', function() {
+        if (alterarPinModoCrianca()) {
+          renderModoResponsavelFluxos();
+        }
+      });
+
+      card.appendChild(title);
+      card.appendChild(text);
+      card.appendChild(button);
+      fluxosContent.appendChild(card);
     }
 
     function renderEscalaResponsavelFluxos() {
@@ -5012,7 +5235,20 @@
 
     async function inicializarFluxosDaCasa(checklistsSupabase) {
       await carregarConfigFluxos(checklistsSupabase);
-      renderTelaInicialFluxos();
+      const estadoModoCrianca = carregarEstadoModoCriancaFluxos();
+      const criancaAtiva = estadoModoCrianca.ativo && estadoModoCrianca.criancaId
+        ? obterCriancaFluxos(estadoModoCrianca.criancaId)
+        : null;
+
+      if (criancaAtiva) {
+        childModeActive = true;
+        fluxosCriancaSelecionadaId = criancaAtiva.id;
+        renderFluxosCriancaSelecionada();
+      } else {
+        limparEstadoModoCrianca();
+        renderTelaInicialFluxos();
+      }
+
       showScreen(SCREENS.fluxos);
     }
 
