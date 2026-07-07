@@ -2215,6 +2215,10 @@
         return 'rejected';
       }
 
+      if (status === 'removida' || status === 'removed') {
+        return 'rejected';
+      }
+
       return 'pending';
     }
 
@@ -2240,16 +2244,156 @@
     }
 
     function getExtraMissionTitle(mission) {
-      return mission ? (mission.title || mission.titulo || mission.descricao || mission.description || '') : '';
+      if (!mission) {
+        return '';
+      }
+
+      const missionText = mission.descricao ||
+        mission.texto ||
+        mission.description ||
+        mission.titulo ||
+        mission.title ||
+        '';
+
+      return String(missionText).trim();
     }
 
     function getExtraMissionBonusAuraCoins(mission, fallbackValue) {
-      if (!mission || !Object.prototype.hasOwnProperty.call(mission, 'bonusAuraCoins')) {
+      if (!mission) {
         return fallbackValue;
       }
 
-      const bonusAuraCoins = Number(mission.bonusAuraCoins);
+      const bonusValue = Object.prototype.hasOwnProperty.call(mission, 'bonusAuraCoins')
+        ? mission.bonusAuraCoins
+        : mission.auraCoinsBonus;
+      const bonusAuraCoins = Number(bonusValue);
       return Number.isFinite(bonusAuraCoins) && bonusAuraCoins >= 0 ? bonusAuraCoins : fallbackValue;
+    }
+
+    function normalizeHistoryDateKey(value) {
+      if (!value) {
+        return '';
+      }
+
+      if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        const year = value.getFullYear();
+        const month = String(value.getMonth() + 1).padStart(2, '0');
+        const day = String(value.getDate()).padStart(2, '0');
+        return year + '-' + month + '-' + day;
+      }
+
+      const textValue = String(value);
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test(textValue.slice(0, 10)) && !textValue.includes('T')) {
+        return textValue.slice(0, 10);
+      }
+
+      const parsedDate = new Date(textValue);
+
+      if (!Number.isNaN(parsedDate.getTime())) {
+        return normalizeHistoryDateKey(parsedDate);
+      }
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test(textValue.slice(0, 10))) {
+        return textValue.slice(0, 10);
+      }
+
+      return '';
+    }
+
+    function getExtraMissionHistoryDate(recordDate, mission) {
+      const preferredDate = mission.approvedAt ||
+        mission.aprovadaEm ||
+        mission.reconhecidaEm ||
+        mission.rejectedAt ||
+        mission.recusadaEm ||
+        mission.createdAt ||
+        mission.criadoEm ||
+        mission.createdDate ||
+        recordDate;
+
+      return normalizeHistoryDateKey(preferredDate) || normalizeHistoryDateKey(recordDate);
+    }
+
+    function shouldShowExtraMissionInHistory(mission) {
+      if (mission && (mission.status === 'removida' || mission.status === 'removed')) {
+        return false;
+      }
+
+      return isApprovedExtraMission(mission) || getExtraMissionStatusClass(mission.status) === 'rejected';
+    }
+
+    function collectExtraMissionsForHistory(history) {
+      const missionsByDate = {};
+      const addedMissionKeys = new Set();
+      const userId = usuarioLogado && usuarioLogado.id ? usuarioLogado.id : null;
+
+      function addMission(recordDate, mission) {
+        if (!currentChecklist || !currentChecklist.code || !mission || !shouldShowExtraMissionInHistory(mission)) {
+          return;
+        }
+
+        const missionChecklistCode = mission.checklist_code || mission.checklistCode || mission.code || currentChecklist.code;
+        const missionUserId = mission.user_id || mission.userId || null;
+        const missionTitle = getExtraMissionTitle(mission);
+
+        if (
+          missionChecklistCode !== currentChecklist.code ||
+          (userId && missionUserId && missionUserId !== userId) ||
+          !missionTitle
+        ) {
+          return;
+        }
+
+        const missionDate = getExtraMissionHistoryDate(recordDate, mission);
+
+        if (!missionDate) {
+          return;
+        }
+
+        const missionKey = mission.id
+          ? 'id:' + mission.id
+          : 'fallback:' + missionDate + ':' + missionTitle + ':' + (mission.status || '');
+
+        if (addedMissionKeys.has(missionKey)) {
+          return;
+        }
+
+        addedMissionKeys.add(missionKey);
+
+        if (!missionsByDate[missionDate]) {
+          missionsByDate[missionDate] = [];
+        }
+
+        missionsByDate[missionDate].push(mission);
+      }
+
+      (Array.isArray(history) ? history : []).forEach(function(record) {
+        if (!Array.isArray(record.extraMissions)) {
+          return;
+        }
+
+        record.extraMissions.forEach(function(mission) {
+          addMission(record.date, mission);
+        });
+      });
+
+      if (currentChecklist && currentChecklist.code) {
+        loadAllExtraMissionsDrafts(currentChecklist.code).forEach(function(draftRecord) {
+          draftRecord.missions.forEach(function(mission) {
+            addMission(draftRecord.date, mission);
+          });
+        });
+      }
+
+      Object.keys(missionsByDate).forEach(function(dateKey) {
+        missionsByDate[dateKey].sort(function(first, second) {
+          return String(first.approvedAt || first.aprovadaEm || first.rejectedAt || first.recusadaEm || first.createdAt || '')
+            .localeCompare(String(second.approvedAt || second.aprovadaEm || second.rejectedAt || second.recusadaEm || second.createdAt || ''));
+        });
+      });
+
+      return missionsByDate;
     }
 
     async function getPendingExtraMissions() {
@@ -2798,6 +2942,10 @@
     }
 
     function getExtraMissionStatusLabel(status) {
+      if (status === 'removida' || status === 'removed') {
+        return 'Removida do histórico';
+      }
+
       if (status === 'approved' || status === 'aprovada' || status === 'reconhecida') {
         return 'Reconhecida';
       }
@@ -2829,6 +2977,12 @@
         mission.bonusAuraCoins = bonusAuraCoins;
         mission.approvedAt = new Date().toISOString();
         mission.aprovadaEm = mission.approvedAt;
+      }
+
+      if (status === 'rejected' || status === 'recusada') {
+        mission.bonusAuraCoins = 0;
+        mission.rejectedAt = new Date().toISOString();
+        mission.recusadaEm = mission.rejectedAt;
       }
 
       saveExtraMissionsDraft(currentChecklist.code, recordDate, missions);
@@ -2863,6 +3017,93 @@
       }
 
       return bonusAuraCoins;
+    }
+
+    function askExtraMissionCorrectionDecision() {
+      const answer = prompt(
+        'Como corrigir esta missão extra?\n\n' +
+        '1 - Reconhecida sem Aura Coins\n' +
+        '2 - Reconhecida com +5 Aura Coins\n' +
+        '3 - Reconhecida com +10 Aura Coins\n' +
+        '4 - Valor personalizado\n' +
+        '5 - Marcar como recusada\n' +
+        '6 - Remover do histórico'
+      );
+
+      if (answer === null) {
+        return null;
+      }
+
+      const option = answer.trim().toLowerCase();
+
+      if (option === '1') {
+        return { status: 'approved', bonusAuraCoins: 0 };
+      }
+
+      if (option === '2') {
+        return { status: 'approved', bonusAuraCoins: 5 };
+      }
+
+      if (option === '3') {
+        return { status: 'approved', bonusAuraCoins: 10 };
+      }
+
+      if (option === '5') {
+        return { status: 'rejected', bonusAuraCoins: 0 };
+      }
+
+      if (option === '6') {
+        const confirmed = confirm('Tem certeza que deseja remover esta proatividade do histórico?');
+        return confirmed ? { status: 'removida', bonusAuraCoins: 0, removedFromHistory: true } : null;
+      }
+
+      if (option !== '4') {
+        alert('Escolha uma opção de 1 a 6.');
+        return null;
+      }
+
+      const customAnswer = prompt('Informe a quantidade de Aura Coins para esta missão extra.');
+
+      if (customAnswer === null) {
+        return null;
+      }
+
+      const cleanCustomAnswer = customAnswer.trim().replace(',', '.');
+
+      if (cleanCustomAnswer === '') {
+        alert('Informe um número positivo ou zero.');
+        return null;
+      }
+
+      const customBonusAuraCoins = Number(cleanCustomAnswer);
+
+      if (!Number.isFinite(customBonusAuraCoins) || customBonusAuraCoins < 0 || !Number.isInteger(customBonusAuraCoins)) {
+        alert('Informe apenas um número inteiro positivo ou zero.');
+        return null;
+      }
+
+      return { status: 'approved', bonusAuraCoins: customBonusAuraCoins };
+    }
+
+    function applyExtraMissionCorrection(mission, decision, changedAt) {
+      mission.status = decision.status;
+      mission.bonusAuraCoins = decision.status === 'approved' ? decision.bonusAuraCoins : 0;
+      mission.updatedAt = changedAt;
+      mission.corrigidaEm = changedAt;
+
+      if (decision.status === 'approved') {
+        mission.approvedAt = mission.approvedAt || mission.aprovadaEm || changedAt;
+        mission.aprovadaEm = mission.aprovadaEm || mission.approvedAt;
+      }
+
+      if (decision.status === 'rejected') {
+        mission.rejectedAt = mission.rejectedAt || mission.recusadaEm || mission.approvedAt || mission.aprovadaEm || changedAt;
+        mission.recusadaEm = mission.recusadaEm || mission.rejectedAt;
+      }
+
+      if (decision.status === 'removida') {
+        mission.removidaEm = changedAt;
+      }
     }
 
     function obterPinModoCrianca() {
@@ -3168,6 +3409,7 @@
         title: cleanTitle,
         titulo: cleanTitle,
         descricao: cleanTitle,
+        texto: cleanTitle,
         status: 'pendente',
         createdDate: today,
         bonusAuraCoins: Number(settings.bonusAuraCoins) || 1,
@@ -3532,11 +3774,11 @@
     }
 
     // Cria o cabeçalho clicável da categoria.
-    function createCollapsibleCategoryHeader(categoryName, itemsArea) {
+    function createCollapsibleCategoryHeader(categoryName, itemsArea, customTitleText) {
       const categoryTitle = document.createElement('button');
       categoryTitle.className = 'category-title';
       categoryTitle.type = 'button';
-      const titleText = getCategoryEmoji(categoryName) + ' ' + categoryName;
+      const titleText = customTitleText || (getCategoryEmoji(categoryName) + ' ' + categoryName);
       categoryTitle.textContent = '▼ ' + titleText;
 
       categoryTitle.addEventListener('click', function() {
@@ -5067,6 +5309,86 @@
       alert('Histórico corrigido!');
     }
 
+    async function corrigirMissaoExtraHistorico(missionId) {
+      if (!currentChecklist || !currentChecklist.code || childModeActive) {
+        return;
+      }
+
+      if (!MODO_DESENVOLVIMENTO) {
+        alert('Correção de missão extra no Supabase ainda não implementada.');
+        return;
+      }
+
+      const decision = askExtraMissionCorrectionDecision();
+
+      if (!decision) {
+        return;
+      }
+
+      const changedAt = new Date().toISOString();
+      const history = await buscarHistorico(currentChecklist.code);
+      let foundMission = false;
+      let changedHistory = false;
+
+      history.forEach(function(record) {
+        if (!Array.isArray(record.extraMissions)) {
+          return;
+        }
+
+        record.extraMissions.forEach(function(mission) {
+          if (String(mission.id) !== String(missionId)) {
+            return;
+          }
+
+          applyExtraMissionCorrection(mission, decision, changedAt);
+          foundMission = true;
+          changedHistory = true;
+        });
+      });
+
+      loadAllExtraMissionsDrafts(currentChecklist.code).forEach(function(draftRecord) {
+        let changedDraft = false;
+
+        draftRecord.missions.forEach(function(mission) {
+          if (String(mission.id) !== String(missionId)) {
+            return;
+          }
+
+          applyExtraMissionCorrection(mission, decision, changedAt);
+          foundMission = true;
+          changedDraft = true;
+        });
+
+        if (changedDraft) {
+          saveExtraMissionsDraft(currentChecklist.code, draftRecord.date, draftRecord.missions);
+        }
+      });
+
+      if (!foundMission) {
+        alert('Missão extra não encontrada.');
+        return;
+      }
+
+      const updatedHistory = recalculateAuraCoins(history);
+
+      if (changedHistory) {
+        saveHistoryToLocalStorage(currentChecklist.code, updatedHistory);
+      }
+
+      currentHistory = updatedHistory;
+      renderExtraMissionPanel();
+
+      if (historyDateFilterInput.value) {
+        filterHistoryByDate();
+      } else {
+        renderizarHistorico(currentHistory);
+      }
+
+      renderMotivationBanner();
+      renderNotificationBell();
+      alert(decision.removedFromHistory ? 'Proatividade removida do histórico.' : 'Missão extra corrigida.');
+    }
+
     async function approveExtraMission(recordDate, missionId) {
       if (!MODO_DESENVOLVIMENTO) {
         alert('Aprovação de missão extra no Supabase ainda não implementada.');
@@ -5172,6 +5494,9 @@
       }
 
       mission.status = 'rejected';
+      mission.bonusAuraCoins = 0;
+      mission.rejectedAt = new Date().toISOString();
+      mission.recusadaEm = mission.rejectedAt;
 
       const updatedHistory = recalculateAuraCoins(history);
       saveHistoryToLocalStorage(currentChecklist.code, updatedHistory);
@@ -5207,6 +5532,9 @@
       historyLossesText.textContent = getRecordIncompleteCount(newestRecord);
       historyBalanceText.textContent = getRecordDailyAuraCoins(newestRecord);
       historyAuraCoinsText.textContent = newestRecord.auraCoins;
+      const extraMissionsByDate = collectExtraMissionsForHistory(
+        Array.isArray(currentHistory) && currentHistory.length > 0 ? currentHistory : history
+      );
 
       history.slice().reverse().forEach(function(record) {
         const dayArea = document.createElement('div');
@@ -5243,35 +5571,34 @@
         dayArea.appendChild(agreementTitle);
         dayArea.appendChild(agreementText);
 
-        if (Array.isArray(record.extraMissions) && record.extraMissions.length > 0) {
+        const historyExtraMissions = extraMissionsByDate[record.date] || [];
+
+        if (historyExtraMissions.length > 0) {
           const extraArea = document.createElement('div');
-          extraArea.className = 'history-extra-missions';
+          extraArea.className = 'category-items history-extra-missions';
+          const extraTitle = createCollapsibleCategoryHeader('Proatividade', extraArea, '🌟 Proatividade');
+          dayArea.appendChild(extraTitle);
 
-          const extraTitle = document.createElement('div');
-          extraTitle.className = 'task-title';
-          extraTitle.textContent = '🚀 Fiz algo a mais';
-          extraArea.appendChild(extraTitle);
-
-          record.extraMissions.forEach(function(mission) {
+          historyExtraMissions.forEach(function(mission) {
             const missionCard = document.createElement('div');
             missionCard.className = 'history-extra-mission-card';
 
             const missionTitle = document.createElement('div');
             missionTitle.className = 'task-title';
-            missionTitle.textContent = '🌟 ' + getExtraMissionTitle(mission);
+            missionTitle.textContent = '"' + getExtraMissionTitle(mission) + '"';
 
             const missionStatus = document.createElement('div');
             missionStatus.className = 'extra-mission-status ' + getExtraMissionStatusClass(mission.status);
-            missionStatus.textContent = getExtraMissionStatusLabel(mission.status);
+            missionStatus.textContent = 'Status: ' + (isApprovedExtraMission(mission) ? 'Reconhecida' : 'Recusada');
 
             const missionBonus = document.createElement('div');
             missionBonus.className = 'task-meta';
             const bonusAuraCoins = getExtraMissionBonusAuraCoins(mission, 1);
 
             if (isApprovedExtraMission(mission)) {
-              missionBonus.textContent = bonusAuraCoins > 0 ? '+' + formatAuraCoinsLabel(bonusAuraCoins) : '0 Aura Coin';
+              missionBonus.textContent = bonusAuraCoins > 0 ? '+' + formatAuraCoinsLabel(bonusAuraCoins) : 'Reconhecida sem Aura Coins';
             } else if (getExtraMissionStatusClass(mission.status) === 'rejected') {
-              missionBonus.textContent = '0 Aura Coin';
+              missionBonus.textContent = 'Sem Aura Coins';
             } else {
               missionBonus.textContent = 'Recompensa: o responsavel escolhe ao reconhecer';
             }
@@ -5280,29 +5607,25 @@
             missionCard.appendChild(missionStatus);
             missionCard.appendChild(missionBonus);
 
-            if (!childModeActive && isPendingExtraMission(mission)) {
-              const missionActions = document.createElement('div');
-              missionActions.className = 'extra-mission-actions';
+            const missionDate = document.createElement('div');
+            missionDate.className = 'task-meta';
+            missionDate.textContent = (isApprovedExtraMission(mission) ? 'Reconhecida em: ' : 'Recusada em: ') + getExtraMissionHistoryDate(record.date, mission);
+            missionCard.appendChild(missionDate);
 
-              const approveButton = document.createElement('button');
-              approveButton.className = 'btn secondary small';
-              approveButton.type = 'button';
-              approveButton.textContent = 'Reconhecer';
-              approveButton.addEventListener('click', function() {
-                approveExtraMission(record.date, mission.id);
+            if (currentChecklist && !childModeActive && mission.id) {
+              const correctionArea = document.createElement('div');
+              correctionArea.className = 'history-task-correction';
+
+              const correctionButton = document.createElement('button');
+              correctionButton.className = 'btn-ghost history-correction-button';
+              correctionButton.type = 'button';
+              correctionButton.textContent = 'Corrigir';
+              correctionButton.addEventListener('click', function() {
+                corrigirMissaoExtraHistorico(mission.id);
               });
 
-              const rejectButton = document.createElement('button');
-              rejectButton.className = 'btn-ghost danger';
-              rejectButton.type = 'button';
-              rejectButton.textContent = 'Recusar';
-              rejectButton.addEventListener('click', function() {
-                rejectExtraMission(record.date, mission.id);
-              });
-
-              missionActions.appendChild(approveButton);
-              missionActions.appendChild(rejectButton);
-              missionCard.appendChild(missionActions);
+              correctionArea.appendChild(correctionButton);
+              missionCard.appendChild(correctionArea);
             }
 
             extraArea.appendChild(missionCard);
