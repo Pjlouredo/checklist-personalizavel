@@ -1210,6 +1210,123 @@
       flex-wrap: wrap;
     }
 
+    .fluxos-shell {
+      display: grid;
+      gap: 18px;
+    }
+
+    .fluxos-hero {
+      display: grid;
+      gap: 14px;
+      padding: 22px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      border-radius: 16px;
+      background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 58%, #eff6ff 100%);
+      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08);
+    }
+
+    .fluxos-title {
+      color: #102a43;
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .fluxos-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .fluxos-card {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .fluxos-card-title {
+      color: #0f172a;
+      font-size: 1.12rem;
+      font-weight: 900;
+    }
+
+    .fluxos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .fluxos-choice {
+      display: grid;
+      gap: 6px;
+      padding: 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      background: #f8fafc;
+      color: #0f172a;
+      font-weight: 800;
+      text-align: left;
+    }
+
+    .fluxos-choice.available {
+      border-color: rgba(15, 118, 110, 0.32);
+      background: #ecfdf5;
+    }
+
+    .fluxos-choice.occupied {
+      color: #64748b;
+      background: #f1f5f9;
+      cursor: not-allowed;
+    }
+
+    .fluxos-choice span,
+    .fluxos-small {
+      color: #64748b;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .fluxos-task {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #f8fafc;
+    }
+
+    .fluxos-task.done {
+      border-color: rgba(15, 118, 110, 0.24);
+      background: #ecfdf5;
+    }
+
+    .fluxos-progress-bar {
+      height: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e2e8f0;
+    }
+
+    .fluxos-progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #14b8a6, #22c55e);
+      transition: width 0.2s ease;
+    }
+
+    .fluxos-toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
     .history-extra-missions {
       display: grid;
       gap: 10px;
@@ -1654,7 +1771,9 @@
       .rewards-grid,
       .reward-editor-grid,
       .consequence-editor-grid,
-      .motivation-banner-hero {
+      .motivation-banner-hero,
+      .fluxos-actions,
+      .fluxos-grid {
         grid-template-columns: 1fr;
       }
 
@@ -1783,6 +1902,13 @@
       </div>
     </section>
 
+    <!-- FLUXOS DA CASA -->
+    <section class="screen" id="fluxosScreen">
+      <div class="panel fluxos-shell">
+        <div id="fluxosContent"></div>
+      </div>
+    </section>
+
     <!-- TELA CRIAR CHECKLIST -->
     <section class="screen" id="createScreen">
       <div class="panel">
@@ -1836,6 +1962,13 @@
               <option value="Semanal">Semanal</option>
               <option value="Mensal">Mensal</option>
               <option value="Única">Única</option>
+            </select>
+          </label>
+
+          <label>
+            Responsável da tarefa
+            <select id="taskResponsibleInput">
+              <option value="todos">Todos</option>
             </select>
           </label>
 
@@ -1958,6 +2091,13 @@
               <input id="newCategoryTaskPointsInput" type="number" min="1" value="10">
             </label>
 
+            <label>
+              Responsável da tarefa
+              <select id="newCategoryTaskResponsibleInput">
+                <option value="todos">Todos</option>
+              </select>
+            </label>
+
             <label class="full-width">
               Passos da tarefa
               <textarea id="newCategoryTaskStepsInput" rows="4" placeholder="Digite um passo por linha&#10;Ex:&#10;Arrumar a cama&#10;Guardar roupas espalhadas&#10;Organizar brinquedos"></textarea>
@@ -1994,6 +2134,13 @@
                 <option value="Semanal">Semanal</option>
                 <option value="Mensal">Mensal</option>
                 <option value="Única">Única</option>
+              </select>
+            </label>
+
+            <label>
+              Responsável da tarefa
+              <select id="newChecklistTaskResponsibleInput">
+                <option value="todos">Todos</option>
               </select>
             </label>
 
@@ -2169,6 +2316,7 @@
     const SCREENS = {
       home: 'home',
       myChecklists: 'myChecklists',
+      fluxos: 'fluxos',
       create: 'create',
       checklist: 'checklist',
       history: 'history',
@@ -2197,6 +2345,7 @@
     let currentHistory = [];
     let checklistEditMode = false;
     let childModeActive = false;
+    let fluxosCriancaSelecionadaId = null;
     let lastCompletedTaskAnimationId = null;
     let notificationRenderVersion = 0;
 
@@ -2216,6 +2365,8 @@
     const myChecklistsScreen = document.getElementById('myChecklistsScreen');
     const myChecklistsContent = document.getElementById('myChecklistsContent');
     const createChecklistFromListButton = document.getElementById('createChecklistFromListButton');
+    const fluxosScreen = document.getElementById('fluxosScreen');
+    const fluxosContent = document.getElementById('fluxosContent');
     const createScreen = document.getElementById('createScreen');
     const checklistScreen = document.getElementById('checklistScreen');
     const historyScreen = document.getElementById('historyScreen');
@@ -2234,6 +2385,7 @@
     const taskNameInput = document.getElementById('taskNameInput');
     const taskPointsInput = document.getElementById('taskPointsInput');
     const taskFrequencyInput = document.getElementById('taskFrequencyInput');
+    const taskResponsibleInput = document.getElementById('taskResponsibleInput');
     const taskStepsInput = document.getElementById('taskStepsInput');
     const addTaskButton = document.getElementById('addTaskButton');
     const saveChecklistButton = document.getElementById('saveChecklistButton');
@@ -2270,6 +2422,7 @@
     const newCategoryTaskNameInput = document.getElementById('newCategoryTaskNameInput');
     const newCategoryTaskFrequencyInput = document.getElementById('newCategoryTaskFrequencyInput');
     const newCategoryTaskPointsInput = document.getElementById('newCategoryTaskPointsInput');
+    const newCategoryTaskResponsibleInput = document.getElementById('newCategoryTaskResponsibleInput');
     const newCategoryTaskStepsInput = document.getElementById('newCategoryTaskStepsInput');
     const saveNewCategoryButton = document.getElementById('saveNewCategoryButton');
     const cancelNewCategoryButton = document.getElementById('cancelNewCategoryButton');
@@ -2278,6 +2431,7 @@
     const newChecklistTaskNameInput = document.getElementById('newChecklistTaskNameInput');
     const newChecklistTaskPointsInput = document.getElementById('newChecklistTaskPointsInput');
     const newChecklistTaskFrequencyInput = document.getElementById('newChecklistTaskFrequencyInput');
+    const newChecklistTaskResponsibleInput = document.getElementById('newChecklistTaskResponsibleInput');
     const newChecklistTaskStepsInput = document.getElementById('newChecklistTaskStepsInput');
     const saveNewChecklistTaskButton = document.getElementById('saveNewChecklistTaskButton');
     const cancelNewChecklistTaskButton = document.getElementById('cancelNewChecklistTaskButton');
@@ -2760,6 +2914,7 @@
       appTopbar.classList.add('hidden');
       homeScreen.classList.remove('active');
       myChecklistsScreen.classList.remove('active');
+      fluxosScreen.classList.remove('active');
       createScreen.classList.remove('active');
       checklistScreen.classList.remove('active');
       historyScreen.classList.remove('active');
@@ -2790,6 +2945,7 @@
       appTopbar.classList.remove('hidden');
       homeScreen.classList.remove('active');
       myChecklistsScreen.classList.remove('active');
+      fluxosScreen.classList.remove('active');
       createScreen.classList.remove('active');
       checklistScreen.classList.remove('active');
       historyScreen.classList.remove('active');
@@ -2797,12 +2953,13 @@
 
       if (screenName === SCREENS.home) homeScreen.classList.add('active');
       if (screenName === SCREENS.myChecklists) myChecklistsScreen.classList.add('active');
+      if (screenName === SCREENS.fluxos) fluxosScreen.classList.add('active');
       if (screenName === SCREENS.create) createScreen.classList.add('active');
       if (screenName === SCREENS.checklist) checklistScreen.classList.add('active');
       if (screenName === SCREENS.history) historyScreen.classList.add('active');
       if (screenName === SCREENS.agreements) agreementsScreen.classList.add('active');
 
-      backHomeButton.classList.toggle('hidden', screenName === SCREENS.myChecklists);
+      backHomeButton.classList.toggle('hidden', screenName === SCREENS.myChecklists || screenName === SCREENS.fluxos);
       hideNotificationPanel();
       if (!childModeActive) {
         logoutButton.classList.remove('hidden');
@@ -2811,6 +2968,14 @@
         renderModoCriancaControles();
       }
       atualizarInfoUsuario();
+      if (screenName === SCREENS.fluxos) {
+        const appBrandText = document.querySelector('#appTopbar .brand span');
+        if (appBrandText) {
+          appBrandText.textContent = 'Fluxos da Casa';
+        }
+        notificationBellButton.classList.add('hidden');
+        return;
+      }
       renderNotificationBell();
     }
 
@@ -3162,7 +3327,11 @@
       });
 
       salvarCriancasRotina(criancas);
-      renderizarCriancasRotina();
+      if (fluxosScreen.classList.contains('active')) {
+        renderModoResponsavelFluxos();
+        return;
+      }
+      renderChecklist();
     }
 
     function editarCriancaRotina(id) {
@@ -3195,7 +3364,11 @@
 
       crianca.nome = nomeLimpo;
       salvarCriancasRotina(criancas);
-      renderizarCriancasRotina();
+      if (fluxosScreen.classList.contains('active')) {
+        renderModoResponsavelFluxos();
+        return;
+      }
+      renderChecklist();
     }
 
     function removerCriancaRotina(id) {
@@ -3210,7 +3383,20 @@
       });
 
       salvarCriancasRotina(criancas);
-      renderizarCriancasRotina();
+      if (typeof carregarEscolhasSemana === 'function') {
+        const escolhas = carregarEscolhasSemana();
+        Object.keys(escolhas.escolhas).forEach(function(categoryId) {
+          if (escolhas.escolhas[categoryId] === id) {
+            delete escolhas.escolhas[categoryId];
+          }
+        });
+        salvarEscolhasSemana(escolhas);
+      }
+      if (fluxosScreen.classList.contains('active')) {
+        renderModoResponsavelFluxos();
+        return;
+      }
+      renderChecklist();
     }
 
     function renderizarCriancasRotina() {
@@ -3319,6 +3505,111 @@
       routineChildrenPanel.appendChild(header);
       routineChildrenPanel.appendChild(form);
       routineChildrenPanel.appendChild(list);
+    }
+
+    function obterResponsavelTarefa(tarefa) {
+      if (!tarefa) {
+        return {
+          tipo: 'todos',
+          criancaId: null
+        };
+      }
+
+      const tipo = tarefa.responsavelTipo === 'crianca' ? 'crianca' : 'todos';
+      const criancaId = tarefa.responsavelCriancaId || tarefa.criancaResponsavelId || tarefa.responsavelId || null;
+
+      if (tipo === 'crianca' && criancaId) {
+        return {
+          tipo: 'crianca',
+          criancaId: String(criancaId)
+        };
+      }
+
+      return {
+        tipo: 'todos',
+        criancaId: null
+      };
+    }
+
+    function obterNomeResponsavelTarefa(tarefa, criancasDisponiveis) {
+      const responsavel = obterResponsavelTarefa(tarefa);
+
+      if (responsavel.tipo !== 'crianca') {
+        return 'Todos';
+      }
+
+      const criancas = Array.isArray(criancasDisponiveis)
+        ? criancasDisponiveis
+        : carregarCriancasRotina();
+      const crianca = criancas.find(function(item) {
+        return String(item.id) === String(responsavel.criancaId);
+      });
+
+      return crianca ? crianca.nome : 'Criança removida';
+    }
+
+    function criarOpcaoResponsavelTarefa(value, text) {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = text;
+      return option;
+    }
+
+    function popularCampoResponsavelTarefa(selectElement, tarefa, criancasDisponiveis) {
+      if (!selectElement) {
+        return;
+      }
+
+      const criancas = Array.isArray(criancasDisponiveis)
+        ? criancasDisponiveis
+        : carregarCriancasRotina();
+      const responsavel = obterResponsavelTarefa(tarefa);
+      const selectedValue = responsavel.tipo === 'crianca'
+        ? 'crianca:' + responsavel.criancaId
+        : 'todos';
+      let selectedChildExists = false;
+
+      selectElement.innerHTML = '';
+      selectElement.appendChild(criarOpcaoResponsavelTarefa('todos', 'Todos'));
+
+      criancas.forEach(function(crianca) {
+        const value = 'crianca:' + crianca.id;
+
+        if (value === selectedValue) {
+          selectedChildExists = true;
+        }
+
+        selectElement.appendChild(criarOpcaoResponsavelTarefa(value, crianca.nome));
+      });
+
+      if (responsavel.tipo === 'crianca' && !selectedChildExists) {
+        selectElement.appendChild(criarOpcaoResponsavelTarefa(selectedValue, 'Criança removida'));
+      }
+
+      selectElement.value = selectedValue;
+    }
+
+    function obterDadosResponsavelCampo(selectElement) {
+      const value = selectElement && selectElement.value ? selectElement.value : 'todos';
+
+      if (value.indexOf('crianca:') === 0) {
+        return {
+          responsavelTipo: 'crianca',
+          responsavelCriancaId: value.replace('crianca:', '')
+        };
+      }
+
+      return {
+        responsavelTipo: 'todos',
+        responsavelCriancaId: null
+      };
+    }
+
+    function criarTaskResponsibleMeta(task, criancasDisponiveis) {
+      const meta = document.createElement('div');
+      meta.className = 'task-meta';
+      meta.textContent = 'Responsável: ' + obterNomeResponsavelTarefa(task, criancasDisponiveis);
+      return meta;
     }
 
     function getDefaultProactivitySettings() {
@@ -3876,6 +4167,855 @@
       alert('Missão extra registrada!');
     }
 
+    function getFluxosCategoriasPadrao() {
+      return [
+        {
+          id: 'sala',
+          nome: 'Sala',
+          tarefas: [
+            'Recolher objetos fora do lugar',
+            'Organizar sofá',
+            'Passar pano na mesa',
+            'Varrer o chão'
+          ]
+        },
+        {
+          id: 'cozinha',
+          nome: 'Cozinha',
+          tarefas: [
+            'Secar louças',
+            'Guardar louças',
+            'Limpar mesa',
+            'Tirar lixo'
+          ]
+        },
+        {
+          id: 'quarto',
+          nome: 'Quarto',
+          tarefas: [
+            'Arrumar cama',
+            'Guardar roupas',
+            'Organizar objetos',
+            'Colocar roupa suja no cesto'
+          ]
+        }
+      ];
+    }
+
+    function getFluxosCriancasPadrao() {
+      return [
+        { id: 'crianca_anthony', nome: 'Anthony', criadaEm: new Date().toISOString(), ativa: true },
+        { id: 'crianca_nicolas', nome: 'Nicolas', criadaEm: new Date().toISOString(), ativa: true },
+        { id: 'crianca_miguel', nome: 'Miguel', criadaEm: new Date().toISOString(), ativa: true }
+      ];
+    }
+
+    function getFluxosChecklistCode() {
+      const userId = usuarioLogado && usuarioLogado.id ? usuarioLogado.id : 'local';
+      return 'fluxos-da-casa-' + normalizeAccessCode(userId);
+    }
+
+    function getFluxosStorageKey(suffix) {
+      const userId = usuarioLogado && usuarioLogado.id ? usuarioLogado.id : 'local';
+      const checklistCode = currentChecklist && currentChecklist.code ? currentChecklist.code : getFluxosChecklistCode();
+      return 'fluxos-da-casa-' + userId + '-' + checklistCode + '-' + suffix;
+    }
+
+    function getFluxosTasksDefault() {
+      const baseId = Date.now();
+      let index = 0;
+
+      return getFluxosCategoriasPadrao().flatMap(function(categoria) {
+        return categoria.tarefas.map(function(taskName) {
+          index += 1;
+          return {
+            id: baseId + index,
+            category: categoria.nome,
+            name: taskName,
+            points: 10,
+            frequency: 'Diária',
+            responsavelTipo: 'todos',
+            responsavelCriancaId: null,
+            passos: [],
+            done: false
+          };
+        });
+      });
+    }
+
+    function getFluxosChecklistPadrao() {
+      return {
+        code: getFluxosChecklistCode(),
+        personName: 'Casa',
+        whatsapp: '',
+        checklistName: 'Fluxos da Casa',
+        familyAgreement: '',
+        tasks: getFluxosTasksDefault()
+      };
+    }
+
+    function getFluxosCategoriaPorId(categoryId) {
+      return getFluxosCategoriasPadrao().find(function(categoria) {
+        return categoria.id === categoryId;
+      }) || getFluxosCategoriasPadrao()[0];
+    }
+
+    function getFluxosCategoriaPorNome(categoryName) {
+      const normalized = normalizeAccessCode(categoryName || '');
+      return getFluxosCategoriasPadrao().find(function(categoria) {
+        return categoria.id === normalized || normalizeAccessCode(categoria.nome) === normalized;
+      });
+    }
+
+    function getFluxosTarefasCategoria(categoryId) {
+      const categoria = getFluxosCategoriaPorId(categoryId);
+      return (currentChecklist && Array.isArray(currentChecklist.tasks) ? currentChecklist.tasks : [])
+        .filter(function(task) {
+          return normalizeAccessCode(getTaskCategory(task)) === normalizeAccessCode(categoria.nome);
+        });
+    }
+
+    function garantirFluxosTarefasPadrao() {
+      if (!currentChecklist) {
+        return;
+      }
+
+      if (!Array.isArray(currentChecklist.tasks)) {
+        currentChecklist.tasks = [];
+      }
+
+      const existingCategories = currentChecklist.tasks.map(function(task) {
+        return normalizeAccessCode(getTaskCategory(task));
+      });
+
+      getFluxosCategoriasPadrao().forEach(function(categoria) {
+        if (existingCategories.indexOf(normalizeAccessCode(categoria.nome)) === -1) {
+          currentChecklist.tasks = currentChecklist.tasks.concat(
+            categoria.tarefas.map(function(taskName, index) {
+              return {
+                id: Date.now() + Math.floor(Math.random() * 1000) + index,
+                category: categoria.nome,
+                name: taskName,
+                points: 10,
+                frequency: 'Diária',
+                responsavelTipo: 'todos',
+                responsavelCriancaId: null,
+                passos: [],
+                done: false
+              };
+            })
+          );
+        }
+      });
+    }
+
+    function garantirFluxosCriancasPadrao() {
+      const criancas = carregarCriancasRotina();
+
+      if (criancas.length > 0) {
+        return criancas;
+      }
+
+      return salvarCriancasRotina(getFluxosCriancasPadrao());
+    }
+
+    async function carregarConfigFluxos(checklistsSupabase) {
+      const code = getFluxosChecklistCode();
+      const checklistSupabase = Array.isArray(checklistsSupabase)
+        ? checklistsSupabase.find(function(row) {
+          return row.code === code || row.checklist_name === 'Fluxos da Casa';
+        })
+        : null;
+      let checklist = loadChecklistFromLocalStorage(code);
+
+      if (!checklist && checklistSupabase) {
+        const tarefasSupabase = await carregarTarefasSupabase(checklistSupabase.code);
+        checklist = {
+          code: checklistSupabase.code,
+          personName: checklistSupabase.person_name || 'Casa',
+          whatsapp: checklistSupabase.whatsapp || '',
+          checklistName: checklistSupabase.checklist_name || 'Fluxos da Casa',
+          familyAgreement: normalizeFamilyAgreement(checklistSupabase.family_agreement),
+          tasks: Array.isArray(tarefasSupabase) ? tarefasSupabase : []
+        };
+      }
+
+      if (!checklist) {
+        checklist = getFluxosChecklistPadrao();
+      }
+
+      checklist.code = checklist.code || code;
+      checklist.personName = checklist.personName || 'Casa';
+      checklist.checklistName = 'Fluxos da Casa';
+      checklist.tasks = Array.isArray(checklist.tasks) ? checklist.tasks : [];
+
+      currentChecklist = checklist;
+      garantirFluxosTarefasPadrao();
+      garantirIdsTarefasChecklist(currentChecklist);
+      saveChecklistToLocalStorage(currentChecklist);
+      garantirFluxosCriancasPadrao();
+
+      await salvarChecklist(currentChecklist);
+      await salvarTarefas(currentChecklist);
+      return currentChecklist;
+    }
+
+    function obterSemanaAtual(date) {
+      const baseDate = date ? new Date(date) : new Date();
+      const utcDate = new Date(Date.UTC(baseDate.getFullYear(), baseDate.getMonth(), baseDate.getDate()));
+      const dayNumber = utcDate.getUTCDay() || 7;
+      utcDate.setUTCDate(utcDate.getUTCDate() + 4 - dayNumber);
+      const yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1));
+      const weekNumber = Math.ceil((((utcDate - yearStart) / 86400000) + 1) / 7);
+      return utcDate.getUTCFullYear() + '-W' + String(weekNumber).padStart(2, '0');
+    }
+
+    function carregarEscolhasSemana(semana) {
+      const weekKey = semana || obterSemanaAtual();
+      const savedData = localStorage.getItem(getFluxosStorageKey('escolhas-' + weekKey));
+      const data = savedData ? JSON.parse(savedData) : {};
+      return {
+        semana: weekKey,
+        escolhas: data.escolhas || {}
+      };
+    }
+
+    function salvarEscolhasSemana(escolhasSemana) {
+      localStorage.setItem(
+        getFluxosStorageKey('escolhas-' + escolhasSemana.semana),
+        JSON.stringify(escolhasSemana)
+      );
+      return escolhasSemana;
+    }
+
+    function obterCriancaFluxos(childId) {
+      return carregarCriancasRotina().find(function(crianca) {
+        return crianca.id === childId;
+      }) || null;
+    }
+
+    function obterNomeCriancaFluxos(childId) {
+      const crianca = obterCriancaFluxos(childId);
+      return crianca ? crianca.nome : 'Disponível';
+    }
+
+    function obterCategoriaDaCriancaNaSemana(childId, escolhasSemana) {
+      const escolhas = escolhasSemana || carregarEscolhasSemana();
+      const categoryId = Object.keys(escolhas.escolhas).find(function(id) {
+        return escolhas.escolhas[id] === childId;
+      });
+      return categoryId || null;
+    }
+
+    function atribuirCategoriaFluxos(childId, categoryId) {
+      const escolhas = carregarEscolhasSemana();
+
+      Object.keys(escolhas.escolhas).forEach(function(existingCategoryId) {
+        if (escolhas.escolhas[existingCategoryId] === childId) {
+          delete escolhas.escolhas[existingCategoryId];
+        }
+      });
+
+      if (childId) {
+        escolhas.escolhas[categoryId] = childId;
+      } else {
+        delete escolhas.escolhas[categoryId];
+      }
+
+      salvarEscolhasSemana(escolhas);
+      return escolhas;
+    }
+
+    function carregarProgressoDiarioFluxos(childId, categoryId) {
+      const key = getFluxosStorageKey('progresso-' + obterSemanaAtual() + '-' + getTodayDate() + '-' + childId + '-' + categoryId);
+      const savedData = localStorage.getItem(key);
+      const data = savedData ? JSON.parse(savedData) : {};
+      return {
+        key: key,
+        doneTaskIds: Array.isArray(data.doneTaskIds) ? data.doneTaskIds : []
+      };
+    }
+
+    function salvarProgressoDiarioFluxos(childId, categoryId, progress) {
+      localStorage.setItem(progress.key, JSON.stringify({
+        user_id: usuarioLogado && usuarioLogado.id ? usuarioLogado.id : null,
+        checklistCode: currentChecklist.code,
+        semana: obterSemanaAtual(),
+        data: getTodayDate(),
+        criancaId: childId,
+        categoriaId: categoryId,
+        doneTaskIds: progress.doneTaskIds
+      }));
+    }
+
+    function calcularProgressoFluxo(tasks, progress) {
+      const total = tasks.length;
+      const done = tasks.filter(function(task) {
+        return progress.doneTaskIds.indexOf(String(task.id)) !== -1;
+      }).length;
+      const aura = done * 10;
+      return {
+        total: total,
+        done: done,
+        aura: aura,
+        percent: total === 0 ? 0 : Math.round((done / total) * 100)
+      };
+    }
+
+    function limparFluxosContent() {
+      fluxosContent.innerHTML = '';
+      notificationBellButton.classList.add('hidden');
+      hideNotificationPanel();
+      document.body.classList.remove('child-mode-active');
+      backHomeButton.classList.add('hidden');
+    }
+
+    function criarFluxosHeader(titleText, subtitleText, showBack) {
+      const header = document.createElement('div');
+      header.className = 'fluxos-hero';
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-title';
+      title.textContent = titleText;
+
+      const subtitle = document.createElement('p');
+      subtitle.className = 'muted';
+      subtitle.textContent = subtitleText;
+
+      header.appendChild(title);
+      header.appendChild(subtitle);
+
+      if (showBack) {
+        const actions = document.createElement('div');
+        actions.className = 'fluxos-toolbar';
+
+        const backButton = document.createElement('button');
+        backButton.className = 'btn secondary small';
+        backButton.type = 'button';
+        backButton.textContent = 'Voltar';
+        backButton.addEventListener('click', renderTelaInicialFluxos);
+
+        actions.appendChild(backButton);
+        header.appendChild(actions);
+      }
+
+      return header;
+    }
+
+    function renderTelaInicialFluxos() {
+      limparFluxosContent();
+      appTopbar.querySelector('.brand span').textContent = 'Fluxos da Casa';
+
+      const header = criarFluxosHeader(
+        'Fluxos da Casa',
+        'Escolha um modo para cuidar da rotina da semana.'
+      );
+
+      const actions = document.createElement('div');
+      actions.className = 'fluxos-actions';
+
+      const childButton = document.createElement('button');
+      childButton.className = 'btn';
+      childButton.type = 'button';
+      childButton.textContent = 'Modo Criança';
+      childButton.addEventListener('click', function() {
+        fluxosCriancaSelecionadaId = null;
+        renderModoCriancaFluxos();
+      });
+
+      const parentButton = document.createElement('button');
+      parentButton.className = 'btn secondary';
+      parentButton.type = 'button';
+      parentButton.textContent = 'Modo Responsável';
+      parentButton.addEventListener('click', renderModoResponsavelFluxos);
+
+      actions.appendChild(childButton);
+      actions.appendChild(parentButton);
+      header.appendChild(actions);
+      fluxosContent.appendChild(header);
+    }
+
+    function renderModoCriancaFluxos() {
+      limparFluxosContent();
+      fluxosContent.appendChild(criarFluxosHeader('Modo Criança', 'Escolha quem está usando agora.', true));
+      renderEscolhaCrianca();
+    }
+
+    function renderEscolhaCrianca() {
+      const card = document.createElement('div');
+      card.className = 'fluxos-card';
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-card-title';
+      title.textContent = 'Quem está usando?';
+
+      const grid = document.createElement('div');
+      grid.className = 'fluxos-grid';
+
+      carregarCriancasRotina().forEach(function(crianca) {
+        const button = document.createElement('button');
+        button.className = 'fluxos-choice available';
+        button.type = 'button';
+        button.textContent = crianca.nome;
+        button.addEventListener('click', function() {
+          fluxosCriancaSelecionadaId = crianca.id;
+          renderFluxosCriancaSelecionada();
+        });
+        grid.appendChild(button);
+      });
+
+      card.appendChild(title);
+      card.appendChild(grid);
+      fluxosContent.appendChild(card);
+    }
+
+    function renderFluxosCriancaSelecionada() {
+      limparFluxosContent();
+
+      const crianca = obterCriancaFluxos(fluxosCriancaSelecionadaId);
+
+      if (!crianca) {
+        renderModoCriancaFluxos();
+        return;
+      }
+
+      const escolhas = carregarEscolhasSemana();
+      const categoryId = obterCategoriaDaCriancaNaSemana(crianca.id, escolhas);
+
+      fluxosContent.appendChild(criarFluxosHeader(crianca.nome, 'Semana: ' + escolhas.semana, true));
+
+      if (!categoryId) {
+        renderEscolhaCategoriaSemana(crianca, escolhas);
+        return;
+      }
+
+      renderTarefasDaCategoria(crianca, categoryId);
+    }
+
+    function renderEscolhaCategoriaSemana(crianca, escolhas) {
+      const card = document.createElement('div');
+      card.className = 'fluxos-card';
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-card-title';
+      title.textContent = 'Qual missão você vai assumir esta semana?';
+
+      const grid = document.createElement('div');
+      grid.className = 'fluxos-grid';
+
+      getFluxosCategoriasPadrao().forEach(function(categoria) {
+        const assignedChildId = escolhas.escolhas[categoria.id];
+        const available = !assignedChildId;
+        const button = document.createElement('button');
+        button.className = 'fluxos-choice ' + (available ? 'available' : 'occupied');
+        button.type = 'button';
+        button.disabled = !available;
+        button.textContent = categoria.nome;
+
+        const status = document.createElement('span');
+        status.textContent = available ? 'Disponível' : 'Ocupada por ' + obterNomeCriancaFluxos(assignedChildId);
+        button.appendChild(status);
+
+        if (available) {
+          button.addEventListener('click', function() {
+            atribuirCategoriaFluxos(crianca.id, categoria.id);
+            renderFluxosCriancaSelecionada();
+          });
+        }
+
+        grid.appendChild(button);
+      });
+
+      card.appendChild(title);
+      card.appendChild(grid);
+      fluxosContent.appendChild(card);
+    }
+
+    function renderTarefasDaCategoria(crianca, categoryId) {
+      const categoria = getFluxosCategoriaPorId(categoryId);
+      const tasks = getFluxosTarefasCategoria(categoryId);
+      const progress = carregarProgressoDiarioFluxos(crianca.id, categoryId);
+      const resumo = calcularProgressoFluxo(tasks, progress);
+
+      const card = document.createElement('div');
+      card.className = 'fluxos-card';
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-card-title';
+      title.textContent = 'Responsável da semana: ' + categoria.nome;
+
+      const progressText = document.createElement('div');
+      progressText.className = 'muted';
+      progressText.textContent = 'Progresso: ' + resumo.percent + '% • ' + resumo.done + '/' + resumo.total + ' feitas • Aura conquistada: ' + resumo.aura + ' coins';
+
+      const progressBar = document.createElement('div');
+      progressBar.className = 'fluxos-progress-bar';
+
+      const progressFill = document.createElement('div');
+      progressFill.className = 'fluxos-progress-fill';
+      progressFill.style.width = resumo.percent + '%';
+
+      progressBar.appendChild(progressFill);
+      card.appendChild(title);
+      card.appendChild(progressText);
+      card.appendChild(progressBar);
+
+      tasks.forEach(function(task) {
+        const taskDone = progress.doneTaskIds.indexOf(String(task.id)) !== -1;
+        const taskRow = document.createElement('div');
+        taskRow.className = 'fluxos-task' + (taskDone ? ' done' : '');
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = taskDone;
+        checkbox.addEventListener('change', function() {
+          alternarTarefaFeitaFluxos(crianca.id, categoryId, task.id);
+        });
+
+        const name = document.createElement('div');
+        name.textContent = task.name;
+
+        const points = document.createElement('div');
+        points.className = 'fluxos-small';
+        points.textContent = '+10';
+
+        taskRow.appendChild(checkbox);
+        taskRow.appendChild(name);
+        taskRow.appendChild(points);
+        card.appendChild(taskRow);
+      });
+
+      if (resumo.percent === 100 && resumo.total > 0) {
+        const reportButton = document.createElement('button');
+        reportButton.className = 'btn';
+        reportButton.type = 'button';
+        reportButton.textContent = 'ENVIAR RELATÓRIO';
+        reportButton.addEventListener('click', function() {
+          gerarRelatorioWhatsAppFluxo(crianca, categoria, resumo);
+        });
+        card.appendChild(reportButton);
+      }
+
+      fluxosContent.appendChild(card);
+    }
+
+    function alternarTarefaFeitaFluxos(childId, categoryId, taskId) {
+      const progress = carregarProgressoDiarioFluxos(childId, categoryId);
+      const id = String(taskId);
+      const currentIndex = progress.doneTaskIds.indexOf(id);
+
+      if (currentIndex === -1) {
+        progress.doneTaskIds.push(id);
+      } else {
+        progress.doneTaskIds.splice(currentIndex, 1);
+      }
+
+      salvarProgressoDiarioFluxos(childId, categoryId, progress);
+      renderFluxosCriancaSelecionada();
+    }
+
+    function gerarRelatorioWhatsAppFluxo(crianca, categoria, resumo) {
+      const text = [
+        'Tudo pronto!',
+        crianca.nome + ' concluiu as missões da ' + categoria.nome + '.',
+        'Progresso: ' + resumo.percent + '%.',
+        'Aura conquistada: ' + resumo.aura + ' coins.'
+      ].join('\n');
+      const phone = (currentChecklist.whatsapp || '').replace(/\D/g, '');
+      const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(text);
+      window.open(url, '_blank');
+    }
+
+    function renderModoResponsavelFluxos() {
+      limparFluxosContent();
+      fluxosContent.appendChild(criarFluxosHeader('Modo Responsável', 'Acompanhe a escala da semana e ajuste a rotina.', true));
+
+      renderEscalaResponsavelFluxos();
+      renderEditorCriancasFluxos();
+      renderEditorTarefasFluxos();
+    }
+
+    function renderEscalaResponsavelFluxos() {
+      const escolhas = carregarEscolhasSemana();
+      const criancas = carregarCriancasRotina();
+      const card = document.createElement('div');
+      card.className = 'fluxos-card';
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-card-title';
+      title.textContent = 'Escala da semana ' + escolhas.semana;
+      card.appendChild(title);
+
+      getFluxosCategoriasPadrao().forEach(function(categoria) {
+        const row = document.createElement('div');
+        row.className = 'fluxos-task';
+
+        const name = document.createElement('div');
+        name.textContent = categoria.nome;
+
+        const select = document.createElement('select');
+        select.appendChild(criarOpcaoResponsavelTarefa('', 'Disponível'));
+        criancas.forEach(function(crianca) {
+          select.appendChild(criarOpcaoResponsavelTarefa(crianca.id, crianca.nome));
+        });
+        select.value = escolhas.escolhas[categoria.id] || '';
+        select.addEventListener('change', function() {
+          corrigirResponsavelFluxo(categoria.id, select.value);
+        });
+
+        const status = document.createElement('div');
+        status.className = 'fluxos-small';
+        status.textContent = escolhas.escolhas[categoria.id]
+          ? obterNomeCriancaFluxos(escolhas.escolhas[categoria.id])
+          : 'Disponível';
+
+        row.appendChild(name);
+        row.appendChild(select);
+        row.appendChild(status);
+        card.appendChild(row);
+      });
+
+      const actions = document.createElement('div');
+      actions.className = 'fluxos-toolbar';
+
+      const resetButton = document.createElement('button');
+      resetButton.className = 'btn danger small';
+      resetButton.type = 'button';
+      resetButton.textContent = 'Resetar escolhas da semana';
+      resetButton.addEventListener('click', resetarEscolhasSemana);
+
+      actions.appendChild(resetButton);
+      card.appendChild(actions);
+      fluxosContent.appendChild(card);
+    }
+
+    function corrigirResponsavelFluxo(categoryId, childId) {
+      atribuirCategoriaFluxos(childId || null, categoryId);
+      renderModoResponsavelFluxos();
+    }
+
+    function resetarEscolhasSemana() {
+      const confirmed = confirm('Deseja resetar as escolhas desta semana?');
+
+      if (!confirmed) {
+        return;
+      }
+
+      salvarEscolhasSemana({
+        semana: obterSemanaAtual(),
+        escolhas: {}
+      });
+      renderModoResponsavelFluxos();
+    }
+
+    function renderEditorCriancasFluxos() {
+      const card = document.createElement('div');
+      card.className = 'fluxos-card';
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-card-title';
+      title.textContent = 'Crianças da rotina';
+
+      const list = document.createElement('div');
+      list.className = 'routine-children-list';
+
+      carregarCriancasRotina().forEach(function(crianca) {
+        const item = document.createElement('div');
+        item.className = 'routine-child-item';
+
+        const name = document.createElement('div');
+        name.className = 'routine-child-name';
+        name.textContent = crianca.nome;
+
+        const actions = document.createElement('div');
+        actions.className = 'routine-child-actions';
+
+        const editButton = document.createElement('button');
+        editButton.className = 'btn-ghost';
+        editButton.type = 'button';
+        editButton.textContent = 'Editar';
+        editButton.addEventListener('click', function() {
+          editarCriancaRotina(crianca.id);
+        });
+
+        const removeButton = document.createElement('button');
+        removeButton.className = 'btn-ghost danger';
+        removeButton.type = 'button';
+        removeButton.textContent = 'Remover';
+        removeButton.addEventListener('click', function() {
+          removerCriancaRotina(crianca.id);
+        });
+
+        actions.appendChild(editButton);
+        actions.appendChild(removeButton);
+        item.appendChild(name);
+        item.appendChild(actions);
+        list.appendChild(item);
+      });
+
+      const addArea = document.createElement('div');
+      addArea.className = 'routine-children-form';
+
+      const label = document.createElement('label');
+      label.textContent = 'Nova criança';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Ex: Anthony';
+
+      const addButton = document.createElement('button');
+      addButton.className = 'btn small';
+      addButton.type = 'button';
+      addButton.textContent = '+ Adicionar';
+      addButton.addEventListener('click', function() {
+        adicionarCriancaRotina(input.value);
+      });
+
+      label.appendChild(input);
+      addArea.appendChild(label);
+      addArea.appendChild(addButton);
+      card.appendChild(title);
+      card.appendChild(list);
+      card.appendChild(addArea);
+      fluxosContent.appendChild(card);
+    }
+
+    function renderEditorTarefasFluxos() {
+      getFluxosCategoriasPadrao().forEach(function(categoria) {
+        const card = document.createElement('div');
+        card.className = 'fluxos-card';
+
+        const title = document.createElement('div');
+        title.className = 'fluxos-card-title';
+        title.textContent = 'Tarefas da ' + categoria.nome;
+        card.appendChild(title);
+
+        getFluxosTarefasCategoria(categoria.id).forEach(function(task) {
+          const row = document.createElement('div');
+          row.className = 'fluxos-task';
+
+          const name = document.createElement('div');
+          name.textContent = task.name;
+
+          const editButton = document.createElement('button');
+          editButton.className = 'btn-ghost';
+          editButton.type = 'button';
+          editButton.textContent = 'Editar';
+          editButton.addEventListener('click', function() {
+            editarTarefaFluxo(task.id);
+          });
+
+          const removeButton = document.createElement('button');
+          removeButton.className = 'btn-ghost danger';
+          removeButton.type = 'button';
+          removeButton.textContent = 'Remover';
+          removeButton.addEventListener('click', function() {
+            removerTarefaFluxo(task.id);
+          });
+
+          row.appendChild(name);
+          row.appendChild(editButton);
+          row.appendChild(removeButton);
+          card.appendChild(row);
+        });
+
+        const addArea = document.createElement('div');
+        addArea.className = 'routine-children-form';
+
+        const label = document.createElement('label');
+        label.textContent = 'Nova tarefa';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Ex: Tirar lixo';
+
+        const addButton = document.createElement('button');
+        addButton.className = 'btn small';
+        addButton.type = 'button';
+        addButton.textContent = '+ Adicionar';
+        addButton.addEventListener('click', function() {
+          adicionarTarefaFluxo(categoria, input.value);
+        });
+
+        label.appendChild(input);
+        addArea.appendChild(label);
+        addArea.appendChild(addButton);
+        card.appendChild(addArea);
+        fluxosContent.appendChild(card);
+      });
+    }
+
+    async function adicionarTarefaFluxo(categoria, taskName) {
+      const cleanName = normalizarNomeCriancaRotina(taskName);
+
+      if (!cleanName) {
+        alert('Digite o nome da tarefa.');
+        return;
+      }
+
+      currentChecklist.tasks.push({
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        category: categoria.nome,
+        name: cleanName,
+        points: 10,
+        frequency: 'Diária',
+        responsavelTipo: 'todos',
+        responsavelCriancaId: null,
+        passos: [],
+        done: false
+      });
+
+      await salvarTarefas(currentChecklist);
+      renderModoResponsavelFluxos();
+    }
+
+    async function editarTarefaFluxo(taskId) {
+      const task = currentChecklist.tasks.find(function(item) {
+        return String(item.id) === String(taskId);
+      });
+
+      if (!task) {
+        return;
+      }
+
+      const newName = prompt('Editar tarefa', task.name);
+
+      if (newName === null) {
+        return;
+      }
+
+      const cleanName = normalizarNomeCriancaRotina(newName);
+
+      if (!cleanName) {
+        alert('Digite o nome da tarefa.');
+        return;
+      }
+
+      task.name = cleanName;
+      await salvarTarefas(currentChecklist);
+      renderModoResponsavelFluxos();
+    }
+
+    async function removerTarefaFluxo(taskId) {
+      const confirmed = confirm('Deseja remover esta tarefa?');
+
+      if (!confirmed) {
+        return;
+      }
+
+      currentChecklist.tasks = currentChecklist.tasks.filter(function(task) {
+        return String(task.id) !== String(taskId);
+      });
+      await salvarTarefas(currentChecklist);
+      renderModoResponsavelFluxos();
+    }
+
+    async function inicializarFluxosDaCasa(checklistsSupabase) {
+      await carregarConfigFluxos(checklistsSupabase);
+      renderTelaInicialFluxos();
+      showScreen(SCREENS.fluxos);
+    }
+
     async function carregarMeusChecklists() {
       if (!usuarioLogado || !usuarioLogado.id) {
         mostrarLogin();
@@ -3902,13 +5042,11 @@
         }
 
         meusChecklists = result.data || [];
-        renderMeusChecklists();
-        showScreen(SCREENS.myChecklists);
+        await inicializarFluxosDaCasa(meusChecklists);
       } catch (error) {
         console.error('Erro ao carregar checklists do usuário no Supabase:', error);
         meusChecklists = [];
-        myChecklistsContent.innerHTML = '<div class="empty-state"><h2>Não foi possível carregar seus checklists</h2><p class="muted">Tente novamente em instantes.</p></div>';
-        showScreen(SCREENS.myChecklists);
+        await inicializarFluxosDaCasa(meusChecklists);
       }
     }
 
@@ -4368,6 +5506,7 @@
           });
 
           textArea.appendChild(title);
+          textArea.appendChild(criarTaskResponsibleMeta(task, []));
           textArea.appendChild(createTaskMeta(task));
           const taskSteps = renderizarPassosTarefa(task, 'Passos:');
           if (taskSteps) {
@@ -4393,6 +5532,7 @@
       const name = taskNameInput.value.trim();
       const points = Number(taskPointsInput.value);
       const frequency = taskFrequencyInput.value;
+      const responsavel = obterDadosResponsavelCampo(taskResponsibleInput);
       const passos = normalizarPassosTarefa(taskStepsInput.value);
 
       if (!name) {
@@ -4411,6 +5551,7 @@
         name: name,
         points: points,
         frequency: frequency,
+        ...responsavel,
         passos: passos,
         done: false
       });
@@ -4419,6 +5560,7 @@
       taskNameInput.value = '';
       taskPointsInput.value = '10';
       taskFrequencyInput.value = 'Diária';
+      popularCampoResponsavelTarefa(taskResponsibleInput, null, []);
       taskStepsInput.value = '';
       renderCreationTasks();
     }
@@ -4695,6 +5837,7 @@
       checklistOwner.textContent = currentChecklist.personName;
       checklistTaskList.innerHTML = '';
       renderizarCriancasRotina();
+      const criancasRotina = carregarCriancasRotina();
 
       groupTasksByCategory(currentChecklist.tasks).forEach(function(group) {
         const categoryHeader = document.createElement('div');
@@ -4932,6 +6075,12 @@
           });
           taskFrequencySelect.value = task.frequency;
 
+          const taskResponsibleLabel = document.createElement('label');
+          taskResponsibleLabel.textContent = 'Responsável da tarefa';
+
+          const taskResponsibleSelect = document.createElement('select');
+          popularCampoResponsavelTarefa(taskResponsibleSelect, task, criancasRotina);
+
           const taskStepsLabel = document.createElement('label');
           taskStepsLabel.textContent = 'Passos da tarefa';
 
@@ -4957,6 +6106,7 @@
           taskCategoryLabel.appendChild(taskCategoryInput);
           taskPointsLabel.appendChild(taskPointsInput);
           taskFrequencyLabel.appendChild(taskFrequencySelect);
+          taskResponsibleLabel.appendChild(taskResponsibleSelect);
           taskStepsLabel.appendChild(taskStepsTextarea);
           taskActions.appendChild(saveTaskButton);
           taskActions.appendChild(cancelTaskButton);
@@ -4964,6 +6114,7 @@
           taskEditor.appendChild(taskCategoryLabel);
           taskEditor.appendChild(taskPointsLabel);
           taskEditor.appendChild(taskFrequencyLabel);
+          taskEditor.appendChild(taskResponsibleLabel);
           taskEditor.appendChild(taskStepsLabel);
           taskEditor.appendChild(taskActions);
 
@@ -4985,6 +6136,7 @@
             taskCategoryInput.value = getTaskCategory(task);
             taskPointsInput.value = task.points;
             taskFrequencySelect.value = task.frequency;
+            popularCampoResponsavelTarefa(taskResponsibleSelect, task, criancasRotina);
             taskStepsTextarea.value = passosTarefaParaTexto(task);
           });
 
@@ -5008,6 +6160,7 @@
               category: taskCategoryInput.value.trim() || 'Sem categoria',
               points: newPoints,
               frequency: taskFrequencySelect.value,
+              ...obterDadosResponsavelCampo(taskResponsibleSelect),
               passos: normalizarPassosTarefa(taskStepsTextarea.value)
             };
 
@@ -5030,6 +6183,7 @@
           });
 
           textArea.appendChild(title);
+          textArea.appendChild(criarTaskResponsibleMeta(task, criancasRotina));
           textArea.appendChild(createTaskMeta(task));
           const taskSteps = renderizarPassosTarefa(
             task,
@@ -5129,6 +6283,7 @@
       newChecklistTaskNameInput.value = '';
       newChecklistTaskPointsInput.value = '10';
       newChecklistTaskFrequencyInput.value = 'Diária';
+      popularCampoResponsavelTarefa(newChecklistTaskResponsibleInput);
       newChecklistTaskStepsInput.value = '';
       if (categoryItems) {
         categoryItems.insertBefore(addChecklistTaskArea, categoryItems.firstChild);
@@ -5147,6 +6302,7 @@
       newCategoryTaskNameInput.value = '';
       newCategoryTaskFrequencyInput.value = 'Diária';
       newCategoryTaskPointsInput.value = '10';
+      popularCampoResponsavelTarefa(newCategoryTaskResponsibleInput);
       newCategoryTaskStepsInput.value = '';
       addCategoryArea.classList.remove('hidden');
     }
@@ -5158,6 +6314,7 @@
       newChecklistTaskNameInput.value = '';
       newChecklistTaskPointsInput.value = '10';
       newChecklistTaskFrequencyInput.value = 'Diária';
+      popularCampoResponsavelTarefa(newChecklistTaskResponsibleInput);
       newChecklistTaskStepsInput.value = '';
     }
 
@@ -5168,6 +6325,7 @@
       newCategoryTaskNameInput.value = '';
       newCategoryTaskFrequencyInput.value = 'Diária';
       newCategoryTaskPointsInput.value = '10';
+      popularCampoResponsavelTarefa(newCategoryTaskResponsibleInput);
       newCategoryTaskStepsInput.value = '';
     }
 
@@ -5181,6 +6339,7 @@
       const name = newChecklistTaskNameInput.value.trim();
       const points = Number(newChecklistTaskPointsInput.value);
       const frequency = newChecklistTaskFrequencyInput.value;
+      const responsavel = obterDadosResponsavelCampo(newChecklistTaskResponsibleInput);
       const passos = normalizarPassosTarefa(newChecklistTaskStepsInput.value);
 
       if (!name) {
@@ -5199,6 +6358,7 @@
         name: name,
         points: points,
         frequency: frequency,
+        ...responsavel,
         passos: passos,
         done: false
       });
@@ -5224,6 +6384,7 @@
       const name = newCategoryTaskNameInput.value.trim();
       const frequency = newCategoryTaskFrequencyInput.value;
       const points = Number(newCategoryTaskPointsInput.value);
+      const responsavel = obterDadosResponsavelCampo(newCategoryTaskResponsibleInput);
       const passos = normalizarPassosTarefa(newCategoryTaskStepsInput.value);
 
       if (!name) {
@@ -5242,6 +6403,7 @@
         name: name,
         points: points,
         frequency: frequency,
+        ...responsavel,
         passos: passos,
         done: false
       });
@@ -6290,6 +7452,7 @@
       taskNameInput.value = '';
       taskPointsInput.value = '10';
       taskFrequencyInput.value = 'Diária';
+      popularCampoResponsavelTarefa(taskResponsibleInput, null, []);
       taskStepsInput.value = '';
       tasksBeingCreated = getDefaultChecklistTemplateTasks();
       generatedCodeBox.classList.add('hidden');
@@ -6308,6 +7471,7 @@
       taskNameInput.value = '';
       taskPointsInput.value = '10';
       taskFrequencyInput.value = 'Diária';
+      popularCampoResponsavelTarefa(taskResponsibleInput, null, []);
       taskStepsInput.value = '';
       generatedCodeBox.classList.add('hidden');
       renderCreationTasks();
@@ -6384,7 +7548,6 @@
     });
 
     renderCreationTasks();
-    inicializarAutenticacao();
   </script>
 
   <!-- LOCALSTORAGE -->
@@ -6523,31 +7686,43 @@
       });
     }
 
-    function mesclarPassosLocaisNasTarefasSupabase(tarefasSupabase, tarefasLocais) {
+    function mesclarDadosLocaisNasTarefasSupabase(tarefasSupabase, tarefasLocais) {
       if (!Array.isArray(tarefasSupabase) || !Array.isArray(tarefasLocais)) {
         return tarefasSupabase;
       }
 
-      const passosPorId = {};
+      const dadosLocaisPorId = {};
 
       tarefasLocais.forEach(function(task) {
         const passos = obterPassosTarefa(task);
+        const responsavel = obterResponsavelTarefa(task);
+        const taskId = String(garantirTaskIdLocal(task));
+        const dadosLocais = {};
 
         if (passos.length > 0) {
-          passosPorId[String(garantirTaskIdLocal(task))] = passos;
+          dadosLocais.passos = passos;
+        }
+
+        if (responsavel.tipo === 'crianca' && responsavel.criancaId) {
+          dadosLocais.responsavelTipo = 'crianca';
+          dadosLocais.responsavelCriancaId = responsavel.criancaId;
+        }
+
+        if (Object.keys(dadosLocais).length > 0) {
+          dadosLocaisPorId[taskId] = dadosLocais;
         }
       });
 
       return tarefasSupabase.map(function(task) {
-        const passos = passosPorId[String(garantirTaskIdLocal(task))];
+        const dadosLocais = dadosLocaisPorId[String(garantirTaskIdLocal(task))];
 
-        if (!passos || passos.length === 0) {
+        if (!dadosLocais) {
           return task;
         }
 
         return {
           ...task,
-          passos: passos
+          ...dadosLocais
         };
       });
     }
@@ -6666,7 +7841,7 @@
       const tarefasSupabase = await carregarTarefasSupabase(checklist.code);
 
       if (Array.isArray(tarefasSupabase) && tarefasSupabase.length > 0) {
-        checklist.tasks = mesclarPassosLocaisNasTarefasSupabase(tarefasSupabase, checklist.tasks);
+        checklist.tasks = mesclarDadosLocaisNasTarefasSupabase(tarefasSupabase, checklist.tasks);
         saveChecklistToLocalStorage(checklist);
         return checklist;
       }
@@ -7088,6 +8263,7 @@
     }
 
     testarConexaoSupabase();
+    inicializarAutenticacao();
   </script>
 </body>
 </html>
