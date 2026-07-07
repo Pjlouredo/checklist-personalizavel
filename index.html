@@ -1149,6 +1149,67 @@
       box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
     }
 
+    .routine-children-panel {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 18px;
+      padding: 16px;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .routine-children-header {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .routine-children-title {
+      color: #102a43;
+      font-size: 1.05rem;
+      font-weight: 900;
+    }
+
+    .routine-children-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .routine-children-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .routine-child-item {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
+    .routine-child-name {
+      color: #0f172a;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .routine-child-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
     .history-extra-missions {
       display: grid;
       gap: 10px;
@@ -1540,6 +1601,7 @@
 
       .form-grid,
       .task-form,
+      .routine-children-form,
       .progress-area {
         grid-template-columns: 1fr;
       }
@@ -1843,6 +1905,7 @@
 
         <div class="motivation-banner" id="motivationBanner"></div>
         <div class="extra-mission-panel hidden" id="extraMissionPanel"></div>
+        <div class="routine-children-panel hidden" id="routineChildrenPanel"></div>
 
         <div class="progress-area">
           <div class="metric">
@@ -2181,6 +2244,7 @@
     const checklistOwner = document.getElementById('checklistOwner');
     const motivationBanner = document.getElementById('motivationBanner');
     const extraMissionPanel = document.getElementById('extraMissionPanel');
+    const routineChildrenPanel = document.getElementById('routineChildrenPanel');
     const checklistTaskList = document.getElementById('checklistTaskList');
     const progressText = document.getElementById('progressText');
     const donePointsText = document.getElementById('donePointsText');
@@ -2986,6 +3050,277 @@
       return 'childModeActive:' + code;
     }
 
+    function obterEscopoUsuarioCriancasRotina(userId) {
+      if (userId !== undefined && userId !== null && String(userId).trim()) {
+        return String(userId).trim();
+      }
+
+      if (usuarioLogado && usuarioLogado.id) {
+        return String(usuarioLogado.id);
+      }
+
+      return 'local';
+    }
+
+    function obterChaveCriancasRotina(checklistCode, userId) {
+      const code = checklistCode || (currentChecklist && currentChecklist.code) || 'sem-codigo';
+      return 'checklist-personalizavel-criancas-' + obterEscopoUsuarioCriancasRotina(userId) + '-' + code;
+    }
+
+    function normalizarNomeCriancaRotina(nome) {
+      return String(nome || '').trim().replace(/\s+/g, ' ');
+    }
+
+    function gerarIdCriancaRotina() {
+      return 'crianca_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    }
+
+    function normalizarCriancasRotina(criancas) {
+      if (!Array.isArray(criancas)) {
+        return [];
+      }
+
+      return criancas
+        .map(function(crianca, index) {
+          const dados = typeof crianca === 'string' ? { nome: crianca } : (crianca || {});
+          const nome = normalizarNomeCriancaRotina(dados.nome || dados.name);
+
+          if (!nome) {
+            return null;
+          }
+
+          return {
+            id: dados.id || ('crianca_' + normalizeAccessCode(nome) + '_' + index),
+            nome: nome,
+            criadaEm: dados.criadaEm || dados.createdAt || new Date().toISOString(),
+            ativa: dados.ativa !== false
+          };
+        })
+        .filter(function(crianca) {
+          return crianca && crianca.ativa !== false;
+        });
+    }
+
+    function carregarCriancasRotina() {
+      if (!currentChecklist || !currentChecklist.code) {
+        return [];
+      }
+
+      try {
+        const savedData = localStorage.getItem(obterChaveCriancasRotina());
+        return savedData ? normalizarCriancasRotina(JSON.parse(savedData)) : [];
+      } catch (error) {
+        console.warn('Crianças da rotina não carregadas:', error);
+        return [];
+      }
+    }
+
+    function salvarCriancasRotina(criancas) {
+      if (!currentChecklist || !currentChecklist.code) {
+        return [];
+      }
+
+      const criancasNormalizadas = normalizarCriancasRotina(criancas);
+      localStorage.setItem(obterChaveCriancasRotina(), JSON.stringify(criancasNormalizadas));
+      return criancasNormalizadas;
+    }
+
+    function removerCriancasRotinaDoChecklist(checklistCode, userId) {
+      if (!checklistCode) {
+        return;
+      }
+
+      localStorage.removeItem(obterChaveCriancasRotina(checklistCode, userId));
+      localStorage.removeItem(obterChaveCriancasRotina(checklistCode, 'local'));
+    }
+
+    function nomeCriancaRotinaDuplicado(nome, criancas, ignoredId) {
+      return criancas.some(function(crianca) {
+        return crianca.id !== ignoredId && crianca.nome === nome;
+      });
+    }
+
+    function adicionarCriancaRotina(nome) {
+      const nomeLimpo = normalizarNomeCriancaRotina(nome);
+      const criancas = carregarCriancasRotina();
+
+      if (!nomeLimpo) {
+        alert('Digite o nome da criança.');
+        return;
+      }
+
+      if (nomeCriancaRotinaDuplicado(nomeLimpo, criancas)) {
+        alert('Esta criança já está cadastrada nesta rotina.');
+        return;
+      }
+
+      criancas.push({
+        id: gerarIdCriancaRotina(),
+        nome: nomeLimpo,
+        criadaEm: new Date().toISOString(),
+        ativa: true
+      });
+
+      salvarCriancasRotina(criancas);
+      renderizarCriancasRotina();
+    }
+
+    function editarCriancaRotina(id) {
+      const criancas = carregarCriancasRotina();
+      const crianca = criancas.find(function(item) {
+        return item.id === id;
+      });
+
+      if (!crianca) {
+        return;
+      }
+
+      const novoNome = prompt('Editar nome da criança', crianca.nome);
+
+      if (novoNome === null) {
+        return;
+      }
+
+      const nomeLimpo = normalizarNomeCriancaRotina(novoNome);
+
+      if (!nomeLimpo) {
+        alert('Digite o nome da criança.');
+        return;
+      }
+
+      if (nomeCriancaRotinaDuplicado(nomeLimpo, criancas, id)) {
+        alert('Esta criança já está cadastrada nesta rotina.');
+        return;
+      }
+
+      crianca.nome = nomeLimpo;
+      salvarCriancasRotina(criancas);
+      renderizarCriancasRotina();
+    }
+
+    function removerCriancaRotina(id) {
+      const confirmed = confirm('Tem certeza que deseja remover esta criança da rotina?');
+
+      if (!confirmed) {
+        return;
+      }
+
+      const criancas = carregarCriancasRotina().filter(function(crianca) {
+        return crianca.id !== id;
+      });
+
+      salvarCriancasRotina(criancas);
+      renderizarCriancasRotina();
+    }
+
+    function renderizarCriancasRotina() {
+      routineChildrenPanel.innerHTML = '';
+
+      if (!currentChecklist || !currentChecklist.code || childModeActive) {
+        routineChildrenPanel.classList.add('hidden');
+        return;
+      }
+
+      routineChildrenPanel.classList.remove('hidden');
+
+      const header = document.createElement('div');
+      header.className = 'routine-children-header';
+
+      const titleArea = document.createElement('div');
+
+      const title = document.createElement('div');
+      title.className = 'routine-children-title';
+      title.textContent = 'Crianças da rotina';
+
+      const subtitle = document.createElement('p');
+      subtitle.className = 'muted';
+      subtitle.textContent = 'Cadastre quem participa desta rotina.';
+
+      titleArea.appendChild(title);
+      titleArea.appendChild(subtitle);
+      header.appendChild(titleArea);
+
+      const form = document.createElement('div');
+      form.className = 'routine-children-form';
+
+      const nameLabel = document.createElement('label');
+      nameLabel.textContent = 'Nome da criança';
+
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.placeholder = 'Ex: Anthony';
+
+      const addButton = document.createElement('button');
+      addButton.className = 'btn small';
+      addButton.type = 'button';
+      addButton.textContent = '+ Adicionar criança';
+
+      function submitChild() {
+        adicionarCriancaRotina(nameInput.value);
+      }
+
+      addButton.addEventListener('click', submitChild);
+      nameInput.addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+          submitChild();
+        }
+      });
+
+      nameLabel.appendChild(nameInput);
+      form.appendChild(nameLabel);
+      form.appendChild(addButton);
+
+      const list = document.createElement('div');
+      list.className = 'routine-children-list';
+
+      const criancas = carregarCriancasRotina();
+
+      if (criancas.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = 'Nenhuma criança cadastrada ainda. Adicione as crianças que participam desta rotina.';
+        list.appendChild(empty);
+      }
+
+      criancas.forEach(function(crianca) {
+        const item = document.createElement('div');
+        item.className = 'routine-child-item';
+
+        const name = document.createElement('div');
+        name.className = 'routine-child-name';
+        name.textContent = crianca.nome;
+
+        const actions = document.createElement('div');
+        actions.className = 'routine-child-actions';
+
+        const editButton = document.createElement('button');
+        editButton.className = 'btn-ghost';
+        editButton.type = 'button';
+        editButton.textContent = 'Editar';
+        editButton.addEventListener('click', function() {
+          editarCriancaRotina(crianca.id);
+        });
+
+        const removeButton = document.createElement('button');
+        removeButton.className = 'btn-ghost danger';
+        removeButton.type = 'button';
+        removeButton.textContent = 'Remover';
+        removeButton.addEventListener('click', function() {
+          removerCriancaRotina(crianca.id);
+        });
+
+        actions.appendChild(editButton);
+        actions.appendChild(removeButton);
+        item.appendChild(name);
+        item.appendChild(actions);
+        list.appendChild(item);
+      });
+
+      routineChildrenPanel.appendChild(header);
+      routineChildrenPanel.appendChild(form);
+      routineChildrenPanel.appendChild(list);
+    }
+
     function getDefaultProactivitySettings() {
       return {
         bonusAuraCoins: 1,
@@ -3262,6 +3597,9 @@
       viewHistoryButton.classList.toggle('hidden', active);
       sendWhatsAppButton.classList.toggle('hidden', active);
       advancedSettings.classList.toggle('hidden', active);
+      if (active || !currentChecklist) {
+        routineChildrenPanel.classList.add('hidden');
+      }
       childModeControls.classList.toggle('hidden', !active);
       logoutButton.classList.toggle('hidden', active);
       finishChildModeTasksButton.textContent = active ? '🚀 Finalizar minhas tarefas' : 'Finalizar minhas tarefas';
@@ -3753,6 +4091,7 @@
         }
 
         localStorage.removeItem(getStorageKey(code));
+        removerCriancasRotinaDoChecklist(code, usuario.id);
         console.log('Checklist excluído com sucesso');
         await carregarMeusChecklists();
       } catch (error) {
@@ -4355,6 +4694,7 @@
       checklistTitle.textContent = currentChecklist.checklistName;
       checklistOwner.textContent = currentChecklist.personName;
       checklistTaskList.innerHTML = '';
+      renderizarCriancasRotina();
 
       groupTasksByCategory(currentChecklist.tasks).forEach(function(group) {
         const categoryHeader = document.createElement('div');
