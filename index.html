@@ -2415,6 +2415,31 @@
       }, 0);
     }
 
+    function calcularSaldoAcumuladoAuraCoins(history) {
+      if (!currentChecklist || !currentChecklist.code) {
+        return 0;
+      }
+
+      const userId = usuarioLogado && usuarioLogado.id ? usuarioLogado.id : null;
+      const records = (Array.isArray(history) ? history : []).filter(function(record) {
+        const recordChecklistCode = record.checklistCode || record.checklist_code || record.code || currentChecklist.code;
+        const recordUserId = record.user_id || record.userId || null;
+
+        return recordChecklistCode === currentChecklist.code && (!userId || !recordUserId || recordUserId === userId);
+      });
+
+      const taskBalance = records.reduce(function(sum, record) {
+        return sum + getRecordBalance(record);
+      }, 0);
+
+      const missionsByDate = collectExtraMissionsForHistory(records);
+      const proactivityBonusAuraCoins = Object.keys(missionsByDate).reduce(function(sum, dateKey) {
+        return sum + getExtraMissionReportBonusTotal(missionsByDate[dateKey]);
+      }, 0);
+
+      return taskBalance + proactivityBonusAuraCoins;
+    }
+
     function formatExtraMissionsForReport(missions) {
       if (!Array.isArray(missions) || missions.length === 0) {
         return '';
@@ -4068,8 +4093,7 @@
 
       try {
         const history = await buscarHistorico(currentChecklist.code);
-        const lastRecord = Array.isArray(history) && history.length > 0 ? history[history.length - 1] : null;
-        auraCoins = lastRecord && typeof lastRecord.auraCoins === 'number' ? Math.max(0, lastRecord.auraCoins) : 0;
+        auraCoins = calcularSaldoAcumuladoAuraCoins(history);
       } catch (error) {
         console.warn('Banner motivacional sem histórico disponível:', error);
       }
@@ -4090,8 +4114,9 @@
       const highestReward = rewards.length > 0 ? rewards[rewards.length - 1] : null;
       const selectedReward = nextReward || highestReward;
       const rewardCost = selectedReward ? Number(selectedReward.cost) : 0;
+      const rewardProgressAuraCoins = Math.max(0, auraCoins);
       const missingCoins = selectedReward ? Math.max(rewardCost - auraCoins, 0) : 0;
-      const progressPercent = rewardCost > 0 ? Math.min(100, Math.round((auraCoins / rewardCost) * 100)) : 0;
+      const progressPercent = rewardCost > 0 ? Math.max(0, Math.min(100, Math.round((rewardProgressAuraCoins / rewardCost) * 100))) : 0;
       const agreement = getConsequencesText(currentChecklist);
 
       const top = document.createElement('div');
@@ -4155,7 +4180,7 @@
       const progressLabel = document.createElement('div');
       progressLabel.className = 'motivation-progress-label';
       progressLabel.textContent = selectedReward
-        ? Math.min(auraCoins, rewardCost) + ' de ' + rewardCost + ' Aura Coins'
+        ? Math.min(rewardProgressAuraCoins, rewardCost) + ' de ' + rewardCost + ' Aura Coins'
         : '0 de 0 Aura Coins';
 
       const progressBar = document.createElement('div');
@@ -4175,7 +4200,7 @@
 
       const stats = document.createElement('div');
       stats.className = 'motivation-stats';
-      stats.appendChild(createMotivationStatCard('Cofrinho Aura', formatAuraCoinsLabel(auraCoins)));
+      stats.appendChild(createMotivationStatCard('Saldo acumulado', formatAuraCoinsLabel(auraCoins)));
       stats.appendChild(createMotivationMissingCard(missingCoins, Boolean(selectedReward)));
 
       hero.appendChild(rewardHero);
@@ -5567,14 +5592,13 @@
       }
 
       const newestRecord = history[history.length - 1];
+      const accumulatedHistory = Array.isArray(currentHistory) && currentHistory.length > 0 ? currentHistory : history;
       historyDateText.textContent = newestRecord.date;
       historyGainsText.textContent = getRecordCompletedCount(newestRecord);
       historyLossesText.textContent = getRecordIncompleteCount(newestRecord);
       historyBalanceText.textContent = getRecordDailyAuraCoins(newestRecord);
-      historyAuraCoinsText.textContent = newestRecord.auraCoins;
-      const extraMissionsByDate = collectExtraMissionsForHistory(
-        Array.isArray(currentHistory) && currentHistory.length > 0 ? currentHistory : history
-      );
+      historyAuraCoinsText.textContent = calcularSaldoAcumuladoAuraCoins(accumulatedHistory);
+      const extraMissionsByDate = collectExtraMissionsForHistory(accumulatedHistory);
 
       history.slice().reverse().forEach(function(record) {
         const dayArea = document.createElement('div');
