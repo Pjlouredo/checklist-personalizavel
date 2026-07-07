@@ -2243,6 +2243,15 @@
       return mission ? (mission.title || mission.titulo || mission.descricao || mission.description || '') : '';
     }
 
+    function getExtraMissionBonusAuraCoins(mission, fallbackValue) {
+      if (!mission || !Object.prototype.hasOwnProperty.call(mission, 'bonusAuraCoins')) {
+        return fallbackValue;
+      }
+
+      const bonusAuraCoins = Number(mission.bonusAuraCoins);
+      return Number.isFinite(bonusAuraCoins) && bonusAuraCoins >= 0 ? bonusAuraCoins : fallbackValue;
+    }
+
     async function getPendingExtraMissions() {
       if (!currentChecklist || !currentChecklist.code) {
         return [];
@@ -2281,7 +2290,7 @@
           missionId: missionId,
           title: missionTitle,
           createdAt: mission.createdAt || mission.criadoEm || '',
-          bonusAuraCoins: mission.bonusAuraCoins || 1,
+          bonusAuraCoins: getExtraMissionBonusAuraCoins(mission, 1),
           source: source
         });
       }
@@ -2380,7 +2389,7 @@
 
         const bonus = document.createElement('div');
         bonus.className = 'notification-item-meta';
-        bonus.textContent = 'Bônus: +' + formatAuraCoinsLabel(Number(mission.bonusAuraCoins) || 1);
+        bonus.textContent = 'Recompensa: o responsavel escolhe ao reconhecer';
 
         const actions = document.createElement('div');
         actions.className = 'notification-actions';
@@ -2800,7 +2809,7 @@
       return 'Aguardando reconhecimento do responsável';
     }
 
-    function updateExtraMissionDraftStatus(recordDate, missionId, status) {
+    function updateExtraMissionDraftStatus(recordDate, missionId, status, bonusAuraCoins) {
       if (!currentChecklist || !currentChecklist.code) {
         return false;
       }
@@ -2817,11 +2826,43 @@
       mission.status = status;
 
       if (status === 'approved' || status === 'aprovada' || status === 'reconhecida') {
-        mission.bonusAuraCoins = Number(mission.bonusAuraCoins) || 1;
+        mission.bonusAuraCoins = bonusAuraCoins;
+        mission.approvedAt = new Date().toISOString();
+        mission.aprovadaEm = mission.approvedAt;
       }
 
       saveExtraMissionsDraft(currentChecklist.code, recordDate, missions);
       return true;
+    }
+
+    function askExtraMissionRewardAuraCoins() {
+      const answer = prompt(
+        'Qual recompensa aplicar?\n\n' +
+        '0 - Reconhecer sem Aura Coins\n' +
+        '5 - +5 Aura Coins\n' +
+        '10 - +10 Aura Coins\n' +
+        'Ou digite outro valor personalizado.'
+      );
+
+      if (answer === null) {
+        return null;
+      }
+
+      const cleanAnswer = answer.trim().replace(',', '.');
+
+      if (cleanAnswer === '') {
+        alert('Informe 0, 5, 10 ou outro valor positivo.');
+        return null;
+      }
+
+      const bonusAuraCoins = Number(cleanAnswer);
+
+      if (!Number.isFinite(bonusAuraCoins) || bonusAuraCoins < 0 || !Number.isInteger(bonusAuraCoins)) {
+        alert('Informe apenas um numero inteiro positivo ou zero.');
+        return null;
+      }
+
+      return bonusAuraCoins;
     }
 
     function obterPinModoCrianca() {
@@ -2986,7 +3027,6 @@
       const missions = loadExtraMissionsDraft(currentChecklist.code, today);
       const usedCount = missions.length;
       const limit = Number(settings.dailyLimit) || 3;
-      const bonus = Number(settings.bonusAuraCoins) || 1;
 
       const header = document.createElement('div');
       header.className = 'extra-mission-header';
@@ -2999,11 +3039,11 @@
 
       const text = document.createElement('p');
       text.className = 'extra-mission-text';
-      text.textContent = 'Fez alguma coisa boa sem ninguém pedir? Registre aqui. O responsável vai ver depois e pode reconhecer com um bônus.';
+      text.textContent = 'Fez alguma coisa boa sem ninguém pedir? Registre aqui. O responsável vai ver depois e escolhe se reconhece com Aura Coins.';
 
       const meta = document.createElement('div');
       meta.className = 'task-meta';
-      meta.textContent = 'Se o responsável reconhecer: +' + formatAuraCoinsLabel(bonus) + ' • Registros de hoje: ' + usedCount + '/' + limit;
+      meta.textContent = 'Registros de hoje: ' + usedCount + '/' + limit;
 
       intro.appendChild(title);
       intro.appendChild(text);
@@ -3459,7 +3499,7 @@
       const proactivityBonusAuraCoins = Array.isArray(record.extraMissions)
         ? record.extraMissions.reduce(function(sum, mission) {
           if (isApprovedExtraMission(mission)) {
-            return sum + (Number(mission.bonusAuraCoins) || 1);
+            return sum + getExtraMissionBonusAuraCoins(mission, 1);
           }
 
           return sum;
@@ -4494,7 +4534,7 @@
 
       const extraMissionLines = Array.isArray(todayHistory.extraMissions) && todayHistory.extraMissions.length > 0
         ? '\n\n🌟 Missões extras registradas:\n' + todayHistory.extraMissions.map(function(mission) {
-          return '- ' + getExtraMissionTitle(mission) + ' (aguardando reconhecimento, bônus sugerido: +' + formatAuraCoinsLabel(Number(mission.bonusAuraCoins) || 1) + ')';
+          return '- ' + getExtraMissionTitle(mission) + ' (aguardando reconhecimento do responsavel)';
         }).join('\n')
         : '';
 
@@ -4968,7 +5008,7 @@
       const proactivityBonusAuraCoins = Array.isArray(record.extraMissions)
         ? record.extraMissions.reduce(function(sum, mission) {
           if (isApprovedExtraMission(mission)) {
-            return sum + (Number(mission.bonusAuraCoins) || 1);
+            return sum + getExtraMissionBonusAuraCoins(mission, 1);
           }
 
           return sum;
@@ -5028,14 +5068,14 @@
     }
 
     async function approveExtraMission(recordDate, missionId) {
-      const confirmed = confirm('Reconhecer esta missão extra e adicionar o bônus de proatividade?');
-
-      if (!confirmed) {
+      if (!MODO_DESENVOLVIMENTO) {
+        alert('Aprovação de missão extra no Supabase ainda não implementada.');
         return;
       }
 
-      if (!MODO_DESENVOLVIMENTO) {
-        alert('Aprovação de missão extra no Supabase ainda não implementada.');
+      const bonusAuraCoins = askExtraMissionRewardAuraCoins();
+
+      if (bonusAuraCoins === null) {
         return;
       }
 
@@ -5044,10 +5084,10 @@
         return item.date === recordDate;
       });
 
-      if ((!record || !Array.isArray(record.extraMissions)) && updateExtraMissionDraftStatus(recordDate, missionId, 'approved')) {
+      if ((!record || !Array.isArray(record.extraMissions)) && updateExtraMissionDraftStatus(recordDate, missionId, 'approved', bonusAuraCoins)) {
         renderExtraMissionPanel();
         renderNotificationBell();
-        alert('Bonus de proatividade reconhecido!');
+        alert(bonusAuraCoins > 0 ? 'Missão reconhecida com +' + formatAuraCoinsLabel(bonusAuraCoins) + '.' : 'Missão reconhecida sem Aura Coins.');
         return;
       }
 
@@ -5060,10 +5100,10 @@
         return String(item.id) === String(missionId);
       });
 
-      if (!mission && updateExtraMissionDraftStatus(recordDate, missionId, 'approved')) {
+      if (!mission && updateExtraMissionDraftStatus(recordDate, missionId, 'approved', bonusAuraCoins)) {
         renderExtraMissionPanel();
         renderNotificationBell();
-        alert('Bonus de proatividade reconhecido!');
+        alert(bonusAuraCoins > 0 ? 'Missão reconhecida com +' + formatAuraCoinsLabel(bonusAuraCoins) + '.' : 'Missão reconhecida sem Aura Coins.');
         return;
       }
 
@@ -5073,7 +5113,9 @@
       }
 
       mission.status = 'approved';
-      mission.bonusAuraCoins = Number(mission.bonusAuraCoins) || 1;
+      mission.bonusAuraCoins = bonusAuraCoins;
+      mission.approvedAt = new Date().toISOString();
+      mission.aprovadaEm = mission.approvedAt;
 
       const updatedHistory = recalculateAuraCoins(history);
       saveHistoryToLocalStorage(currentChecklist.code, updatedHistory);
@@ -5081,7 +5123,7 @@
       renderizarHistorico(currentHistory);
       renderMotivationBanner();
       renderNotificationBell();
-      alert('Bônus de proatividade reconhecido!');
+      alert(bonusAuraCoins > 0 ? 'Missão reconhecida com +' + formatAuraCoinsLabel(bonusAuraCoins) + '.' : 'Missão reconhecida sem Aura Coins.');
     }
 
     async function rejectExtraMission(recordDate, missionId) {
@@ -5224,13 +5266,14 @@
 
             const missionBonus = document.createElement('div');
             missionBonus.className = 'task-meta';
+            const bonusAuraCoins = getExtraMissionBonusAuraCoins(mission, 1);
 
             if (isApprovedExtraMission(mission)) {
-              missionBonus.textContent = '+' + formatAuraCoinsLabel(Number(mission.bonusAuraCoins) || 1);
+              missionBonus.textContent = bonusAuraCoins > 0 ? '+' + formatAuraCoinsLabel(bonusAuraCoins) : '0 Aura Coin';
             } else if (getExtraMissionStatusClass(mission.status) === 'rejected') {
               missionBonus.textContent = '0 Aura Coin';
             } else {
-              missionBonus.textContent = 'Bônus sugerido: +' + formatAuraCoinsLabel(Number(mission.bonusAuraCoins) || 1);
+              missionBonus.textContent = 'Recompensa: o responsavel escolhe ao reconhecer';
             }
 
             missionCard.appendChild(missionTitle);
@@ -5244,7 +5287,7 @@
               const approveButton = document.createElement('button');
               approveButton.className = 'btn secondary small';
               approveButton.type = 'button';
-              approveButton.textContent = 'Reconhecer +' + formatAuraCoinsLabel(Number(mission.bonusAuraCoins) || 1);
+              approveButton.textContent = 'Reconhecer';
               approveButton.addEventListener('click', function() {
                 approveExtraMission(record.date, mission.id);
               });
