@@ -2307,9 +2307,13 @@
         mission.reconhecidaEm ||
         mission.rejectedAt ||
         mission.recusadaEm ||
+        mission.updatedAt ||
+        mission.corrigidaEm ||
         mission.createdAt ||
         mission.criadoEm ||
         mission.createdDate ||
+        mission.dataCriacao ||
+        mission.data ||
         recordDate;
 
       return normalizeHistoryDateKey(preferredDate) || normalizeHistoryDateKey(recordDate);
@@ -2394,6 +2398,40 @@
       });
 
       return missionsByDate;
+    }
+
+    function getExtraMissionsForReport(record) {
+      if (!record || !record.date) {
+        return [];
+      }
+
+      const missionsByDate = collectExtraMissionsForHistory([record]);
+      return missionsByDate[record.date] || [];
+    }
+
+    function getExtraMissionReportBonusTotal(missions) {
+      return (Array.isArray(missions) ? missions : []).reduce(function(sum, mission) {
+        return isApprovedExtraMission(mission) ? sum + getExtraMissionBonusAuraCoins(mission, 0) : sum;
+      }, 0);
+    }
+
+    function formatExtraMissionsForReport(missions) {
+      if (!Array.isArray(missions) || missions.length === 0) {
+        return '';
+      }
+
+      const lines = missions.map(function(mission) {
+        const title = getExtraMissionTitle(mission) || 'Missão extra';
+        const bonusAuraCoins = getExtraMissionBonusAuraCoins(mission, 0);
+
+        if (isApprovedExtraMission(mission)) {
+          return '- ' + title + ' (' + (bonusAuraCoins > 0 ? '+' + formatAuraCoinsLabel(bonusAuraCoins) : 'reconhecida sem Aura Coins') + ')';
+        }
+
+        return '- ' + title + ' (recusada, sem Aura Coins)';
+      });
+
+      return '\n\nProatividade:\n' + lines.join('\n');
     }
 
     async function getPendingExtraMissions() {
@@ -4768,16 +4806,17 @@
           const historyValue = getTaskHistoryValue(task, todayHistory);
           const valueText = (historyValue > 0 ? '+' : '') + historyValue + ' pontos';
 
-          return (task.done ? '✅ ' : '❌ ') + task.name + ' (' + valueText + ')';
+          return '- ' + task.name + ' (' + valueText + ')';
         }).join('\n');
 
         return group.name + '\n' + lines;
       }).join('\n\n');
 
-      const extraMissionLines = Array.isArray(todayHistory.extraMissions) && todayHistory.extraMissions.length > 0
-        ? '\n\n🌟 Missões extras registradas:\n' + todayHistory.extraMissions.map(function(mission) {
-          return '- ' + getExtraMissionTitle(mission) + ' (aguardando reconhecimento do responsavel)';
-        }).join('\n')
+      const reportExtraMissions = getExtraMissionsForReport(todayHistory);
+      const proactivityBonusAuraCoins = getExtraMissionReportBonusTotal(reportExtraMissions);
+      const extraMissionLines = formatExtraMissionsForReport(reportExtraMissions);
+      const proactivityBonusLine = proactivityBonusAuraCoins > 0
+        ? 'Bônus de proatividade: +' + formatAuraCoinsLabel(proactivityBonusAuraCoins) + '\n'
         : '';
 
       const message =
@@ -4787,6 +4826,7 @@
         'Feitas: ' + getRecordCompletedCount(todayHistory) + '\n' +
         'Tarefas não concluídas: ' + getRecordIncompleteCount(todayHistory) + '\n' +
         'Aura Coins ganhas: +' + getRecordDailyAuraCoins(todayHistory) + '\n' +
+        proactivityBonusLine +
         'Pontos concluídos: +' + getRecordGains(todayHistory) + '\n' +
         'Pontos não conquistados: ' + getRecordLosses(todayHistory) + '\n' +
         'Saldo de pontos do dia: ' + getRecordBalance(todayHistory) + '\n' +
