@@ -1290,6 +1290,13 @@
       font-weight: 700;
     }
 
+    .fluxos-section-title {
+      margin-top: 12px;
+      color: #102a43;
+      font-size: 1rem;
+      font-weight: 900;
+    }
+
     .fluxos-task {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr) auto;
@@ -1325,6 +1332,13 @@
       gap: 10px;
       align-items: center;
       flex-wrap: wrap;
+    }
+
+    .fluxos-daily-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 120px auto;
+      gap: 10px;
+      align-items: end;
     }
 
     .history-extra-missions {
@@ -1719,6 +1733,7 @@
       .form-grid,
       .task-form,
       .routine-children-form,
+      .fluxos-daily-form,
       .progress-area {
         grid-template-columns: 1fr;
       }
@@ -4347,6 +4362,92 @@
       }
     }
 
+    function getFluxosTarefasDiariasKey() {
+      const userId = getFluxosUserIdSeguro();
+      return userId ? 'fluxos-casa-tarefas-diarias-' + userId : null;
+    }
+
+    function getFluxosTarefasDiariasPadrao() {
+      return [
+        { id: 'diaria_arrumar_cama', titulo: 'Arrumar a cama', aura: 10, ativa: true },
+        { id: 'diaria_escovar_dentes', titulo: 'Escovar os dentes', aura: 10, ativa: true },
+        { id: 'diaria_roupa_suja_cesto', titulo: 'Colocar roupa suja no cesto', aura: 10, ativa: true },
+        { id: 'diaria_guardar_mochila', titulo: 'Guardar mochila', aura: 10, ativa: true }
+      ];
+    }
+
+    function normalizarTarefasDiarias(tarefas) {
+      if (!Array.isArray(tarefas)) {
+        return [];
+      }
+
+      return tarefas
+        .map(function(tarefa, index) {
+          const dados = typeof tarefa === 'string' ? { titulo: tarefa } : (tarefa || {});
+          const titulo = normalizarNomeCriancaRotina(dados.titulo || dados.name || dados.nome);
+
+          if (!titulo) {
+            return null;
+          }
+
+          return {
+            id: dados.id || ('diaria_' + normalizeAccessCode(titulo) + '_' + index),
+            titulo: titulo,
+            aura: Number(dados.aura || dados.points || 10) || 10,
+            ativa: dados.ativa !== false
+          };
+        })
+        .filter(function(tarefa) {
+          return tarefa && tarefa.ativa !== false;
+        });
+    }
+
+    function carregarTarefasDiarias() {
+      const key = getFluxosTarefasDiariasKey();
+
+      if (!key) {
+        return getFluxosTarefasDiariasPadrao();
+      }
+
+      try {
+        const savedData = localStorage.getItem(key);
+
+        if (!savedData) {
+          return salvarTarefasDiarias(getFluxosTarefasDiariasPadrao());
+        }
+
+        const parsedData = JSON.parse(savedData);
+
+        if (!Array.isArray(parsedData)) {
+          return salvarTarefasDiarias(getFluxosTarefasDiariasPadrao());
+        }
+
+        return normalizarTarefasDiarias(parsedData);
+      } catch (error) {
+        console.warn('Tarefas diárias não carregadas:', error);
+        return getFluxosTarefasDiariasPadrao();
+      }
+    }
+
+    function salvarTarefasDiarias(tarefas) {
+      const key = getFluxosTarefasDiariasKey();
+      const tarefasNormalizadas = normalizarTarefasDiarias(tarefas);
+
+      if (key) {
+        localStorage.setItem(key, JSON.stringify(tarefasNormalizadas));
+      }
+
+      return tarefasNormalizadas;
+    }
+
+    function garantirTarefasDiariasPadrao() {
+      return carregarTarefasDiarias();
+    }
+
+    function gerarIdTarefaDiaria() {
+      return 'diaria_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    }
+
     function getFluxosTasksDefault() {
       const baseId = Date.now();
       let index = 0;
@@ -4480,6 +4581,7 @@
       garantirIdsTarefasChecklist(currentChecklist);
       saveChecklistToLocalStorage(currentChecklist);
       garantirFluxosCriancasPadrao();
+      garantirTarefasDiariasPadrao();
 
       await salvarChecklist(currentChecklist);
       await salvarTarefas(currentChecklist);
@@ -4552,40 +4654,106 @@
       return escolhas;
     }
 
-    function carregarProgressoDiarioFluxos(childId, categoryId) {
-      const key = getFluxosStorageKey('progresso-' + obterSemanaAtual() + '-' + getTodayDate() + '-' + childId + '-' + categoryId);
-      const savedData = localStorage.getItem(key);
-      const data = savedData ? JSON.parse(savedData) : {};
+    function carregarProgressoDiarioCrianca(childId, categoryId) {
+      const dailyKey = getFluxosStorageKey('progresso-diario-' + getTodayDate() + '-' + childId);
+      const categoryKey = getFluxosStorageKey('progresso-categoria-' + obterSemanaAtual() + '-' + getTodayDate() + '-' + childId + '-' + categoryId);
+      const legacyKey = getFluxosStorageKey('progresso-' + obterSemanaAtual() + '-' + getTodayDate() + '-' + childId + '-' + categoryId);
+      const dailySavedData = localStorage.getItem(dailyKey);
+      const categorySavedData = localStorage.getItem(categoryKey);
+      const legacySavedData = localStorage.getItem(legacyKey);
+      const dailyData = dailySavedData ? JSON.parse(dailySavedData) : {};
+      const categoryData = categorySavedData
+        ? JSON.parse(categorySavedData)
+        : (legacySavedData ? JSON.parse(legacySavedData) : {});
+      const tarefasDiariasFeitas = Array.isArray(dailyData.tarefasDiariasFeitas)
+        ? dailyData.tarefasDiariasFeitas.map(String)
+        : [];
+      const tarefasCategoriaFeitas = Array.isArray(categoryData.tarefasCategoriaFeitas)
+        ? categoryData.tarefasCategoriaFeitas
+        : (Array.isArray(categoryData.doneTaskIds) ? categoryData.doneTaskIds : []);
+
       return {
-        key: key,
-        doneTaskIds: Array.isArray(data.doneTaskIds) ? data.doneTaskIds : []
+        dailyKey: dailyKey,
+        categoryKey: categoryKey,
+        tarefasDiariasFeitas: tarefasDiariasFeitas,
+        tarefasCategoriaFeitas: tarefasCategoriaFeitas.map(String),
+        doneTaskIds: tarefasCategoriaFeitas.map(String)
       };
     }
 
-    function salvarProgressoDiarioFluxos(childId, categoryId, progress) {
-      localStorage.setItem(progress.key, JSON.stringify({
+    function carregarProgressoDiarioFluxos(childId, categoryId) {
+      return carregarProgressoDiarioCrianca(childId, categoryId);
+    }
+
+    function salvarProgressoDiarioCrianca(childId, categoryId, progress) {
+      const progressData = progress || {};
+      const dailyKey = progressData.dailyKey || getFluxosStorageKey('progresso-diario-' + getTodayDate() + '-' + childId);
+      const categoryKey = progressData.categoryKey || getFluxosStorageKey('progresso-categoria-' + obterSemanaAtual() + '-' + getTodayDate() + '-' + childId + '-' + categoryId);
+      const tarefasDiariasFeitas = Array.isArray(progressData.tarefasDiariasFeitas)
+        ? progressData.tarefasDiariasFeitas.map(String)
+        : [];
+      const tarefasCategoriaFeitas = Array.isArray(progressData.tarefasCategoriaFeitas)
+        ? progressData.tarefasCategoriaFeitas.map(String)
+        : (Array.isArray(progressData.doneTaskIds) ? progressData.doneTaskIds.map(String) : []);
+
+      localStorage.setItem(dailyKey, JSON.stringify({
+        user_id: usuarioLogado && usuarioLogado.id ? usuarioLogado.id : null,
+        checklistCode: currentChecklist.code,
+        data: getTodayDate(),
+        criancaId: childId,
+        tarefasDiariasFeitas: tarefasDiariasFeitas
+      }));
+
+      localStorage.setItem(categoryKey, JSON.stringify({
         user_id: usuarioLogado && usuarioLogado.id ? usuarioLogado.id : null,
         checklistCode: currentChecklist.code,
         semana: obterSemanaAtual(),
         data: getTodayDate(),
         criancaId: childId,
         categoriaId: categoryId,
-        doneTaskIds: progress.doneTaskIds
+        tarefasCategoriaFeitas: tarefasCategoriaFeitas,
+        doneTaskIds: tarefasCategoriaFeitas
       }));
     }
 
-    function calcularProgressoFluxo(tasks, progress) {
-      const total = tasks.length;
-      const done = tasks.filter(function(task) {
-        return progress.doneTaskIds.indexOf(String(task.id)) !== -1;
-      }).length;
-      const aura = done * 10;
+    function salvarProgressoDiarioFluxos(childId, categoryId, progress) {
+      salvarProgressoDiarioCrianca(childId, categoryId, progress);
+    }
+
+    function calcularProgressoDiaCrianca(tarefasDiarias, tarefasCategoria, progress) {
+      const progressData = progress || {};
+      const tarefasDiariasFeitas = Array.isArray(progressData.tarefasDiariasFeitas)
+        ? progressData.tarefasDiariasFeitas.map(String)
+        : [];
+      const tarefasCategoriaFeitas = Array.isArray(progressData.tarefasCategoriaFeitas)
+        ? progressData.tarefasCategoriaFeitas.map(String)
+        : (Array.isArray(progressData.doneTaskIds) ? progressData.doneTaskIds.map(String) : []);
+      const dailyDone = tarefasDiarias.filter(function(task) {
+        return tarefasDiariasFeitas.indexOf(String(task.id)) !== -1;
+      });
+      const categoryDone = tarefasCategoria.filter(function(task) {
+        return tarefasCategoriaFeitas.indexOf(String(task.id)) !== -1;
+      });
+      const total = tarefasDiarias.length + tarefasCategoria.length;
+      const done = dailyDone.length + categoryDone.length;
+      const aura = dailyDone.reduce(function(sum, task) {
+        return sum + (Number(task.aura) || 10);
+      }, 0) + categoryDone.reduce(function(sum, task) {
+        return sum + (Number(task.points) || 10);
+      }, 0);
+
       return {
         total: total,
         done: done,
         aura: aura,
-        percent: total === 0 ? 0 : Math.round((done / total) * 100)
+        percent: total === 0 ? 0 : Math.round((done / total) * 100),
+        tarefasDiariasFeitas: dailyDone,
+        tarefasCategoriaFeitas: categoryDone
       };
+    }
+
+    function calcularProgressoFluxo(tasks, progress) {
+      return calcularProgressoDiaCrianca([], tasks, progress);
     }
 
     function limparFluxosContent() {
@@ -4824,16 +4992,17 @@
 
     function renderTarefasDaCategoria(crianca, categoryId) {
       const categoria = getFluxosCategoriaPorId(categoryId);
-      const tasks = getFluxosTarefasCategoria(categoryId);
-      const progress = carregarProgressoDiarioFluxos(crianca.id, categoryId);
-      const resumo = calcularProgressoFluxo(tasks, progress);
+      const tarefasDiarias = carregarTarefasDiarias();
+      const tarefasCategoria = getFluxosTarefasCategoria(categoryId);
+      const progress = carregarProgressoDiarioCrianca(crianca.id, categoryId);
+      const resumo = calcularProgressoDiaCrianca(tarefasDiarias, tarefasCategoria, progress);
 
       const card = document.createElement('div');
       card.className = 'fluxos-card';
 
       const title = document.createElement('div');
       title.className = 'fluxos-card-title';
-      title.textContent = 'Responsável da semana: ' + categoria.nome;
+      title.textContent = 'Missões de hoje';
 
       const progressText = document.createElement('div');
       progressText.className = 'muted';
@@ -4851,29 +5020,40 @@
       card.appendChild(progressText);
       card.appendChild(progressBar);
 
-      tasks.forEach(function(task) {
-        const taskDone = progress.doneTaskIds.indexOf(String(task.id)) !== -1;
-        const taskRow = document.createElement('div');
-        taskRow.className = 'fluxos-task' + (taskDone ? ' done' : '');
+      renderGrupoTarefasFluxos(card, {
+        titulo: 'Tarefas diárias',
+        tarefas: tarefasDiarias,
+        obterId: function(task) {
+          return task.id;
+        },
+        obterNome: function(task) {
+          return task.titulo;
+        },
+        obterPontos: function(task) {
+          return task.aura;
+        },
+        feitas: progress.tarefasDiariasFeitas,
+        alternar: function(task) {
+          alternarTarefaDiariaFeita(crianca.id, categoryId, task.id);
+        }
+      });
 
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = taskDone;
-        checkbox.addEventListener('change', function() {
-          alternarTarefaFeitaFluxos(crianca.id, categoryId, task.id);
-        });
-
-        const name = document.createElement('div');
-        name.textContent = task.name;
-
-        const points = document.createElement('div');
-        points.className = 'fluxos-small';
-        points.textContent = '+10';
-
-        taskRow.appendChild(checkbox);
-        taskRow.appendChild(name);
-        taskRow.appendChild(points);
-        card.appendChild(taskRow);
+      renderGrupoTarefasFluxos(card, {
+        titulo: 'Responsabilidade da semana: ' + categoria.nome,
+        tarefas: tarefasCategoria,
+        obterId: function(task) {
+          return task.id;
+        },
+        obterNome: function(task) {
+          return task.name;
+        },
+        obterPontos: function(task) {
+          return task.points;
+        },
+        feitas: progress.tarefasCategoriaFeitas,
+        alternar: function(task) {
+          alternarTarefaCategoriaFeita(crianca.id, categoryId, task.id);
+        }
       });
 
       if (resumo.percent === 100 && resumo.total > 0) {
@@ -4882,7 +5062,7 @@
         reportButton.type = 'button';
         reportButton.textContent = 'ENVIAR RELATÓRIO';
         reportButton.addEventListener('click', function() {
-          gerarRelatorioWhatsAppFluxo(crianca, categoria, resumo);
+          gerarRelatorioWhatsAppFluxo(crianca, categoria, resumo, tarefasDiarias, tarefasCategoria);
         });
         card.appendChild(reportButton);
       }
@@ -4890,25 +5070,102 @@
       fluxosContent.appendChild(card);
     }
 
-    function alternarTarefaFeitaFluxos(childId, categoryId, taskId) {
-      const progress = carregarProgressoDiarioFluxos(childId, categoryId);
-      const id = String(taskId);
-      const currentIndex = progress.doneTaskIds.indexOf(id);
+    function renderGrupoTarefasFluxos(card, config) {
+      const sectionTitle = document.createElement('div');
+      sectionTitle.className = 'fluxos-section-title';
+      sectionTitle.textContent = config.titulo;
+      card.appendChild(sectionTitle);
 
-      if (currentIndex === -1) {
-        progress.doneTaskIds.push(id);
-      } else {
-        progress.doneTaskIds.splice(currentIndex, 1);
+      if (!config.tarefas.length) {
+        const emptyText = document.createElement('p');
+        emptyText.className = 'muted';
+        emptyText.textContent = 'Nenhuma tarefa cadastrada.';
+        card.appendChild(emptyText);
+        return;
       }
 
-      salvarProgressoDiarioFluxos(childId, categoryId, progress);
+      config.tarefas.forEach(function(task) {
+        const taskId = String(config.obterId(task));
+        const feitas = Array.isArray(config.feitas) ? config.feitas.map(String) : [];
+        const taskDone = feitas.indexOf(taskId) !== -1;
+        const taskRow = document.createElement('div');
+        taskRow.className = 'fluxos-task' + (taskDone ? ' done' : '');
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = taskDone;
+        checkbox.addEventListener('change', function() {
+          config.alternar(task);
+        });
+
+        const name = document.createElement('div');
+        name.textContent = config.obterNome(task);
+
+        const points = document.createElement('div');
+        points.className = 'fluxos-small';
+        points.textContent = '+' + (Number(config.obterPontos(task)) || 10);
+
+        taskRow.appendChild(checkbox);
+        taskRow.appendChild(name);
+        taskRow.appendChild(points);
+        card.appendChild(taskRow);
+      });
+    }
+
+    function alternarTarefaDiariaFeita(childId, categoryId, taskId) {
+      const progress = carregarProgressoDiarioCrianca(childId, categoryId);
+      const id = String(taskId);
+      const currentIndex = progress.tarefasDiariasFeitas.indexOf(id);
+
+      if (currentIndex === -1) {
+        progress.tarefasDiariasFeitas.push(id);
+      } else {
+        progress.tarefasDiariasFeitas.splice(currentIndex, 1);
+      }
+
+      salvarProgressoDiarioCrianca(childId, categoryId, progress);
       renderFluxosCriancaSelecionada();
     }
 
-    function gerarRelatorioWhatsAppFluxo(crianca, categoria, resumo) {
+    function alternarTarefaCategoriaFeita(childId, categoryId, taskId) {
+      const progress = carregarProgressoDiarioCrianca(childId, categoryId);
+      const id = String(taskId);
+      const currentIndex = progress.tarefasCategoriaFeitas.indexOf(id);
+
+      if (currentIndex === -1) {
+        progress.tarefasCategoriaFeitas.push(id);
+      } else {
+        progress.tarefasCategoriaFeitas.splice(currentIndex, 1);
+      }
+
+      progress.doneTaskIds = progress.tarefasCategoriaFeitas;
+      salvarProgressoDiarioCrianca(childId, categoryId, progress);
+      renderFluxosCriancaSelecionada();
+    }
+
+    function alternarTarefaFeitaFluxos(childId, categoryId, taskId) {
+      alternarTarefaCategoriaFeita(childId, categoryId, taskId);
+    }
+
+    function gerarRelatorioWhatsAppFluxo(crianca, categoria, resumo, tarefasDiarias, tarefasCategoria) {
+      const diarias = Array.isArray(tarefasDiarias) ? tarefasDiarias : carregarTarefasDiarias();
+      const categoriaTasks = Array.isArray(tarefasCategoria) ? tarefasCategoria : getFluxosTarefasCategoria(categoria.id);
+      const linhasDiarias = diarias.map(function(task) {
+        return '- ' + task.titulo;
+      });
+      const linhasCategoria = categoriaTasks.map(function(task) {
+        return '- ' + task.name;
+      });
       const text = [
         'Tudo pronto!',
-        crianca.nome + ' concluiu as missões da ' + categoria.nome + '.',
+        crianca.nome + ' concluiu as missões do dia.',
+        '',
+        'Tarefas diárias:',
+        linhasDiarias.length ? linhasDiarias.join('\n') : '- Nenhuma tarefa diária cadastrada',
+        '',
+        'Responsabilidade da semana: ' + categoria.nome,
+        linhasCategoria.length ? linhasCategoria.join('\n') : '- Nenhuma tarefa da categoria cadastrada',
+        '',
         'Progresso: ' + resumo.percent + '%.',
         'Aura conquistada: ' + resumo.aura + ' coins.'
       ].join('\n');
@@ -4925,6 +5182,7 @@
       renderPinModoCriancaFluxos();
       renderEscalaResponsavelFluxos();
       renderEditorCriancasFluxos();
+      renderTarefasDiariasResponsavel();
       renderEditorTarefasFluxos();
     }
 
@@ -5101,6 +5359,186 @@
       card.appendChild(list);
       card.appendChild(addArea);
       fluxosContent.appendChild(card);
+    }
+
+    function renderTarefasDiariasResponsavel() {
+      const tarefas = carregarTarefasDiarias();
+      const card = document.createElement('div');
+      card.className = 'fluxos-card';
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-card-title';
+      title.textContent = 'Tarefas diárias de todos';
+
+      const list = document.createElement('div');
+      list.className = 'routine-children-list';
+
+      if (!tarefas.length) {
+        const emptyText = document.createElement('p');
+        emptyText.className = 'muted';
+        emptyText.textContent = 'Nenhuma tarefa diária cadastrada.';
+        list.appendChild(emptyText);
+      }
+
+      tarefas.forEach(function(tarefa) {
+        const item = document.createElement('div');
+        item.className = 'routine-child-item';
+
+        const details = document.createElement('div');
+
+        const name = document.createElement('div');
+        name.className = 'routine-child-name';
+        name.textContent = tarefa.titulo;
+
+        const meta = document.createElement('div');
+        meta.className = 'fluxos-small';
+        meta.textContent = (Number(tarefa.aura) || 10) + ' Aura Coins';
+
+        const actions = document.createElement('div');
+        actions.className = 'routine-child-actions';
+
+        const editButton = document.createElement('button');
+        editButton.className = 'btn-ghost';
+        editButton.type = 'button';
+        editButton.textContent = 'Editar';
+        editButton.addEventListener('click', function() {
+          editarTarefaDiaria(tarefa.id);
+        });
+
+        const removeButton = document.createElement('button');
+        removeButton.className = 'btn-ghost danger';
+        removeButton.type = 'button';
+        removeButton.textContent = 'Remover';
+        removeButton.addEventListener('click', function() {
+          removerTarefaDiaria(tarefa.id);
+        });
+
+        details.appendChild(name);
+        details.appendChild(meta);
+        actions.appendChild(editButton);
+        actions.appendChild(removeButton);
+        item.appendChild(details);
+        item.appendChild(actions);
+        list.appendChild(item);
+      });
+
+      const addArea = document.createElement('div');
+      addArea.className = 'fluxos-daily-form';
+
+      const titleLabel = document.createElement('label');
+      titleLabel.textContent = 'Nova tarefa diária';
+
+      const titleInput = document.createElement('input');
+      titleInput.type = 'text';
+      titleInput.placeholder = 'Ex: Separar uniforme';
+
+      const auraLabel = document.createElement('label');
+      auraLabel.textContent = 'Aura';
+
+      const auraInput = document.createElement('input');
+      auraInput.type = 'number';
+      auraInput.min = '1';
+      auraInput.step = '1';
+      auraInput.value = '10';
+
+      const addButton = document.createElement('button');
+      addButton.className = 'btn small';
+      addButton.type = 'button';
+      addButton.textContent = '+ Adicionar';
+      addButton.addEventListener('click', function() {
+        adicionarTarefaDiaria(titleInput.value, auraInput.value);
+      });
+
+      titleLabel.appendChild(titleInput);
+      auraLabel.appendChild(auraInput);
+      addArea.appendChild(titleLabel);
+      addArea.appendChild(auraLabel);
+      addArea.appendChild(addButton);
+      card.appendChild(title);
+      card.appendChild(list);
+      card.appendChild(addArea);
+      fluxosContent.appendChild(card);
+    }
+
+    function adicionarTarefaDiaria(titulo, aura) {
+      const cleanTitle = normalizarNomeCriancaRotina(titulo);
+      const auraValue = Number(aura);
+
+      if (!cleanTitle) {
+        alert('Digite o nome da tarefa diária.');
+        return;
+      }
+
+      if (!auraValue || auraValue < 1) {
+        alert('Informe uma quantidade de Aura Coins maior que zero.');
+        return;
+      }
+
+      const tarefas = carregarTarefasDiarias();
+      tarefas.push({
+        id: gerarIdTarefaDiaria(),
+        titulo: cleanTitle,
+        aura: Math.round(auraValue),
+        ativa: true
+      });
+      salvarTarefasDiarias(tarefas);
+      renderModoResponsavelFluxos();
+    }
+
+    function editarTarefaDiaria(taskId) {
+      const tarefas = carregarTarefasDiarias();
+      const tarefa = tarefas.find(function(item) {
+        return String(item.id) === String(taskId);
+      });
+
+      if (!tarefa) {
+        return;
+      }
+
+      const newTitle = prompt('Editar tarefa diária', tarefa.titulo);
+
+      if (newTitle === null) {
+        return;
+      }
+
+      const cleanTitle = normalizarNomeCriancaRotina(newTitle);
+
+      if (!cleanTitle) {
+        alert('Digite o nome da tarefa diária.');
+        return;
+      }
+
+      const auraText = prompt('Aura Coins da tarefa', String(Number(tarefa.aura) || 10));
+
+      if (auraText === null) {
+        return;
+      }
+
+      const auraValue = Number(auraText);
+
+      if (!auraValue || auraValue < 1) {
+        alert('Informe uma quantidade de Aura Coins maior que zero.');
+        return;
+      }
+
+      tarefa.titulo = cleanTitle;
+      tarefa.aura = Math.round(auraValue);
+      salvarTarefasDiarias(tarefas);
+      renderModoResponsavelFluxos();
+    }
+
+    function removerTarefaDiaria(taskId) {
+      const confirmed = confirm('Deseja remover esta tarefa diária?');
+
+      if (!confirmed) {
+        return;
+      }
+
+      const tarefas = carregarTarefasDiarias().filter(function(tarefa) {
+        return String(tarefa.id) !== String(taskId);
+      });
+      salvarTarefasDiarias(tarefas);
+      renderModoResponsavelFluxos();
     }
 
     function renderEditorTarefasFluxos() {
