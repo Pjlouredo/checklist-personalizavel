@@ -1334,11 +1334,155 @@
       flex-wrap: wrap;
     }
 
+    .fluxos-child-actions {
+      display: grid;
+      width: 100%;
+      grid-template-columns: minmax(260px, 320px);
+      align-items: stretch;
+      justify-content: center;
+    }
+
+    .fluxos-child-actions .btn {
+      width: 100%;
+      min-height: 42px;
+      white-space: nowrap;
+    }
+
     .fluxos-daily-form {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 120px auto;
       gap: 10px;
       align-items: end;
+    }
+
+    .fluxos-setup {
+      display: grid;
+      gap: 14px;
+    }
+
+    .fluxos-editor-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .fluxos-editor-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .fluxos-daily-editor-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 120px auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .fluxos-category-editor {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
+    .fluxos-error {
+      color: #b91c1c;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .fluxos-badge {
+      display: inline-flex;
+      min-width: 24px;
+      min-height: 24px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 2px 8px;
+      background: #dc2626;
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 900;
+    }
+
+    .fluxos-history-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .fluxos-history-item {
+      display: grid;
+      gap: 6px;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
+    .fluxos-modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(15, 23, 42, 0.58);
+    }
+
+    .fluxos-modal {
+      width: min(560px, 100%);
+      max-height: min(82vh, 720px);
+      overflow: auto;
+      border-radius: 14px;
+      background: #ffffff;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+    }
+
+    .fluxos-modal-header {
+      padding: 18px;
+      background: linear-gradient(135deg, #0f766e, #14b8a6);
+      color: #ffffff;
+      font-size: 1.25rem;
+      font-weight: 900;
+    }
+
+    .fluxos-modal-body {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .fluxos-combinado-block {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .fluxos-combinado-block.positive {
+      border-color: #bbf7d0;
+      background: #f0fdf4;
+    }
+
+    .fluxos-combinado-block.negative {
+      border-color: #fecaca;
+      background: #fff1f2;
+    }
+
+    .fluxos-combinado-title {
+      color: #102a43;
+      font-weight: 900;
+    }
+
+    .fluxos-combinado-list {
+      margin: 0;
+      padding-left: 20px;
+      color: #334155;
+      line-height: 1.5;
     }
 
     .history-extra-missions {
@@ -1734,6 +1878,8 @@
       .task-form,
       .routine-children-form,
       .fluxos-daily-form,
+      .fluxos-editor-row,
+      .fluxos-daily-editor-row,
       .progress-area {
         grid-template-columns: 1fr;
       }
@@ -1790,6 +1936,10 @@
       .fluxos-actions,
       .fluxos-grid {
         grid-template-columns: 1fr;
+      }
+
+      .fluxos-child-actions {
+        grid-template-columns: minmax(0, min(100%, 320px));
       }
 
       .template-preview-list {
@@ -2361,6 +2511,8 @@
     let checklistEditMode = false;
     let childModeActive = false;
     let fluxosCriancaSelecionadaId = null;
+    let fluxosConfigInicialDraft = null;
+    let fluxosHistoricoDataSelecionada = null;
     let lastCompletedTaskAnimationId = null;
     let notificationRenderVersion = 0;
 
@@ -4182,7 +4334,17 @@
       alert('Missão extra registrada!');
     }
 
-    function getFluxosCategoriasPadrao() {
+    function getFluxosConfigKey() {
+      const userId = getFluxosUserIdSeguro();
+      return userId ? 'fluxos-casa-config-' + userId : null;
+    }
+
+    function getFluxosConfigInicialKey() {
+      const userId = getFluxosUserIdSeguro();
+      return userId ? 'fluxos-casa-config-inicial-' + userId : null;
+    }
+
+    function getFluxosCategoriasSugestaoPadrao() {
       return [
         {
           id: 'sala',
@@ -4217,6 +4379,162 @@
       ];
     }
 
+    function normalizarCategoriasConfiguracao(categorias) {
+      if (!Array.isArray(categorias)) {
+        return [];
+      }
+
+      return categorias
+        .map(function(categoria, index) {
+          const dados = typeof categoria === 'string' ? { nome: categoria } : (categoria || {});
+          const nome = normalizarNomeCriancaRotina(dados.nome || dados.name || dados.category);
+
+          if (!nome) {
+            return null;
+          }
+
+          const tarefas = Array.isArray(dados.tarefas)
+            ? dados.tarefas
+            : (typeof dados.tarefasTexto === 'string' ? dados.tarefasTexto.split('\n') : []);
+
+          return {
+            id: dados.id || ('categoria_' + (normalizeAccessCode(nome) || index) + '_' + index),
+            nome: nome,
+            tarefas: tarefas
+              .map(function(tarefa) {
+                return normalizarNomeCriancaRotina(tarefa);
+              })
+              .filter(Boolean),
+            ativa: dados.ativa !== false
+          };
+        })
+        .filter(function(categoria) {
+          return categoria && categoria.ativa !== false;
+        });
+    }
+
+    function carregarConfigFluxosCasa() {
+      const key = getFluxosConfigKey();
+
+      if (!key) {
+        return null;
+      }
+
+      try {
+        const savedData = localStorage.getItem(key);
+        const config = savedData ? JSON.parse(savedData) : null;
+
+        if (!config || typeof config !== 'object') {
+          return null;
+        }
+
+        return {
+          rotinaNome: normalizarNomeCriancaRotina(config.rotinaNome || config.nomeRotina || config.checklistName),
+          categorias: normalizarCategoriasConfiguracao(config.categorias),
+          configuracaoInicialConcluida: config.configuracaoInicialConcluida === true,
+          atualizadaEm: config.atualizadaEm || null
+        };
+      } catch (error) {
+        console.warn('Configuração dos Fluxos da Casa não carregada:', error);
+        return null;
+      }
+    }
+
+    function salvarConfigFluxosCasa(config) {
+      const key = getFluxosConfigKey();
+      const configAtual = carregarConfigFluxosCasa() || {};
+      const configNormalizada = {
+        rotinaNome: normalizarNomeCriancaRotina(
+          config && config.rotinaNome !== undefined ? config.rotinaNome : configAtual.rotinaNome
+        ),
+        categorias: normalizarCategoriasConfiguracao(
+          config && config.categorias !== undefined ? config.categorias : configAtual.categorias
+        ),
+        configuracaoInicialConcluida: Boolean(
+          config && config.configuracaoInicialConcluida !== undefined
+            ? config.configuracaoInicialConcluida
+            : configAtual.configuracaoInicialConcluida
+        ),
+        atualizadaEm: new Date().toISOString()
+      };
+
+      if (key) {
+        localStorage.setItem(key, JSON.stringify(configNormalizada));
+      }
+
+      return configNormalizada;
+    }
+
+    function carregarCategoriasFluxos() {
+      const config = carregarConfigFluxosCasa();
+
+      if (config && config.categorias.length > 0) {
+        return config.categorias;
+      }
+
+      return derivarCategoriasDoChecklist(currentChecklist);
+    }
+
+    function salvarCategoriasFluxos(categorias) {
+      const configAtual = carregarConfigFluxosCasa() || {};
+      return salvarConfigFluxosCasa({
+        ...configAtual,
+        categorias: categorias
+      }).categorias;
+    }
+
+    function derivarCategoriasDoChecklist(checklist) {
+      if (!checklist || !Array.isArray(checklist.tasks)) {
+        return [];
+      }
+
+      const categorias = [];
+
+      checklist.tasks.forEach(function(task) {
+        const nome = normalizarNomeCriancaRotina(getTaskCategory(task));
+
+        if (!nome) {
+          return;
+        }
+
+        const existente = categorias.find(function(categoria) {
+          return normalizeAccessCode(categoria.nome) === normalizeAccessCode(nome);
+        });
+
+        if (!existente) {
+          categorias.push({
+            id: normalizeAccessCode(nome) || gerarIdCategoriaFluxo(nome),
+            nome: nome,
+            tarefas: [],
+            ativa: true
+          });
+        }
+      });
+
+      return categorias;
+    }
+
+    function garantirCategoriasFluxosConfiguradas() {
+      const config = carregarConfigFluxosCasa();
+
+      if (config && config.categorias.length > 0) {
+        return config.categorias;
+      }
+
+      const categoriasDerivadas = derivarCategoriasDoChecklist(currentChecklist);
+
+      if (categoriasDerivadas.length > 0) {
+        return salvarCategoriasFluxos(categoriasDerivadas);
+      }
+
+      return [];
+    }
+
+    function getFluxosCategoriasPadrao() {
+      const categoriasConfiguradas = carregarCategoriasFluxos();
+      return categoriasConfiguradas.length > 0 ? categoriasConfiguradas : getFluxosCategoriasSugestaoPadrao();
+    }
+
     function getFluxosCriancasPadrao() {
       return [
         { id: 'crianca_anthony', nome: 'Anthony', criadaEm: new Date().toISOString(), ativa: true },
@@ -4238,6 +4556,54 @@
 
     function getFluxosUserIdSeguro() {
       return usuarioLogado && usuarioLogado.id ? String(usuarioLogado.id) : null;
+    }
+
+    function configuracaoInicialFluxosConcluida() {
+      const key = getFluxosConfigInicialKey();
+      const config = carregarConfigFluxosCasa();
+
+      if (config && config.configuracaoInicialConcluida === true) {
+        return true;
+      }
+
+      return key ? localStorage.getItem(key) === 'true' : false;
+    }
+
+    function marcarConfiguracaoInicialConcluida() {
+      const key = getFluxosConfigInicialKey();
+      const configAtual = carregarConfigFluxosCasa() || {};
+
+      salvarConfigFluxosCasa({
+        ...configAtual,
+        configuracaoInicialConcluida: true
+      });
+
+      if (key) {
+        localStorage.setItem(key, 'true');
+      }
+    }
+
+    function obterNomeRotinaFluxos() {
+      const config = carregarConfigFluxosCasa();
+
+      if (config && config.rotinaNome) {
+        return config.rotinaNome;
+      }
+
+      if (currentChecklist && currentChecklist.checklistName && currentChecklist.checklistName !== 'Fluxos da Casa') {
+        return currentChecklist.checklistName;
+      }
+
+      if (currentChecklist && currentChecklist.personName && currentChecklist.personName !== 'Casa') {
+        return currentChecklist.personName;
+      }
+
+      return 'Fluxos da Casa';
+    }
+
+    function gerarIdCategoriaFluxo(nome) {
+      const base = normalizeAccessCode(nome || 'fluxo') || 'fluxo';
+      return 'categoria_' + base + '_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
     }
 
     function getFluxosPinModoCriancaKey() {
@@ -4511,6 +4877,12 @@
         currentChecklist.tasks = [];
       }
 
+      const config = carregarConfigFluxosCasa();
+
+      if (config && config.categorias.length > 0) {
+        return;
+      }
+
       const existingCategories = currentChecklist.tasks.map(function(task) {
         return normalizeAccessCode(getTaskCategory(task));
       });
@@ -4536,6 +4908,23 @@
       });
     }
 
+    function sincronizarTarefasCategoriasFluxos() {
+      if (!currentChecklist || !Array.isArray(currentChecklist.tasks)) {
+        return;
+      }
+
+      const categorias = getFluxosCategoriasPadrao().map(function(categoria) {
+        return {
+          ...categoria,
+          tarefas: getFluxosTarefasCategoria(categoria.id).map(function(task) {
+            return task.name;
+          })
+        };
+      });
+
+      salvarCategoriasFluxos(categorias);
+    }
+
     function garantirFluxosCriancasPadrao() {
       const criancas = carregarCriancasRotina();
 
@@ -4546,22 +4935,103 @@
       return salvarCriancasRotina(getFluxosCriancasPadrao());
     }
 
-    async function carregarConfigFluxos(checklistsSupabase) {
+    function obterChecklistFluxosSupabase(checklistsSupabase) {
       const code = getFluxosChecklistCode();
-      const checklistSupabase = Array.isArray(checklistsSupabase)
+      return Array.isArray(checklistsSupabase)
         ? checklistsSupabase.find(function(row) {
           return row.code === code || row.checklist_name === 'Fluxos da Casa';
         })
         : null;
+    }
+
+    function carregarCriancasRotinaPorChave(checklistCode, userId) {
+      try {
+        const savedData = localStorage.getItem(obterChaveCriancasRotina(checklistCode, userId));
+        return savedData ? normalizarCriancasRotina(JSON.parse(savedData)) : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function usuarioPossuiDadosFluxosExistentes(checklistsSupabase) {
+      const userId = getFluxosUserIdSeguro();
+      const code = getFluxosChecklistCode();
+      const config = carregarConfigFluxosCasa();
+      const checklistLocal = loadChecklistFromLocalStorage(code);
+      const checklistSupabase = obterChecklistFluxosSupabase(checklistsSupabase);
+      const criancasSalvas = carregarCriancasRotinaPorChave(code, userId);
+      const dailyKey = getFluxosTarefasDiariasKey();
+
+      if (config && (config.rotinaNome || config.categorias.length > 0 || config.configuracaoInicialConcluida)) {
+        return true;
+      }
+
+      if (criancasSalvas.length > 0) {
+        return true;
+      }
+
+      if (checklistLocal && Array.isArray(checklistLocal.tasks) && checklistLocal.tasks.length > 0) {
+        return true;
+      }
+
+      if (checklistSupabase) {
+        return true;
+      }
+
+      if (dailyKey && localStorage.getItem(dailyKey) !== null) {
+        return true;
+      }
+
+      return Boolean(carregarPinModoCrianca());
+    }
+
+    function usuarioPrecisaConfiguracaoInicial(checklistsSupabase) {
+      if (!getFluxosUserIdSeguro()) {
+        return false;
+      }
+
+      if (configuracaoInicialFluxosConcluida()) {
+        return false;
+      }
+
+      if (usuarioPossuiDadosFluxosExistentes(checklistsSupabase)) {
+        marcarConfiguracaoInicialConcluida();
+        return false;
+      }
+
+      return true;
+    }
+
+    function prepararChecklistFluxosParaConfiguracao(checklistsSupabase) {
+      const code = getFluxosChecklistCode();
+      const checklistSupabase = obterChecklistFluxosSupabase(checklistsSupabase);
+      const checklistLocal = loadChecklistFromLocalStorage(code);
+
+      currentChecklist = checklistLocal || {
+        code: checklistSupabase && checklistSupabase.code ? checklistSupabase.code : code,
+        personName: '',
+        whatsapp: checklistSupabase && checklistSupabase.whatsapp ? checklistSupabase.whatsapp : '',
+        checklistName: 'Fluxos da Casa',
+        familyAgreement: '',
+        tasks: []
+      };
+
+      return currentChecklist;
+    }
+
+    async function carregarConfigFluxos(checklistsSupabase) {
+      const code = getFluxosChecklistCode();
+      const checklistSupabase = obterChecklistFluxosSupabase(checklistsSupabase);
       let checklist = loadChecklistFromLocalStorage(code);
+      const configCasa = carregarConfigFluxosCasa();
 
       if (!checklist && checklistSupabase) {
         const tarefasSupabase = await carregarTarefasSupabase(checklistSupabase.code);
         checklist = {
           code: checklistSupabase.code,
-          personName: checklistSupabase.person_name || 'Casa',
+          personName: checklistSupabase.person_name || (configCasa && configCasa.rotinaNome) || 'Casa',
           whatsapp: checklistSupabase.whatsapp || '',
-          checklistName: checklistSupabase.checklist_name || 'Fluxos da Casa',
+          checklistName: checklistSupabase.checklist_name || (configCasa && configCasa.rotinaNome) || 'Fluxos da Casa',
           familyAgreement: normalizeFamilyAgreement(checklistSupabase.family_agreement),
           tasks: Array.isArray(tarefasSupabase) ? tarefasSupabase : []
         };
@@ -4572,15 +5042,16 @@
       }
 
       checklist.code = checklist.code || code;
-      checklist.personName = checklist.personName || 'Casa';
-      checklist.checklistName = 'Fluxos da Casa';
+      checklist.personName = (configCasa && configCasa.rotinaNome) || checklist.personName || 'Casa';
+      checklist.checklistName = (configCasa && configCasa.rotinaNome) || checklist.checklistName || 'Fluxos da Casa';
       checklist.tasks = Array.isArray(checklist.tasks) ? checklist.tasks : [];
 
       currentChecklist = checklist;
+      garantirCategoriasFluxosConfiguradas();
       garantirFluxosTarefasPadrao();
+      garantirCategoriasFluxosConfiguradas();
       garantirIdsTarefasChecklist(currentChecklist);
       saveChecklistToLocalStorage(currentChecklist);
-      garantirFluxosCriancasPadrao();
       garantirTarefasDiariasPadrao();
 
       await salvarChecklist(currentChecklist);
@@ -4596,6 +5067,46 @@
       const yearStart = new Date(Date.UTC(utcDate.getUTCFullYear(), 0, 1));
       const weekNumber = Math.ceil((((utcDate - yearStart) / 86400000) + 1) / 7);
       return utcDate.getUTCFullYear() + '-W' + String(weekNumber).padStart(2, '0');
+    }
+
+    function formatarDataCurtaFluxos(date) {
+      return String(date.getUTCDate()).padStart(2, '0') + '/' + String(date.getUTCMonth() + 1).padStart(2, '0');
+    }
+
+    function obterPeriodoSemanaPorChave(semanaKey) {
+      const match = String(semanaKey || '').match(/^(\d{4})-W(\d{2})$/);
+
+      if (!match) {
+        return null;
+      }
+
+      const year = Number(match[1]);
+      const week = Number(match[2]);
+      const jan4 = new Date(Date.UTC(year, 0, 4));
+      const jan4Day = jan4.getUTCDay() || 7;
+      const weekOneMonday = new Date(jan4);
+      weekOneMonday.setUTCDate(jan4.getUTCDate() - jan4Day + 1);
+
+      const start = new Date(weekOneMonday);
+      start.setUTCDate(weekOneMonday.getUTCDate() + ((week - 1) * 7));
+
+      const end = new Date(start);
+      end.setUTCDate(start.getUTCDate() + 6);
+
+      return {
+        inicio: start,
+        fim: end
+      };
+    }
+
+    function formatarSemanaParaExibicao(semanaKey) {
+      const periodo = obterPeriodoSemanaPorChave(semanaKey || obterSemanaAtual());
+
+      if (!periodo) {
+        return 'semana atual';
+      }
+
+      return formatarDataCurtaFluxos(periodo.inicio) + ' a ' + formatarDataCurtaFluxos(periodo.fim);
     }
 
     function carregarEscolhasSemana(semana) {
@@ -4654,10 +5165,12 @@
       return escolhas;
     }
 
-    function carregarProgressoDiarioCrianca(childId, categoryId) {
-      const dailyKey = getFluxosStorageKey('progresso-diario-' + getTodayDate() + '-' + childId);
-      const categoryKey = getFluxosStorageKey('progresso-categoria-' + obterSemanaAtual() + '-' + getTodayDate() + '-' + childId + '-' + categoryId);
-      const legacyKey = getFluxosStorageKey('progresso-' + obterSemanaAtual() + '-' + getTodayDate() + '-' + childId + '-' + categoryId);
+    function carregarProgressoDiarioCriancaPorData(childId, categoryId, data, semana) {
+      const dateKey = data || getTodayDate();
+      const weekKey = semana || obterSemanaAtual(new Date(dateKey + 'T12:00:00'));
+      const dailyKey = getFluxosStorageKey('progresso-diario-' + dateKey + '-' + childId);
+      const categoryKey = getFluxosStorageKey('progresso-categoria-' + weekKey + '-' + dateKey + '-' + childId + '-' + categoryId);
+      const legacyKey = getFluxosStorageKey('progresso-' + weekKey + '-' + dateKey + '-' + childId + '-' + categoryId);
       const dailySavedData = localStorage.getItem(dailyKey);
       const categorySavedData = localStorage.getItem(categoryKey);
       const legacySavedData = localStorage.getItem(legacyKey);
@@ -4675,10 +5188,17 @@
       return {
         dailyKey: dailyKey,
         categoryKey: categoryKey,
+        data: dateKey,
+        semana: weekKey,
+        hasRecord: Boolean(dailySavedData || categorySavedData || legacySavedData),
         tarefasDiariasFeitas: tarefasDiariasFeitas,
         tarefasCategoriaFeitas: tarefasCategoriaFeitas.map(String),
         doneTaskIds: tarefasCategoriaFeitas.map(String)
       };
+    }
+
+    function carregarProgressoDiarioCrianca(childId, categoryId) {
+      return carregarProgressoDiarioCriancaPorData(childId, categoryId, getTodayDate(), obterSemanaAtual());
     }
 
     function carregarProgressoDiarioFluxos(childId, categoryId) {
@@ -4734,6 +5254,12 @@
       const categoryDone = tarefasCategoria.filter(function(task) {
         return tarefasCategoriaFeitas.indexOf(String(task.id)) !== -1;
       });
+      const dailyPending = tarefasDiarias.filter(function(task) {
+        return tarefasDiariasFeitas.indexOf(String(task.id)) === -1;
+      });
+      const categoryPending = tarefasCategoria.filter(function(task) {
+        return tarefasCategoriaFeitas.indexOf(String(task.id)) === -1;
+      });
       const total = tarefasDiarias.length + tarefasCategoria.length;
       const done = dailyDone.length + categoryDone.length;
       const aura = dailyDone.reduce(function(sum, task) {
@@ -4748,12 +5274,284 @@
         aura: aura,
         percent: total === 0 ? 0 : Math.round((done / total) * 100),
         tarefasDiariasFeitas: dailyDone,
-        tarefasCategoriaFeitas: categoryDone
+        tarefasCategoriaFeitas: categoryDone,
+        tarefasDiariasPendentes: dailyPending,
+        tarefasCategoriaPendentes: categoryPending
       };
     }
 
     function calcularProgressoFluxo(tasks, progress) {
       return calcularProgressoDiaCrianca([], tasks, progress);
+    }
+
+    function getFluxosProatividadesKey() {
+      const userId = getFluxosUserIdSeguro();
+      return userId ? 'fluxos-casa-proatividades-' + userId : null;
+    }
+
+    function gerarIdProatividadeFluxos() {
+      return 'proatividade_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    }
+
+    function normalizarProatividadeFluxos(item) {
+      const dados = item || {};
+      const texto = normalizarNomeCriancaRotina(dados.texto || dados.title || dados.titulo);
+
+      if (!texto) {
+        return null;
+      }
+
+      return {
+        id: dados.id || gerarIdProatividadeFluxos(),
+        user_id: dados.user_id || getFluxosUserIdSeguro(),
+        criancaId: dados.criancaId || dados.childId || null,
+        criancaNome: dados.criancaNome || dados.childName || obterNomeCriancaFluxos(dados.criancaId || dados.childId),
+        texto: texto,
+        status: dados.status || 'pendente',
+        bonusAura: Math.max(0, Number(dados.bonusAura || dados.bonusAuraCoins || 0) || 0),
+        dataCriacao: dados.dataCriacao || dados.createdAt || new Date().toISOString(),
+        dataAprovacao: dados.dataAprovacao || dados.approvedAt || null,
+        data: dados.data || getTodayDate(),
+        semana: dados.semana || obterSemanaAtual()
+      };
+    }
+
+    function carregarProatividadesFluxos() {
+      const key = getFluxosProatividadesKey();
+
+      if (!key) {
+        return [];
+      }
+
+      try {
+        const savedData = localStorage.getItem(key);
+        const data = savedData ? JSON.parse(savedData) : [];
+        return Array.isArray(data)
+          ? data.map(normalizarProatividadeFluxos).filter(Boolean)
+          : [];
+      } catch (error) {
+        console.warn('Proatividades não carregadas:', error);
+        return [];
+      }
+    }
+
+    function salvarProatividadesFluxos(proatividades) {
+      const key = getFluxosProatividadesKey();
+      const normalizadas = Array.isArray(proatividades)
+        ? proatividades.map(normalizarProatividadeFluxos).filter(Boolean)
+        : [];
+
+      if (key) {
+        localStorage.setItem(key, JSON.stringify(normalizadas));
+      }
+
+      return normalizadas;
+    }
+
+    function contarProatividadesPendentes() {
+      return carregarProatividadesFluxos().filter(function(item) {
+        return item.status === 'pendente';
+      }).length;
+    }
+
+    function obterProatividadesDoDia(data) {
+      const dateKey = data || getTodayDate();
+      return carregarProatividadesFluxos().filter(function(item) {
+        return item.data === dateKey;
+      });
+    }
+
+    function obterProatividadesAprovadasDoDiaCrianca(criancaId, data) {
+      return obterProatividadesDoDia(data).filter(function(item) {
+        return item.criancaId === criancaId && (item.status === 'aprovada' || item.status === 'reconhecida');
+      });
+    }
+
+    function calcularBonusProatividadeFluxos(proatividades) {
+      return (Array.isArray(proatividades) ? proatividades : []).reduce(function(sum, item) {
+        return sum + (Number(item.bonusAura) || 0);
+      }, 0);
+    }
+
+    function formatarProatividadeRelatorio(item) {
+      const bonus = Number(item.bonusAura) || 0;
+      return '- ' + item.texto + ' (' + (bonus > 0 ? '+' + bonus + ' coins' : 'reconhecida sem coins') + ')';
+    }
+
+    function getFluxosCombinadosKey() {
+      const userId = getFluxosUserIdSeguro();
+      return userId ? 'fluxos-casa-combinados-' + userId : null;
+    }
+
+    function obterCombinadosPadrao() {
+      return {
+        tituloPositivo: 'Arrumado',
+        beneficios: [
+          'Pode pegar o celular',
+          'Pode sair para rua e treino',
+          'Bônus: +30 min se manter o dia todo'
+        ],
+        tituloNegativo: 'Não arrumado',
+        penalidades: [
+          'Celular confiscado',
+          'Não pode sair nem treinar',
+          'Perde tempo nos próximos dias'
+        ],
+        observacao: 'Esses combinados podem ser ajustados pelo responsável.'
+      };
+    }
+
+    function normalizarLinhasCombinados(value) {
+      if (Array.isArray(value)) {
+        return value
+          .map(function(item) {
+            return normalizarNomeCriancaRotina(item);
+          })
+          .filter(Boolean);
+      }
+
+      return String(value || '')
+        .split('\n')
+        .map(function(item) {
+          return normalizarNomeCriancaRotina(item);
+        })
+        .filter(Boolean);
+    }
+
+    function normalizarCombinadosFluxos(combinados) {
+      const padrao = obterCombinadosPadrao();
+      const dados = combinados || {};
+      return {
+        tituloPositivo: normalizarNomeCriancaRotina(dados.tituloPositivo || dados.positiveTitle) || padrao.tituloPositivo,
+        beneficios: normalizarLinhasCombinados(dados.beneficios || dados.benefits || padrao.beneficios),
+        tituloNegativo: normalizarNomeCriancaRotina(dados.tituloNegativo || dados.negativeTitle) || padrao.tituloNegativo,
+        penalidades: normalizarLinhasCombinados(dados.penalidades || dados.penalties || padrao.penalidades),
+        observacao: normalizarNomeCriancaRotina(dados.observacao || dados.note || padrao.observacao)
+      };
+    }
+
+    function carregarCombinadosFluxos() {
+      const key = getFluxosCombinadosKey();
+
+      if (!key) {
+        return obterCombinadosPadrao();
+      }
+
+      try {
+        const savedData = localStorage.getItem(key);
+        return savedData ? normalizarCombinadosFluxos(JSON.parse(savedData)) : obterCombinadosPadrao();
+      } catch (error) {
+        console.warn('Combinados não carregados:', error);
+        return obterCombinadosPadrao();
+      }
+    }
+
+    function salvarCombinadosFluxos(combinados) {
+      const key = getFluxosCombinadosKey();
+      const normalizados = normalizarCombinadosFluxos(combinados);
+
+      if (key) {
+        localStorage.setItem(key, JSON.stringify(normalizados));
+      }
+
+      return normalizados;
+    }
+
+    function registrarProatividadeCrianca(crianca, texto) {
+      const cleanText = normalizarNomeCriancaRotina(texto);
+
+      if (!cleanText) {
+        alert('Digite o que você fez a mais.');
+        return false;
+      }
+
+      const proatividades = carregarProatividadesFluxos();
+      proatividades.push({
+        id: gerarIdProatividadeFluxos(),
+        user_id: getFluxosUserIdSeguro(),
+        criancaId: crianca.id,
+        criancaNome: crianca.nome,
+        texto: cleanText,
+        status: 'pendente',
+        bonusAura: 0,
+        dataCriacao: new Date().toISOString(),
+        data: getTodayDate(),
+        semana: obterSemanaAtual()
+      });
+      salvarProatividadesFluxos(proatividades);
+      alert('Sua proatividade foi enviada para o responsável analisar.');
+      renderFluxosCriancaSelecionada();
+      return true;
+    }
+
+    function pedirBonusProatividade() {
+      const answer = prompt(
+        'Quantos Aura Coins reconhecer?\n' +
+        '0 = reconhecer sem coins\n' +
+        '5 = +5 coins\n' +
+        '10 = +10 coins\n' +
+        'Ou digite outro valor.'
+      );
+
+      if (answer === null) {
+        return null;
+      }
+
+      const cleanAnswer = String(answer).trim();
+      const value = Number(cleanAnswer);
+
+      if (!cleanAnswer || !Number.isFinite(value) || value < 0 || !Number.isInteger(value)) {
+        alert('Informe um número inteiro maior ou igual a zero.');
+        return null;
+      }
+
+      return value;
+    }
+
+    function aprovarProatividade(id) {
+      const bonusAura = pedirBonusProatividade();
+
+      if (bonusAura === null) {
+        return;
+      }
+
+      const proatividades = carregarProatividadesFluxos();
+      const item = proatividades.find(function(proatividade) {
+        return proatividade.id === id;
+      });
+
+      if (!item || item.status !== 'pendente') {
+        return;
+      }
+
+      item.status = 'aprovada';
+      item.bonusAura = bonusAura;
+      item.dataAprovacao = new Date().toISOString();
+      salvarProatividadesFluxos(proatividades);
+      renderModoResponsavelFluxos();
+    }
+
+    function recusarProatividade(id) {
+      const confirmed = confirm('Deseja recusar esta proatividade?');
+
+      if (!confirmed) {
+        return;
+      }
+
+      const proatividades = carregarProatividadesFluxos();
+      const item = proatividades.find(function(proatividade) {
+        return proatividade.id === id;
+      });
+
+      if (!item || item.status !== 'pendente') {
+        return;
+      }
+
+      item.status = 'recusada';
+      item.bonusAura = 0;
+      item.dataAprovacao = new Date().toISOString();
+      salvarProatividadesFluxos(proatividades);
+      renderModoResponsavelFluxos();
     }
 
     function limparFluxosContent() {
@@ -4797,14 +5595,545 @@
       return header;
     }
 
-    function renderTelaInicialFluxos() {
+    function criarConfigPadraoEditavel() {
+      const config = carregarConfigFluxosCasa();
+      const dailyKey = getFluxosTarefasDiariasKey();
+      const tarefasDiarias = dailyKey && localStorage.getItem(dailyKey) !== null
+        ? carregarTarefasDiarias()
+        : getFluxosTarefasDiariasPadrao();
+
+      return {
+        rotinaNome: config && config.rotinaNome ? config.rotinaNome : '',
+        criancas: carregarCriancasRotina(),
+        categorias: config && config.categorias.length > 0
+          ? config.categorias.map(function(categoria) {
+            return {
+              id: categoria.id,
+              nome: categoria.nome,
+              tarefas: categoria.tarefas.slice()
+            };
+          })
+          : getFluxosCategoriasSugestaoPadrao().map(function(categoria) {
+            return {
+              id: categoria.id,
+              nome: categoria.nome,
+              tarefas: categoria.tarefas.slice()
+            };
+          }),
+        tarefasDiarias: tarefasDiarias.map(function(tarefa) {
+          return {
+            id: tarefa.id,
+            titulo: tarefa.titulo,
+            aura: Number(tarefa.aura) || 10,
+            ativa: true
+          };
+        }),
+        pin: '',
+        pinConfirmacao: '',
+        erro: ''
+      };
+    }
+
+    function criarCardConfiguracaoInicial(titulo, subtitulo) {
+      const card = document.createElement('div');
+      card.className = 'fluxos-card';
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-card-title';
+      title.textContent = titulo;
+      card.appendChild(title);
+
+      if (subtitulo) {
+        const text = document.createElement('p');
+        text.className = 'muted';
+        text.textContent = subtitulo;
+        card.appendChild(text);
+      }
+
+      return card;
+    }
+
+    function renderConfiguracaoInicialFluxos() {
       childModeActive = false;
       fluxosCriancaSelecionadaId = null;
       limparFluxosContent();
       appTopbar.querySelector('.brand span').textContent = 'Fluxos da Casa';
 
+      if (!fluxosConfigInicialDraft) {
+        fluxosConfigInicialDraft = criarConfigPadraoEditavel();
+      }
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'fluxos-setup';
+      wrapper.appendChild(criarFluxosHeader(
+        'Vamos configurar sua rotina da casa',
+        'Preencha o básico uma vez. Depois você pode ajustar tudo no Modo Responsável.'
+      ));
+
+      if (fluxosConfigInicialDraft.erro) {
+        const error = document.createElement('div');
+        error.className = 'fluxos-error';
+        error.textContent = fluxosConfigInicialDraft.erro;
+        wrapper.appendChild(error);
+      }
+
+      renderNomeRotinaConfiguracao(wrapper);
+      renderCriancasConfiguracao(wrapper);
+      renderCategoriasConfiguracao(wrapper);
+      renderTarefasDiariasConfiguracao(wrapper);
+      renderPinConfiguracao(wrapper);
+
+      const actions = document.createElement('div');
+      actions.className = 'fluxos-toolbar';
+
+      const finishButton = document.createElement('button');
+      finishButton.className = 'btn';
+      finishButton.type = 'button';
+      finishButton.textContent = 'Finalizar configuração';
+      finishButton.addEventListener('click', finalizarConfiguracaoInicial);
+
+      actions.appendChild(finishButton);
+      wrapper.appendChild(actions);
+      fluxosContent.appendChild(wrapper);
+    }
+
+    function renderNomeRotinaConfiguracao(wrapper) {
+      const card = criarCardConfiguracaoInicial('1. Nome da rotina', 'Use o nome da família ou da rotina da casa.');
+      const label = document.createElement('label');
+      label.textContent = 'Nome da rotina';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Ex: Rotina da Família Silva';
+      input.value = fluxosConfigInicialDraft.rotinaNome;
+      input.addEventListener('input', function() {
+        fluxosConfigInicialDraft.rotinaNome = input.value;
+      });
+
+      label.appendChild(input);
+      card.appendChild(label);
+      wrapper.appendChild(card);
+    }
+
+    function renderCriancasConfiguracao(wrapper) {
+      const card = criarCardConfiguracaoInicial('2. Crianças', 'Adicione quem participa da rotina.');
+      const list = document.createElement('div');
+      list.className = 'fluxos-editor-list';
+
+      fluxosConfigInicialDraft.criancas.forEach(function(crianca, index) {
+        const row = document.createElement('div');
+        row.className = 'fluxos-editor-row';
+
+        const label = document.createElement('label');
+        label.textContent = 'Nome da criança';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = crianca.nome;
+        input.placeholder = 'Ex: Anthony';
+        input.addEventListener('input', function() {
+          fluxosConfigInicialDraft.criancas[index].nome = input.value;
+        });
+
+        const removeButton = document.createElement('button');
+        removeButton.className = 'btn danger small';
+        removeButton.type = 'button';
+        removeButton.textContent = 'Remover';
+        removeButton.addEventListener('click', function() {
+          fluxosConfigInicialDraft.criancas.splice(index, 1);
+          renderConfiguracaoInicialFluxos();
+        });
+
+        label.appendChild(input);
+        row.appendChild(label);
+        row.appendChild(removeButton);
+        list.appendChild(row);
+      });
+
+      const addRow = document.createElement('div');
+      addRow.className = 'fluxos-editor-row';
+
+      const addLabel = document.createElement('label');
+      addLabel.textContent = 'Nova criança';
+
+      const addInput = document.createElement('input');
+      addInput.type = 'text';
+      addInput.placeholder = 'Ex: Nicolas';
+
+      const addButton = document.createElement('button');
+      addButton.className = 'btn small';
+      addButton.type = 'button';
+      addButton.textContent = '+ Adicionar';
+      addButton.addEventListener('click', function() {
+        const nome = normalizarNomeCriancaRotina(addInput.value);
+
+        if (!nome) {
+          fluxosConfigInicialDraft.erro = 'Digite o nome da criança antes de adicionar.';
+          renderConfiguracaoInicialFluxos();
+          return;
+        }
+
+        fluxosConfigInicialDraft.criancas.push({
+          id: gerarIdCriancaRotina(),
+          nome: nome,
+          criadaEm: new Date().toISOString(),
+          ativa: true
+        });
+        fluxosConfigInicialDraft.erro = '';
+        renderConfiguracaoInicialFluxos();
+      });
+
+      addLabel.appendChild(addInput);
+      addRow.appendChild(addLabel);
+      addRow.appendChild(addButton);
+      card.appendChild(list);
+      card.appendChild(addRow);
+      wrapper.appendChild(card);
+    }
+
+    function renderCategoriasConfiguracao(wrapper) {
+      const card = criarCardConfiguracaoInicial('3. Fluxos da casa', 'Edite os ambientes e as tarefas de cada um.');
+      const list = document.createElement('div');
+      list.className = 'fluxos-editor-list';
+
+      fluxosConfigInicialDraft.categorias.forEach(function(categoria, index) {
+        const area = document.createElement('div');
+        area.className = 'fluxos-category-editor';
+
+        const nameRow = document.createElement('div');
+        nameRow.className = 'fluxos-editor-row';
+
+        const nameLabel = document.createElement('label');
+        nameLabel.textContent = 'Nome do fluxo';
+
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.value = categoria.nome;
+        nameInput.placeholder = 'Ex: Sala';
+        nameInput.addEventListener('input', function() {
+          fluxosConfigInicialDraft.categorias[index].nome = nameInput.value;
+        });
+
+        const removeButton = document.createElement('button');
+        removeButton.className = 'btn danger small';
+        removeButton.type = 'button';
+        removeButton.textContent = 'Remover';
+        removeButton.disabled = fluxosConfigInicialDraft.categorias.length <= 1;
+        removeButton.addEventListener('click', function() {
+          fluxosConfigInicialDraft.categorias.splice(index, 1);
+          renderConfiguracaoInicialFluxos();
+        });
+
+        const tasksLabel = document.createElement('label');
+        tasksLabel.textContent = 'Tarefas deste fluxo';
+
+        const tasksInput = document.createElement('textarea');
+        tasksInput.value = categoria.tarefas.join('\n');
+        tasksInput.placeholder = 'Uma tarefa por linha';
+        tasksInput.addEventListener('input', function() {
+          fluxosConfigInicialDraft.categorias[index].tarefas = tasksInput.value
+            .split('\n')
+            .map(function(tarefa) {
+              return normalizarNomeCriancaRotina(tarefa);
+            });
+        });
+
+        nameLabel.appendChild(nameInput);
+        nameRow.appendChild(nameLabel);
+        nameRow.appendChild(removeButton);
+        tasksLabel.appendChild(tasksInput);
+        area.appendChild(nameRow);
+        area.appendChild(tasksLabel);
+        list.appendChild(area);
+      });
+
+      const addButton = document.createElement('button');
+      addButton.className = 'btn secondary small';
+      addButton.type = 'button';
+      addButton.textContent = '+ Adicionar fluxo';
+      addButton.addEventListener('click', function() {
+        fluxosConfigInicialDraft.categorias.push({
+          id: gerarIdCategoriaFluxo('novo fluxo'),
+          nome: '',
+          tarefas: []
+        });
+        renderConfiguracaoInicialFluxos();
+      });
+
+      card.appendChild(list);
+      card.appendChild(addButton);
+      wrapper.appendChild(card);
+    }
+
+    function renderTarefasDiariasConfiguracao(wrapper) {
+      const card = criarCardConfiguracaoInicial('4. Tarefas diárias', 'Essas tarefas aparecem para todas as crianças todos os dias.');
+      const list = document.createElement('div');
+      list.className = 'fluxos-editor-list';
+
+      fluxosConfigInicialDraft.tarefasDiarias.forEach(function(tarefa, index) {
+        const row = document.createElement('div');
+        row.className = 'fluxos-daily-editor-row';
+
+        const titleLabel = document.createElement('label');
+        titleLabel.textContent = 'Tarefa';
+
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.value = tarefa.titulo;
+        titleInput.placeholder = 'Ex: Arrumar a cama';
+        titleInput.addEventListener('input', function() {
+          fluxosConfigInicialDraft.tarefasDiarias[index].titulo = titleInput.value;
+        });
+
+        const auraLabel = document.createElement('label');
+        auraLabel.textContent = 'Aura';
+
+        const auraInput = document.createElement('input');
+        auraInput.type = 'number';
+        auraInput.min = '1';
+        auraInput.step = '1';
+        auraInput.value = Number(tarefa.aura) || 10;
+        auraInput.addEventListener('input', function() {
+          fluxosConfigInicialDraft.tarefasDiarias[index].aura = auraInput.value;
+        });
+
+        const removeButton = document.createElement('button');
+        removeButton.className = 'btn danger small';
+        removeButton.type = 'button';
+        removeButton.textContent = 'Remover';
+        removeButton.addEventListener('click', function() {
+          fluxosConfigInicialDraft.tarefasDiarias.splice(index, 1);
+          renderConfiguracaoInicialFluxos();
+        });
+
+        titleLabel.appendChild(titleInput);
+        auraLabel.appendChild(auraInput);
+        row.appendChild(titleLabel);
+        row.appendChild(auraLabel);
+        row.appendChild(removeButton);
+        list.appendChild(row);
+      });
+
+      const addButton = document.createElement('button');
+      addButton.className = 'btn secondary small';
+      addButton.type = 'button';
+      addButton.textContent = '+ Adicionar tarefa diária';
+      addButton.addEventListener('click', function() {
+        fluxosConfigInicialDraft.tarefasDiarias.push({
+          id: gerarIdTarefaDiaria(),
+          titulo: '',
+          aura: 10,
+          ativa: true
+        });
+        renderConfiguracaoInicialFluxos();
+      });
+
+      card.appendChild(list);
+      card.appendChild(addButton);
+      wrapper.appendChild(card);
+    }
+
+    function renderPinConfiguracao(wrapper) {
+      const card = criarCardConfiguracaoInicial('5. PIN do Modo Criança', 'Esse PIN protege a saída do Modo Criança.');
+
+      const pinLabel = document.createElement('label');
+      pinLabel.textContent = 'PIN';
+
+      const pinInput = document.createElement('input');
+      pinInput.type = 'password';
+      pinInput.value = fluxosConfigInicialDraft.pin;
+      pinInput.addEventListener('input', function() {
+        fluxosConfigInicialDraft.pin = pinInput.value;
+      });
+
+      const confirmLabel = document.createElement('label');
+      confirmLabel.textContent = 'Confirmar PIN';
+
+      const confirmInput = document.createElement('input');
+      confirmInput.type = 'password';
+      confirmInput.value = fluxosConfigInicialDraft.pinConfirmacao;
+      confirmInput.addEventListener('input', function() {
+        fluxosConfigInicialDraft.pinConfirmacao = confirmInput.value;
+      });
+
+      pinLabel.appendChild(pinInput);
+      confirmLabel.appendChild(confirmInput);
+      card.appendChild(pinLabel);
+      card.appendChild(confirmLabel);
+      wrapper.appendChild(card);
+    }
+
+    function nomesDuplicadosConfiguracao(itens, obterNome) {
+      const vistos = {};
+      return itens.some(function(item) {
+        const nome = normalizeAccessCode(obterNome(item) || '');
+
+        if (!nome) {
+          return false;
+        }
+
+        if (vistos[nome]) {
+          return true;
+        }
+
+        vistos[nome] = true;
+        return false;
+      });
+    }
+
+    function validarConfiguracaoInicial() {
+      const rotinaNome = normalizarNomeCriancaRotina(fluxosConfigInicialDraft.rotinaNome);
+      const criancas = normalizarCriancasRotina(fluxosConfigInicialDraft.criancas);
+      const categorias = normalizarCategoriasConfiguracao(fluxosConfigInicialDraft.categorias);
+      const tarefasDiarias = normalizarTarefasDiarias(fluxosConfigInicialDraft.tarefasDiarias);
+      const pin = String(fluxosConfigInicialDraft.pin || '').trim();
+      const pinConfirmacao = String(fluxosConfigInicialDraft.pinConfirmacao || '').trim();
+      const temCriancaVazia = fluxosConfigInicialDraft.criancas.some(function(crianca) {
+        return !normalizarNomeCriancaRotina(crianca.nome);
+      });
+      const temCategoriaVazia = fluxosConfigInicialDraft.categorias.some(function(categoria) {
+        return !normalizarNomeCriancaRotina(categoria.nome);
+      });
+      const temTarefaDiariaVazia = fluxosConfigInicialDraft.tarefasDiarias.some(function(tarefa) {
+        return !normalizarNomeCriancaRotina(tarefa.titulo);
+      });
+      const temAuraInvalida = fluxosConfigInicialDraft.tarefasDiarias.some(function(tarefa) {
+        return !Number(tarefa.aura) || Number(tarefa.aura) < 1;
+      });
+
+      if (!rotinaNome) {
+        return { ok: false, mensagem: 'Digite o nome da rotina.' };
+      }
+
+      if (criancas.length < 1) {
+        return { ok: false, mensagem: 'Adicione pelo menos uma criança.' };
+      }
+
+      if (temCriancaVazia) {
+        return { ok: false, mensagem: 'Remova ou preencha as crianças sem nome.' };
+      }
+
+      if (nomesDuplicadosConfiguracao(criancas, function(crianca) { return crianca.nome; })) {
+        return { ok: false, mensagem: 'Não use nomes duplicados para crianças.' };
+      }
+
+      if (categorias.length < 1) {
+        return { ok: false, mensagem: 'Adicione pelo menos um fluxo da casa.' };
+      }
+
+      if (temCategoriaVazia) {
+        return { ok: false, mensagem: 'Remova ou preencha os fluxos sem nome.' };
+      }
+
+      if (nomesDuplicadosConfiguracao(categorias, function(categoria) { return categoria.nome; })) {
+        return { ok: false, mensagem: 'Não use nomes duplicados para fluxos da casa.' };
+      }
+
+      if (temTarefaDiariaVazia) {
+        return { ok: false, mensagem: 'Remova ou preencha as tarefas diárias vazias.' };
+      }
+
+      if (temAuraInvalida) {
+        return { ok: false, mensagem: 'As tarefas diárias precisam ter Aura maior que zero.' };
+      }
+
+      if (nomesDuplicadosConfiguracao(tarefasDiarias, function(tarefa) { return tarefa.titulo; })) {
+        return { ok: false, mensagem: 'Não use tarefas diárias duplicadas.' };
+      }
+
+      if (!pin) {
+        return { ok: false, mensagem: 'Crie o PIN do Modo Criança.' };
+      }
+
+      if (pin !== pinConfirmacao) {
+        return { ok: false, mensagem: 'Os PINs não conferem.' };
+      }
+
+      return {
+        ok: true,
+        dados: {
+          rotinaNome: rotinaNome,
+          criancas: criancas,
+          categorias: categorias,
+          tarefasDiarias: tarefasDiarias,
+          pin: pin
+        }
+      };
+    }
+
+    function criarTarefasFluxosPorCategorias(categorias) {
+      const baseId = Date.now();
+      let index = 0;
+
+      return categorias.flatMap(function(categoria) {
+        return categoria.tarefas.map(function(taskName) {
+          index += 1;
+          return {
+            id: baseId + index,
+            category: categoria.nome,
+            name: taskName,
+            points: 10,
+            frequency: 'Diária',
+            responsavelTipo: 'todos',
+            responsavelCriancaId: null,
+            passos: [],
+            done: false
+          };
+        });
+      });
+    }
+
+    async function finalizarConfiguracaoInicial() {
+      const validacao = validarConfiguracaoInicial();
+
+      if (!validacao.ok) {
+        fluxosConfigInicialDraft.erro = validacao.mensagem;
+        renderConfiguracaoInicialFluxos();
+        return;
+      }
+
+      const dados = validacao.dados;
+      currentChecklist = {
+        code: getFluxosChecklistCode(),
+        personName: dados.rotinaNome,
+        whatsapp: currentChecklist && currentChecklist.whatsapp ? currentChecklist.whatsapp : '',
+        checklistName: dados.rotinaNome,
+        familyAgreement: '',
+        tasks: criarTarefasFluxosPorCategorias(dados.categorias)
+      };
+
+      try {
+        salvarConfigFluxosCasa({
+          rotinaNome: dados.rotinaNome,
+          categorias: dados.categorias,
+          configuracaoInicialConcluida: true
+        });
+        salvarCriancasRotina(dados.criancas);
+        salvarTarefasDiarias(dados.tarefasDiarias);
+        salvarPinModoCrianca(dados.pin);
+        saveChecklistToLocalStorage(currentChecklist);
+        await salvarChecklist(currentChecklist);
+        await salvarTarefas(currentChecklist);
+        marcarConfiguracaoInicialConcluida();
+        fluxosConfigInicialDraft = null;
+        limparEstadoModoCrianca();
+        renderTelaInicialFluxos();
+      } catch (error) {
+        console.error('Erro ao finalizar configuração inicial:', error);
+        fluxosConfigInicialDraft.erro = 'Não foi possível finalizar agora. Tente novamente.';
+        renderConfiguracaoInicialFluxos();
+      }
+    }
+
+    function renderTelaInicialFluxos() {
+      childModeActive = false;
+      fluxosCriancaSelecionadaId = null;
+      limparFluxosContent();
+      const rotinaNome = obterNomeRotinaFluxos();
+      appTopbar.querySelector('.brand span').textContent = rotinaNome;
+
       const header = criarFluxosHeader(
-        'Fluxos da Casa',
+        rotinaNome,
         'Escolha um modo para cuidar da rotina da semana.'
       );
 
@@ -4846,7 +6175,13 @@
       limparFluxosContent();
       const header = criarFluxosHeader('Modo Criança', 'Escolha quem está usando agora.', false);
       const actions = document.createElement('div');
-      actions.className = 'fluxos-toolbar';
+      actions.className = 'fluxos-toolbar fluxos-child-actions';
+
+      const benefitsButton = document.createElement('button');
+      benefitsButton.className = 'btn secondary small';
+      benefitsButton.type = 'button';
+      benefitsButton.textContent = '🎁 Benefícios';
+      benefitsButton.addEventListener('click', abrirModalBeneficiosFluxos);
 
       const exitButton = document.createElement('button');
       exitButton.className = 'btn secondary small';
@@ -4854,6 +6189,7 @@
       exitButton.textContent = 'Sair do Modo Criança';
       exitButton.addEventListener('click', sairModoCriancaComPin);
 
+      actions.appendChild(benefitsButton);
       actions.appendChild(exitButton);
       header.appendChild(actions);
       fluxosContent.appendChild(header);
@@ -4929,9 +6265,15 @@
       const escolhas = carregarEscolhasSemana();
       const categoryId = obterCategoriaDaCriancaNaSemana(crianca.id, escolhas);
 
-      const header = criarFluxosHeader(crianca.nome, 'Semana: ' + escolhas.semana, false);
+      const header = criarFluxosHeader(crianca.nome, 'Semana atual: ' + formatarSemanaParaExibicao(escolhas.semana), false);
       const actions = document.createElement('div');
-      actions.className = 'fluxos-toolbar';
+      actions.className = 'fluxos-toolbar fluxos-child-actions';
+
+      const benefitsButton = document.createElement('button');
+      benefitsButton.className = 'btn secondary small';
+      benefitsButton.type = 'button';
+      benefitsButton.textContent = '🎁 Benefícios';
+      benefitsButton.addEventListener('click', abrirModalBeneficiosFluxos);
 
       const exitButton = document.createElement('button');
       exitButton.className = 'btn secondary small';
@@ -4939,6 +6281,7 @@
       exitButton.textContent = 'Sair do Modo Criança';
       exitButton.addEventListener('click', sairModoCriancaComPin);
 
+      actions.appendChild(benefitsButton);
       actions.appendChild(exitButton);
       header.appendChild(actions);
       fluxosContent.appendChild(header);
@@ -4949,6 +6292,96 @@
       }
 
       renderTarefasDaCategoria(crianca, categoryId);
+    }
+
+    function renderListaCombinadosFluxos(itens) {
+      const list = document.createElement('ul');
+      list.className = 'fluxos-combinado-list';
+
+      if (!itens.length) {
+        const item = document.createElement('li');
+        item.textContent = 'Nenhum item cadastrado.';
+        list.appendChild(item);
+        return list;
+      }
+
+      itens.forEach(function(texto) {
+        const item = document.createElement('li');
+        item.textContent = texto;
+        list.appendChild(item);
+      });
+
+      return list;
+    }
+
+    function criarBlocoCombinadoFluxos(titulo, itens, tipo) {
+      const block = document.createElement('div');
+      block.className = 'fluxos-combinado-block ' + tipo;
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-combinado-title';
+      title.textContent = titulo;
+
+      block.appendChild(title);
+      block.appendChild(renderListaCombinadosFluxos(itens));
+      return block;
+    }
+
+    function abrirModalBeneficiosFluxos() {
+      fecharModalBeneficiosFluxos();
+      document.body.appendChild(renderModalBeneficiosFluxos());
+    }
+
+    function fecharModalBeneficiosFluxos() {
+      const existingModal = document.getElementById('fluxosBenefitsModal');
+
+      if (existingModal) {
+        existingModal.remove();
+      }
+    }
+
+    function renderModalBeneficiosFluxos() {
+      const combinados = carregarCombinadosFluxos();
+      const overlay = document.createElement('div');
+      overlay.className = 'fluxos-modal-overlay';
+      overlay.id = 'fluxosBenefitsModal';
+      overlay.addEventListener('click', function(event) {
+        if (event.target === overlay) {
+          fecharModalBeneficiosFluxos();
+        }
+      });
+
+      const modal = document.createElement('div');
+      modal.className = 'fluxos-modal';
+
+      const header = document.createElement('div');
+      header.className = 'fluxos-modal-header';
+      header.textContent = 'Regras do Combinado';
+
+      const body = document.createElement('div');
+      body.className = 'fluxos-modal-body';
+
+      body.appendChild(criarBlocoCombinadoFluxos(combinados.tituloPositivo, combinados.beneficios, 'positive'));
+      body.appendChild(criarBlocoCombinadoFluxos(combinados.tituloNegativo, combinados.penalidades, 'negative'));
+
+      if (combinados.observacao) {
+        const note = document.createElement('p');
+        note.className = 'muted';
+        note.textContent = combinados.observacao;
+        body.appendChild(note);
+      }
+
+      const closeButton = document.createElement('button');
+      closeButton.className = 'btn';
+      closeButton.type = 'button';
+      closeButton.textContent = 'Fechar';
+      closeButton.addEventListener('click', fecharModalBeneficiosFluxos);
+      body.appendChild(closeButton);
+
+      modal.appendChild(header);
+      modal.appendChild(body);
+      overlay.appendChild(modal);
+      return overlay;
     }
 
     function renderEscolhaCategoriaSemana(crianca, escolhas) {
@@ -4996,6 +6429,11 @@
       const tarefasCategoria = getFluxosTarefasCategoria(categoryId);
       const progress = carregarProgressoDiarioCrianca(crianca.id, categoryId);
       const resumo = calcularProgressoDiaCrianca(tarefasDiarias, tarefasCategoria, progress);
+      const proatividadesAprovadas = obterProatividadesAprovadasDoDiaCrianca(crianca.id, getTodayDate());
+      const bonusProatividade = calcularBonusProatividadeFluxos(proatividadesAprovadas);
+      resumo.proatividadesAprovadas = proatividadesAprovadas;
+      resumo.bonusProatividade = bonusProatividade;
+      resumo.auraTotal = resumo.aura + bonusProatividade;
 
       const card = document.createElement('div');
       card.className = 'fluxos-card';
@@ -5006,7 +6444,7 @@
 
       const progressText = document.createElement('div');
       progressText.className = 'muted';
-      progressText.textContent = 'Progresso: ' + resumo.percent + '% • ' + resumo.done + '/' + resumo.total + ' feitas • Aura conquistada: ' + resumo.aura + ' coins';
+      progressText.textContent = 'Progresso: ' + resumo.percent + '% • ' + resumo.done + '/' + resumo.total + ' feitas • Aura conquistada: ' + resumo.auraTotal + ' coins';
 
       const progressBar = document.createElement('div');
       progressBar.className = 'fluxos-progress-bar';
@@ -5056,18 +6494,90 @@
         }
       });
 
-      if (resumo.percent === 100 && resumo.total > 0) {
-        const reportButton = document.createElement('button');
-        reportButton.className = 'btn';
-        reportButton.type = 'button';
-        reportButton.textContent = 'ENVIAR RELATÓRIO';
-        reportButton.addEventListener('click', function() {
-          gerarRelatorioWhatsAppFluxo(crianca, categoria, resumo, tarefasDiarias, tarefasCategoria);
-        });
-        card.appendChild(reportButton);
-      }
+      renderAcaoRelatorioModoCrianca(card, crianca, categoria, resumo, tarefasDiarias, tarefasCategoria);
 
       fluxosContent.appendChild(card);
+      renderBotaoProatividadeCrianca(crianca);
+    }
+
+    function renderBotaoProatividadeCrianca(crianca) {
+      const card = document.createElement('div');
+      card.className = 'fluxos-card';
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-card-title';
+      title.textContent = 'Fiz algo a mais';
+
+      const text = document.createElement('p');
+      text.className = 'muted';
+      text.textContent = 'Conte para o responsável o que você fez. Ele vai analisar e reconhecer depois.';
+
+      const label = document.createElement('label');
+      label.textContent = 'O que você fez?';
+
+      const input = document.createElement('textarea');
+      input.placeholder = 'Ex: Ajudei meu irmão, organizei algo sem pedir...';
+
+      const button = document.createElement('button');
+      button.className = 'btn secondary small';
+      button.type = 'button';
+      button.textContent = 'Enviar para análise';
+      button.addEventListener('click', function() {
+        registrarProatividadeCrianca(crianca, input.value);
+      });
+
+      label.appendChild(input);
+      card.appendChild(title);
+      card.appendChild(text);
+      card.appendChild(label);
+      card.appendChild(button);
+      fluxosContent.appendChild(card);
+    }
+
+    function renderAcaoRelatorioModoCrianca(card, crianca, categoria, resumo, tarefasDiarias, tarefasCategoria) {
+      const actionArea = document.createElement('div');
+      actionArea.className = 'fluxos-toolbar';
+
+      const progressStatus = document.createElement('div');
+      progressStatus.className = 'muted';
+      progressStatus.textContent = resumo.done + ' de ' + resumo.total + ' missões concluídas';
+      actionArea.appendChild(progressStatus);
+
+      const reportButton = document.createElement('button');
+      reportButton.type = 'button';
+
+      if (resumo.total > 0 && resumo.done === resumo.total) {
+        reportButton.className = 'btn';
+        reportButton.textContent = 'ENVIAR RELATÓRIO FINAL';
+        reportButton.addEventListener('click', function() {
+          gerarRelatorioWhatsAppFluxo(crianca, categoria, resumo, tarefasDiarias, tarefasCategoria, 'final');
+        });
+      } else if (resumo.done === 0) {
+        reportButton.className = 'btn secondary small';
+        reportButton.textContent = 'Enviar relatório do dia';
+        reportButton.addEventListener('click', function() {
+          const confirmed = confirm('Nenhuma missão foi concluída ainda. Deseja enviar mesmo assim?');
+
+          if (confirmed) {
+            gerarRelatorioWhatsAppFluxo(crianca, categoria, resumo, tarefasDiarias, tarefasCategoria, 'vazio');
+          }
+        });
+      } else {
+        reportButton.className = 'btn secondary';
+        reportButton.textContent = 'Enviar relatório parcial';
+        reportButton.addEventListener('click', function() {
+          const missing = Math.max(0, resumo.total - resumo.done);
+          const confirmed = confirm('Ainda faltam ' + missing + ' missões. Deseja enviar o relatório parcial?');
+
+          if (confirmed) {
+            gerarRelatorioWhatsAppFluxo(crianca, categoria, resumo, tarefasDiarias, tarefasCategoria, 'parcial');
+          }
+        });
+      }
+
+      actionArea.appendChild(reportButton);
+
+      card.appendChild(actionArea);
     }
 
     function renderGrupoTarefasFluxos(card, config) {
@@ -5147,28 +6657,83 @@
       alternarTarefaCategoriaFeita(childId, categoryId, taskId);
     }
 
-    function gerarRelatorioWhatsAppFluxo(crianca, categoria, resumo, tarefasDiarias, tarefasCategoria) {
+    function obterTituloTarefaRelatorio(task) {
+      return task.titulo || task.name || task.nome || 'Tarefa';
+    }
+
+    function criarLinhasTarefasRelatorio(tarefas) {
+      return (Array.isArray(tarefas) ? tarefas : []).map(function(task) {
+        return '- ' + obterTituloTarefaRelatorio(task);
+      });
+    }
+
+    function obterTarefasConcluidasRelatorio(resumo) {
+      return []
+        .concat(Array.isArray(resumo.tarefasDiariasFeitas) ? resumo.tarefasDiariasFeitas : [])
+        .concat(Array.isArray(resumo.tarefasCategoriaFeitas) ? resumo.tarefasCategoriaFeitas : []);
+    }
+
+    function obterTarefasPendentesRelatorio(resumo, tarefasDiarias, tarefasCategoria) {
+      const pendentesResumo = []
+        .concat(Array.isArray(resumo.tarefasDiariasPendentes) ? resumo.tarefasDiariasPendentes : [])
+        .concat(Array.isArray(resumo.tarefasCategoriaPendentes) ? resumo.tarefasCategoriaPendentes : []);
+
+      if (pendentesResumo.length > 0 || resumo.done > 0) {
+        return pendentesResumo;
+      }
+
+      return []
+        .concat(Array.isArray(tarefasDiarias) ? tarefasDiarias : [])
+        .concat(Array.isArray(tarefasCategoria) ? tarefasCategoria : []);
+    }
+
+    function gerarRelatorioWhatsAppFluxo(crianca, categoria, resumo, tarefasDiarias, tarefasCategoria, tipoRelatorio) {
       const diarias = Array.isArray(tarefasDiarias) ? tarefasDiarias : carregarTarefasDiarias();
       const categoriaTasks = Array.isArray(tarefasCategoria) ? tarefasCategoria : getFluxosTarefasCategoria(categoria.id);
-      const linhasDiarias = diarias.map(function(task) {
-        return '- ' + task.titulo;
-      });
-      const linhasCategoria = categoriaTasks.map(function(task) {
-        return '- ' + task.name;
-      });
-      const text = [
-        'Tudo pronto!',
-        crianca.nome + ' concluiu as missões do dia.',
-        '',
-        'Tarefas diárias:',
-        linhasDiarias.length ? linhasDiarias.join('\n') : '- Nenhuma tarefa diária cadastrada',
-        '',
-        'Responsabilidade da semana: ' + categoria.nome,
-        linhasCategoria.length ? linhasCategoria.join('\n') : '- Nenhuma tarefa da categoria cadastrada',
-        '',
-        'Progresso: ' + resumo.percent + '%.',
-        'Aura conquistada: ' + resumo.aura + ' coins.'
-      ].join('\n');
+      const tipo = tipoRelatorio || (resumo.total > 0 && resumo.done === resumo.total ? 'final' : (resumo.done === 0 ? 'vazio' : 'parcial'));
+      const tarefasConcluidas = obterTarefasConcluidasRelatorio(resumo);
+      const tarefasPendentes = obterTarefasPendentesRelatorio(resumo, diarias, categoriaTasks);
+      const proatividadesAprovadas = Array.isArray(resumo.proatividadesAprovadas)
+        ? resumo.proatividadesAprovadas
+        : obterProatividadesAprovadasDoDiaCrianca(crianca.id, getTodayDate());
+      const linhasProatividade = proatividadesAprovadas.map(formatarProatividadeRelatorio);
+      const auraTotal = Number(resumo.auraTotal) || (Number(resumo.aura) || 0) + calcularBonusProatividadeFluxos(proatividadesAprovadas);
+      const linhasConcluidas = criarLinhasTarefasRelatorio(tarefasConcluidas);
+      const linhasPendentes = criarLinhasTarefasRelatorio(tarefasPendentes);
+      const linhas = tipo === 'final'
+        ? [
+          'Tudo pronto!',
+          crianca.nome + ' concluiu todas as missões do dia.',
+          '',
+          'Progresso: 100%',
+          'Feitas: ' + resumo.done + '/' + resumo.total,
+          'Aura conquistada: ' + auraTotal + ' coins',
+          '',
+          'Tarefas concluídas:',
+          linhasConcluidas.length ? linhasConcluidas.join('\n') : '- Nenhuma'
+        ]
+        : [
+          'Relatório do dia',
+          crianca.nome + (tipo === 'vazio' ? ' ainda não concluiu missões.' : ' concluiu parte das missões.'),
+          '',
+          'Progresso: ' + resumo.percent + '%',
+          'Feitas: ' + resumo.done + '/' + resumo.total,
+          'Aura conquistada: ' + auraTotal + ' coins',
+          '',
+          'Tarefas concluídas:',
+          linhasConcluidas.length ? linhasConcluidas.join('\n') : '- Nenhuma',
+          '',
+          'Tarefas pendentes:',
+          linhasPendentes.length ? linhasPendentes.join('\n') : '- Nenhuma',
+          '',
+          'Responsabilidade da semana: ' + categoria.nome
+        ];
+
+      if (linhasProatividade.length > 0) {
+        linhas.push('', 'Proatividade:', linhasProatividade.join('\n'));
+      }
+
+      const text = linhas.join('\n');
       const phone = (currentChecklist.whatsapp || '').replace(/\D/g, '');
       const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(text);
       window.open(url, '_blank');
@@ -5179,11 +6744,399 @@
       limparFluxosContent();
       fluxosContent.appendChild(criarFluxosHeader('Modo Responsável', 'Acompanhe a escala da semana e ajuste a rotina.', true));
 
+      renderSinoProatividadeResponsavel();
+      renderConfiguracoesRotinaResponsavel();
+      renderCombinadosResponsavel();
       renderPinModoCriancaFluxos();
       renderEscalaResponsavelFluxos();
+      renderHistoricoResponsavel();
       renderEditorCriancasFluxos();
       renderTarefasDiariasResponsavel();
       renderEditorTarefasFluxos();
+    }
+
+    function renderSinoProatividadeResponsavel() {
+      const pendentes = carregarProatividadesFluxos().filter(function(item) {
+        return item.status === 'pendente';
+      });
+      const card = document.createElement('div');
+      card.className = 'fluxos-card';
+
+      const header = document.createElement('div');
+      header.className = 'routine-children-header';
+
+      const titleArea = document.createElement('div');
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-card-title';
+      title.textContent = 'Notificações';
+
+      const subtitle = document.createElement('p');
+      subtitle.className = 'muted';
+      subtitle.textContent = pendentes.length
+        ? 'Proatividades aguardando análise.'
+        : 'Nenhuma proatividade pendente.';
+
+      const badge = document.createElement('span');
+      badge.className = 'fluxos-badge';
+      badge.textContent = String(pendentes.length);
+
+      titleArea.appendChild(title);
+      titleArea.appendChild(subtitle);
+      header.appendChild(titleArea);
+      header.appendChild(badge);
+      card.appendChild(header);
+
+      if (pendentes.length > 0) {
+        const list = document.createElement('div');
+        list.className = 'fluxos-history-list';
+
+        pendentes.forEach(function(item) {
+          const row = document.createElement('div');
+          row.className = 'fluxos-history-item';
+
+          const name = document.createElement('div');
+          name.className = 'routine-child-name';
+          name.textContent = item.criancaNome + ' fez algo a mais:';
+
+          const text = document.createElement('p');
+          text.className = 'muted';
+          text.textContent = '"' + item.texto + '"';
+
+          const actions = document.createElement('div');
+          actions.className = 'fluxos-toolbar';
+
+          const approveButton = document.createElement('button');
+          approveButton.className = 'btn small';
+          approveButton.type = 'button';
+          approveButton.textContent = 'Reconhecer';
+          approveButton.addEventListener('click', function() {
+            aprovarProatividade(item.id);
+          });
+
+          const rejectButton = document.createElement('button');
+          rejectButton.className = 'btn danger small';
+          rejectButton.type = 'button';
+          rejectButton.textContent = 'Recusar';
+          rejectButton.addEventListener('click', function() {
+            recusarProatividade(item.id);
+          });
+
+          actions.appendChild(approveButton);
+          actions.appendChild(rejectButton);
+          row.appendChild(name);
+          row.appendChild(text);
+          row.appendChild(actions);
+          list.appendChild(row);
+        });
+
+        card.appendChild(list);
+      }
+
+      fluxosContent.appendChild(card);
+    }
+
+    function formatarDataCompletaFluxos(data) {
+      const parts = String(data || getTodayDate()).split('-');
+
+      if (parts.length !== 3) {
+        return data || getTodayDate();
+      }
+
+      return parts[2] + '/' + parts[1] + '/' + parts[0];
+    }
+
+    function calcularHistoricoDiaFluxos(data) {
+      const dateKey = data || getTodayDate();
+      const weekKey = obterSemanaAtual(new Date(dateKey + 'T12:00:00'));
+      const escolhas = carregarEscolhasSemana(weekKey);
+      const tarefasDiarias = carregarTarefasDiarias();
+      const proatividadesDoDia = obterProatividadesDoDia(dateKey);
+
+      const registros = carregarCriancasRotina().map(function(crianca) {
+        const categoryId = obterCategoriaDaCriancaNaSemana(crianca.id, escolhas);
+        const categoria = categoryId ? getFluxosCategoriaPorId(categoryId) : null;
+        const tarefasCategoria = categoryId ? getFluxosTarefasCategoria(categoryId) : [];
+        const progress = categoryId
+          ? carregarProgressoDiarioCriancaPorData(crianca.id, categoryId, dateKey, weekKey)
+          : {
+            hasRecord: false,
+            tarefasDiariasFeitas: [],
+            tarefasCategoriaFeitas: [],
+            doneTaskIds: []
+          };
+        const resumo = calcularProgressoDiaCrianca(tarefasDiarias, tarefasCategoria, progress);
+        const proatividadesHistorico = proatividadesDoDia.filter(function(item) {
+          return item.criancaId === crianca.id && item.status !== 'pendente';
+        });
+        const proatividadesAprovadas = proatividadesHistorico.filter(function(item) {
+          return item.status === 'aprovada' || item.status === 'reconhecida';
+        });
+        const bonusProatividade = calcularBonusProatividadeFluxos(proatividadesAprovadas);
+        const temRegistro = progress.hasRecord || proatividadesHistorico.length > 0;
+
+        return {
+          crianca: crianca,
+          categoria: categoria,
+          resumo: resumo,
+          auraTotal: resumo.aura + bonusProatividade,
+          bonusProatividade: bonusProatividade,
+          proatividades: proatividadesHistorico,
+          temRegistro: temRegistro,
+          status: resumo.total > 0 && resumo.done === resumo.total ? 'Concluído' : 'Incompleto'
+        };
+      }).filter(function(registro) {
+        return registro.temRegistro;
+      });
+
+      return {
+        data: dateKey,
+        semana: weekKey,
+        registros: registros
+      };
+    }
+
+    function renderHistoricoResponsavel() {
+      const dataSelecionada = fluxosHistoricoDataSelecionada || getTodayDate();
+      const historico = calcularHistoricoDiaFluxos(dataSelecionada);
+      const card = document.createElement('div');
+      card.className = 'fluxos-card';
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-card-title';
+      title.textContent = 'Histórico';
+
+      const label = document.createElement('label');
+      label.textContent = 'Data';
+
+      const dateInput = document.createElement('input');
+      dateInput.type = 'date';
+      dateInput.value = dataSelecionada;
+      dateInput.addEventListener('change', function() {
+        fluxosHistoricoDataSelecionada = dateInput.value || getTodayDate();
+        renderModoResponsavelFluxos();
+      });
+
+      const subtitle = document.createElement('p');
+      subtitle.className = 'muted';
+      subtitle.textContent = 'Histórico do dia - ' + formatarDataCompletaFluxos(dataSelecionada);
+
+      label.appendChild(dateInput);
+      card.appendChild(title);
+      card.appendChild(label);
+      card.appendChild(subtitle);
+
+      if (!historico.registros.length) {
+        const emptyText = document.createElement('p');
+        emptyText.className = 'muted';
+        emptyText.textContent = 'Nenhum registro encontrado para esta data.';
+        card.appendChild(emptyText);
+        fluxosContent.appendChild(card);
+        return;
+      }
+
+      const list = document.createElement('div');
+      list.className = 'fluxos-history-list';
+
+      historico.registros.forEach(function(registro) {
+        const item = document.createElement('div');
+        item.className = 'fluxos-history-item';
+
+        const name = document.createElement('div');
+        name.className = 'routine-child-name';
+        name.textContent = registro.crianca.nome;
+
+        const categoria = document.createElement('div');
+        categoria.className = 'muted';
+        categoria.textContent = 'Responsabilidade da semana: ' + (registro.categoria ? registro.categoria.nome : 'não escolhida');
+
+        const feitas = document.createElement('div');
+        feitas.className = 'muted';
+        feitas.textContent = 'Tarefas feitas: ' + registro.resumo.done + '/' + registro.resumo.total;
+
+        const naoFeitas = document.createElement('div');
+        naoFeitas.className = 'muted';
+        naoFeitas.textContent = 'Tarefas não feitas: ' + Math.max(0, registro.resumo.total - registro.resumo.done);
+
+        const aura = document.createElement('div');
+        aura.className = 'muted';
+        aura.textContent = 'Aura conquistada: ' + registro.auraTotal + ' coins';
+
+        const status = document.createElement('div');
+        status.className = 'muted';
+        status.textContent = 'Status: ' + registro.status;
+
+        item.appendChild(name);
+        item.appendChild(categoria);
+        item.appendChild(feitas);
+        item.appendChild(naoFeitas);
+        item.appendChild(aura);
+        item.appendChild(status);
+
+        if (registro.proatividades.length > 0) {
+          const proTitle = document.createElement('div');
+          proTitle.className = 'fluxos-small';
+          proTitle.textContent = 'Proatividade:';
+          item.appendChild(proTitle);
+
+          registro.proatividades.forEach(function(proatividade) {
+            const proLine = document.createElement('div');
+            proLine.className = 'muted';
+
+            if (proatividade.status === 'aprovada' || proatividade.status === 'reconhecida') {
+              proLine.textContent = formatarProatividadeRelatorio(proatividade);
+            } else {
+              proLine.textContent = '- ' + proatividade.texto + ' (recusada)';
+            }
+
+            item.appendChild(proLine);
+          });
+        }
+
+        list.appendChild(item);
+      });
+
+      card.appendChild(list);
+      fluxosContent.appendChild(card);
+    }
+
+    function renderConfiguracoesRotinaResponsavel() {
+      const card = document.createElement('div');
+      card.className = 'fluxos-card';
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-card-title';
+      title.textContent = 'Configurações da rotina';
+
+      const text = document.createElement('p');
+      text.className = 'muted';
+      text.textContent = 'Nome atual: ' + obterNomeRotinaFluxos();
+
+      const button = document.createElement('button');
+      button.className = 'btn secondary small';
+      button.type = 'button';
+      button.textContent = 'Editar nome da rotina';
+      button.addEventListener('click', editarNomeRotinaFluxos);
+
+      card.appendChild(title);
+      card.appendChild(text);
+      card.appendChild(button);
+      fluxosContent.appendChild(card);
+    }
+
+    async function editarNomeRotinaFluxos() {
+      const novoNome = prompt('Nome da rotina', obterNomeRotinaFluxos());
+
+      if (novoNome === null) {
+        return;
+      }
+
+      const nomeLimpo = normalizarNomeCriancaRotina(novoNome);
+
+      if (!nomeLimpo) {
+        alert('Digite o nome da rotina.');
+        return;
+      }
+
+      const configAtual = carregarConfigFluxosCasa() || {};
+      salvarConfigFluxosCasa({
+        ...configAtual,
+        rotinaNome: nomeLimpo
+      });
+
+      if (currentChecklist) {
+        currentChecklist.personName = nomeLimpo;
+        currentChecklist.checklistName = nomeLimpo;
+        await salvarChecklist(currentChecklist);
+      }
+
+      renderModoResponsavelFluxos();
+    }
+
+    function renderCombinadosResponsavel() {
+      const combinados = carregarCombinadosFluxos();
+      const card = document.createElement('div');
+      card.className = 'fluxos-card';
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-card-title';
+      title.textContent = 'Benefícios e Penalidades';
+
+      const positiveTitleLabel = document.createElement('label');
+      positiveTitleLabel.textContent = 'Título do bloco positivo';
+
+      const positiveTitleInput = document.createElement('input');
+      positiveTitleInput.type = 'text';
+      positiveTitleInput.value = combinados.tituloPositivo;
+
+      const benefitsLabel = document.createElement('label');
+      benefitsLabel.textContent = 'Benefícios';
+
+      const benefitsInput = document.createElement('textarea');
+      benefitsInput.placeholder = 'Uma regra por linha';
+      benefitsInput.value = combinados.beneficios.join('\n');
+
+      const negativeTitleLabel = document.createElement('label');
+      negativeTitleLabel.textContent = 'Título do bloco negativo';
+
+      const negativeTitleInput = document.createElement('input');
+      negativeTitleInput.type = 'text';
+      negativeTitleInput.value = combinados.tituloNegativo;
+
+      const penaltiesLabel = document.createElement('label');
+      penaltiesLabel.textContent = 'Penalidades';
+
+      const penaltiesInput = document.createElement('textarea');
+      penaltiesInput.placeholder = 'Uma regra por linha';
+      penaltiesInput.value = combinados.penalidades.join('\n');
+
+      const noteLabel = document.createElement('label');
+      noteLabel.textContent = 'Observação extra';
+
+      const noteInput = document.createElement('textarea');
+      noteInput.placeholder = 'Opcional';
+      noteInput.value = combinados.observacao || '';
+
+      const saveButton = document.createElement('button');
+      saveButton.className = 'btn small';
+      saveButton.type = 'button';
+      saveButton.textContent = 'Salvar combinados';
+      saveButton.addEventListener('click', function() {
+        salvarCombinadosResponsavel({
+          tituloPositivo: positiveTitleInput.value,
+          beneficios: benefitsInput.value,
+          tituloNegativo: negativeTitleInput.value,
+          penalidades: penaltiesInput.value,
+          observacao: noteInput.value
+        });
+      });
+
+      positiveTitleLabel.appendChild(positiveTitleInput);
+      benefitsLabel.appendChild(benefitsInput);
+      negativeTitleLabel.appendChild(negativeTitleInput);
+      penaltiesLabel.appendChild(penaltiesInput);
+      noteLabel.appendChild(noteInput);
+      card.appendChild(title);
+      card.appendChild(positiveTitleLabel);
+      card.appendChild(benefitsLabel);
+      card.appendChild(negativeTitleLabel);
+      card.appendChild(penaltiesLabel);
+      card.appendChild(noteLabel);
+      card.appendChild(saveButton);
+      fluxosContent.appendChild(card);
+    }
+
+    function salvarCombinadosResponsavel(combinados) {
+      const dados = normalizarCombinadosFluxos(combinados);
+
+      if (!dados.tituloPositivo || !dados.tituloNegativo) {
+        alert('Preencha os títulos dos blocos.');
+        return;
+      }
+
+      salvarCombinadosFluxos(dados);
+      alert('Combinados salvos.');
+      renderModoResponsavelFluxos();
     }
 
     function renderPinModoCriancaFluxos() {
@@ -5224,7 +7177,7 @@
 
       const title = document.createElement('div');
       title.className = 'fluxos-card-title';
-      title.textContent = 'Escala da semana ' + escolhas.semana;
+      title.textContent = 'Escala da semana: ' + formatarSemanaParaExibicao(escolhas.semana);
       card.appendChild(title);
 
       getFluxosCategoriasPadrao().forEach(function(categoria) {
@@ -5546,10 +7499,38 @@
         const card = document.createElement('div');
         card.className = 'fluxos-card';
 
+        const header = document.createElement('div');
+        header.className = 'routine-children-header';
+
         const title = document.createElement('div');
         title.className = 'fluxos-card-title';
         title.textContent = 'Tarefas da ' + categoria.nome;
-        card.appendChild(title);
+
+        const actions = document.createElement('div');
+        actions.className = 'routine-child-actions';
+
+        const editCategoryButton = document.createElement('button');
+        editCategoryButton.className = 'btn-ghost';
+        editCategoryButton.type = 'button';
+        editCategoryButton.textContent = 'Editar fluxo';
+        editCategoryButton.addEventListener('click', function() {
+          editarCategoriaFluxo(categoria.id);
+        });
+
+        const removeCategoryButton = document.createElement('button');
+        removeCategoryButton.className = 'btn-ghost danger';
+        removeCategoryButton.type = 'button';
+        removeCategoryButton.textContent = 'Remover fluxo';
+        removeCategoryButton.disabled = getFluxosCategoriasPadrao().length <= 1;
+        removeCategoryButton.addEventListener('click', function() {
+          removerCategoriaFluxo(categoria.id);
+        });
+
+        actions.appendChild(editCategoryButton);
+        actions.appendChild(removeCategoryButton);
+        header.appendChild(title);
+        header.appendChild(actions);
+        card.appendChild(header);
 
         getFluxosTarefasCategoria(categoria.id).forEach(function(task) {
           const row = document.createElement('div');
@@ -5604,6 +7585,156 @@
         card.appendChild(addArea);
         fluxosContent.appendChild(card);
       });
+
+      renderAdicionarCategoriaFluxos();
+    }
+
+    function renderAdicionarCategoriaFluxos() {
+      const card = document.createElement('div');
+      card.className = 'fluxos-card';
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-card-title';
+      title.textContent = 'Novo fluxo da casa';
+
+      const addArea = document.createElement('div');
+      addArea.className = 'routine-children-form';
+
+      const label = document.createElement('label');
+      label.textContent = 'Nome do fluxo';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Ex: Banheiro';
+
+      const addButton = document.createElement('button');
+      addButton.className = 'btn small';
+      addButton.type = 'button';
+      addButton.textContent = '+ Adicionar';
+      addButton.addEventListener('click', function() {
+        adicionarCategoriaFluxo(input.value);
+      });
+
+      label.appendChild(input);
+      addArea.appendChild(label);
+      addArea.appendChild(addButton);
+      card.appendChild(title);
+      card.appendChild(addArea);
+      fluxosContent.appendChild(card);
+    }
+
+    function categoriaFluxoDuplicada(nome, categorias, ignoredId) {
+      const nomeNormalizado = normalizeAccessCode(nome || '');
+      return categorias.some(function(categoria) {
+        return categoria.id !== ignoredId && normalizeAccessCode(categoria.nome) === nomeNormalizado;
+      });
+    }
+
+    function adicionarCategoriaFluxo(nome) {
+      const nomeLimpo = normalizarNomeCriancaRotina(nome);
+      const categorias = getFluxosCategoriasPadrao();
+
+      if (!nomeLimpo) {
+        alert('Digite o nome do fluxo.');
+        return;
+      }
+
+      if (categoriaFluxoDuplicada(nomeLimpo, categorias)) {
+        alert('Este fluxo já está cadastrado.');
+        return;
+      }
+
+      categorias.push({
+        id: gerarIdCategoriaFluxo(nomeLimpo),
+        nome: nomeLimpo,
+        tarefas: [],
+        ativa: true
+      });
+      salvarCategoriasFluxos(categorias);
+      renderModoResponsavelFluxos();
+    }
+
+    async function editarCategoriaFluxo(categoryId) {
+      const categorias = getFluxosCategoriasPadrao();
+      const categoria = categorias.find(function(item) {
+        return item.id === categoryId;
+      });
+
+      if (!categoria) {
+        return;
+      }
+
+      const novoNome = prompt('Nome do fluxo', categoria.nome);
+
+      if (novoNome === null) {
+        return;
+      }
+
+      const nomeLimpo = normalizarNomeCriancaRotina(novoNome);
+
+      if (!nomeLimpo) {
+        alert('Digite o nome do fluxo.');
+        return;
+      }
+
+      if (categoriaFluxoDuplicada(nomeLimpo, categorias, categoryId)) {
+        alert('Este fluxo já está cadastrado.');
+        return;
+      }
+
+      const nomeAntigo = categoria.nome;
+      categoria.nome = nomeLimpo;
+      salvarCategoriasFluxos(categorias);
+
+      if (currentChecklist && Array.isArray(currentChecklist.tasks)) {
+        currentChecklist.tasks.forEach(function(task) {
+          if (normalizeAccessCode(getTaskCategory(task)) === normalizeAccessCode(nomeAntigo)) {
+            task.category = nomeLimpo;
+          }
+        });
+        sincronizarTarefasCategoriasFluxos();
+        await salvarTarefas(currentChecklist);
+      }
+
+      renderModoResponsavelFluxos();
+    }
+
+    async function removerCategoriaFluxo(categoryId) {
+      const categorias = getFluxosCategoriasPadrao();
+      const categoria = categorias.find(function(item) {
+        return item.id === categoryId;
+      });
+
+      if (!categoria) {
+        return;
+      }
+
+      if (categorias.length <= 1) {
+        alert('A rotina precisa ter pelo menos um fluxo.');
+        return;
+      }
+
+      const confirmed = confirm('Deseja remover este fluxo e suas tarefas?');
+
+      if (!confirmed) {
+        return;
+      }
+
+      salvarCategoriasFluxos(categorias.filter(function(item) {
+        return item.id !== categoryId;
+      }));
+
+      if (currentChecklist && Array.isArray(currentChecklist.tasks)) {
+        currentChecklist.tasks = currentChecklist.tasks.filter(function(task) {
+          return normalizeAccessCode(getTaskCategory(task)) !== normalizeAccessCode(categoria.nome);
+        });
+        await salvarTarefas(currentChecklist);
+      }
+
+      const escolhas = carregarEscolhasSemana();
+      delete escolhas.escolhas[categoryId];
+      salvarEscolhasSemana(escolhas);
+      renderModoResponsavelFluxos();
     }
 
     async function adicionarTarefaFluxo(categoria, taskName) {
@@ -5626,6 +7757,7 @@
         done: false
       });
 
+      sincronizarTarefasCategoriasFluxos();
       await salvarTarefas(currentChecklist);
       renderModoResponsavelFluxos();
     }
@@ -5653,6 +7785,7 @@
       }
 
       task.name = cleanName;
+      sincronizarTarefasCategoriasFluxos();
       await salvarTarefas(currentChecklist);
       renderModoResponsavelFluxos();
     }
@@ -5667,11 +7800,21 @@
       currentChecklist.tasks = currentChecklist.tasks.filter(function(task) {
         return String(task.id) !== String(taskId);
       });
+      sincronizarTarefasCategoriasFluxos();
       await salvarTarefas(currentChecklist);
       renderModoResponsavelFluxos();
     }
 
     async function inicializarFluxosDaCasa(checklistsSupabase) {
+      if (usuarioPrecisaConfiguracaoInicial(checklistsSupabase)) {
+        prepararChecklistFluxosParaConfiguracao(checklistsSupabase);
+        fluxosConfigInicialDraft = criarConfigPadraoEditavel();
+        limparEstadoModoCrianca();
+        renderConfiguracaoInicialFluxos();
+        showScreen(SCREENS.fluxos);
+        return;
+      }
+
       await carregarConfigFluxos(checklistsSupabase);
       const estadoModoCrianca = carregarEstadoModoCriancaFluxos();
       const criancaAtiva = estadoModoCrianca.ativo && estadoModoCrianca.criancaId
