@@ -1254,6 +1254,88 @@
       font-weight: 900;
     }
 
+    .fluxos-ranking-card {
+      gap: 10px;
+    }
+
+    .fluxos-ranking-card.compact {
+      padding: 14px;
+    }
+
+    .fluxos-ranking-header {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .fluxos-ranking-period {
+      color: #64748b;
+      font-size: 0.9rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .fluxos-ranking-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .fluxos-ranking-row {
+      display: grid;
+      grid-template-columns: 40px minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      min-height: 42px;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #f8fafc;
+    }
+
+    .fluxos-ranking-card.compact .fluxos-ranking-row {
+      min-height: 38px;
+      padding: 8px 10px;
+    }
+
+    .fluxos-ranking-row.no-position {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .fluxos-ranking-row.is-leader {
+      border-color: rgba(245, 158, 11, 0.36);
+      background: #fffbeb;
+    }
+
+    .fluxos-ranking-row.is-active-child {
+      border-color: rgba(20, 184, 166, 0.42);
+      background: #ecfdf5;
+    }
+
+    .fluxos-ranking-position,
+    .fluxos-ranking-coins {
+      color: #0f766e;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .fluxos-ranking-name {
+      min-width: 0;
+      overflow: hidden;
+      color: #0f172a;
+      font-weight: 800;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .fluxos-ranking-empty {
+      margin: 0;
+      color: #64748b;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
     .fluxos-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1370,6 +1452,10 @@
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 10px;
       align-items: end;
+    }
+
+    .fluxos-category-editor .fluxos-editor-row {
+      grid-template-columns: minmax(0, 1fr) 150px auto;
     }
 
     .fluxos-daily-editor-row {
@@ -1934,7 +2020,8 @@
       .consequence-editor-grid,
       .motivation-banner-hero,
       .fluxos-actions,
-      .fluxos-grid {
+      .fluxos-grid,
+      .fluxos-category-editor .fluxos-editor-row {
         grid-template-columns: 1fr;
       }
 
@@ -2487,6 +2574,8 @@
       history: 'history',
       agreements: 'agreements'
     };
+
+    const NOME_APP_FLUXOS = 'Missões da Casa';
 
     // Enquanto estiver true, o projeto salva no navegador. Quando mudar para false, usa Supabase.
     const MODO_DESENVOLVIMENTO = true;
@@ -3138,7 +3227,7 @@
       if (screenName === SCREENS.fluxos) {
         const appBrandText = document.querySelector('#appTopbar .brand span');
         if (appBrandText) {
-          appBrandText.textContent = 'Fluxos da Casa';
+          appBrandText.textContent = NOME_APP_FLUXOS;
         }
         notificationBellButton.classList.add('hidden');
         return;
@@ -4349,6 +4438,7 @@
         {
           id: 'sala',
           nome: 'Sala',
+          auraMaximaDia: 60,
           tarefas: [
             'Recolher objetos fora do lugar',
             'Organizar sofá',
@@ -4359,6 +4449,7 @@
         {
           id: 'cozinha',
           nome: 'Cozinha',
+          auraMaximaDia: 60,
           tarefas: [
             'Secar louças',
             'Guardar louças',
@@ -4369,6 +4460,7 @@
         {
           id: 'quarto',
           nome: 'Quarto',
+          auraMaximaDia: 60,
           tarefas: [
             'Arrumar cama',
             'Guardar roupas',
@@ -4377,6 +4469,47 @@
           ]
         }
       ];
+    }
+
+    function normalizarAuraMaximaDiaCategoria(value) {
+      const cleanValue = String(value === undefined || value === null ? '' : value).trim();
+
+      if (!cleanValue) {
+        return 60;
+      }
+
+      const numberValue = Number(cleanValue);
+
+      if (!Number.isFinite(numberValue) || numberValue < 0) {
+        return 60;
+      }
+
+      return Math.round(numberValue);
+    }
+
+    function validarAuraMaximaDiaCategoria(value) {
+      const cleanValue = String(value === undefined || value === null ? '' : value).trim();
+
+      if (!cleanValue) {
+        return 60;
+      }
+
+      const numberValue = Number(cleanValue);
+
+      if (!Number.isFinite(numberValue) || numberValue < 0) {
+        return null;
+      }
+
+      return Math.round(numberValue);
+    }
+
+    function obterAuraMaximaDiaCategoria(categoria) {
+      const dados = categoria || {};
+      return normalizarAuraMaximaDiaCategoria(
+        dados.auraMaximaDia !== undefined
+          ? dados.auraMaximaDia
+          : (dados.maxAuraDia !== undefined ? dados.maxAuraDia : dados.auraMaxima)
+      );
     }
 
     function normalizarCategoriasConfiguracao(categorias) {
@@ -4400,6 +4533,7 @@
           return {
             id: dados.id || ('categoria_' + (normalizeAccessCode(nome) || index) + '_' + index),
             nome: nome,
+            auraMaximaDia: obterAuraMaximaDiaCategoria(dados),
             tarefas: tarefas
               .map(function(tarefa) {
                 return normalizarNomeCriancaRotina(tarefa);
@@ -4435,7 +4569,7 @@
           atualizadaEm: config.atualizadaEm || null
         };
       } catch (error) {
-        console.warn('Configuração dos Fluxos da Casa não carregada:', error);
+        console.warn('Configuração dos ' + NOME_APP_FLUXOS + ' não carregada:', error);
         return null;
       }
     }
@@ -4505,6 +4639,7 @@
           categorias.push({
             id: normalizeAccessCode(nome) || gerarIdCategoriaFluxo(nome),
             nome: nome,
+            auraMaximaDia: 60,
             tarefas: [],
             ativa: true
           });
@@ -4541,6 +4676,10 @@
         { id: 'crianca_nicolas', nome: 'Nicolas', criadaEm: new Date().toISOString(), ativa: true },
         { id: 'crianca_miguel', nome: 'Miguel', criadaEm: new Date().toISOString(), ativa: true }
       ];
+    }
+
+    function isNomePadraoFluxos(nome) {
+      return nome === NOME_APP_FLUXOS || nome === 'Fluxos da Casa';
     }
 
     function getFluxosChecklistCode() {
@@ -4590,7 +4729,7 @@
         return config.rotinaNome;
       }
 
-      if (currentChecklist && currentChecklist.checklistName && currentChecklist.checklistName !== 'Fluxos da Casa') {
+      if (currentChecklist && currentChecklist.checklistName && !isNomePadraoFluxos(currentChecklist.checklistName)) {
         return currentChecklist.checklistName;
       }
 
@@ -4598,7 +4737,7 @@
         return currentChecklist.personName;
       }
 
-      return 'Fluxos da Casa';
+      return NOME_APP_FLUXOS;
     }
 
     function gerarIdCategoriaFluxo(nome) {
@@ -4841,7 +4980,7 @@
         code: getFluxosChecklistCode(),
         personName: 'Casa',
         whatsapp: '',
-        checklistName: 'Fluxos da Casa',
+        checklistName: NOME_APP_FLUXOS,
         familyAgreement: '',
         tasks: getFluxosTasksDefault()
       };
@@ -4939,7 +5078,7 @@
       const code = getFluxosChecklistCode();
       return Array.isArray(checklistsSupabase)
         ? checklistsSupabase.find(function(row) {
-          return row.code === code || row.checklist_name === 'Fluxos da Casa';
+          return row.code === code || isNomePadraoFluxos(row.checklist_name);
         })
         : null;
     }
@@ -5011,7 +5150,7 @@
         code: checklistSupabase && checklistSupabase.code ? checklistSupabase.code : code,
         personName: '',
         whatsapp: checklistSupabase && checklistSupabase.whatsapp ? checklistSupabase.whatsapp : '',
-        checklistName: 'Fluxos da Casa',
+        checklistName: NOME_APP_FLUXOS,
         familyAgreement: '',
         tasks: []
       };
@@ -5031,7 +5170,7 @@
           code: checklistSupabase.code,
           personName: checklistSupabase.person_name || (configCasa && configCasa.rotinaNome) || 'Casa',
           whatsapp: checklistSupabase.whatsapp || '',
-          checklistName: checklistSupabase.checklist_name || (configCasa && configCasa.rotinaNome) || 'Fluxos da Casa',
+          checklistName: checklistSupabase.checklist_name || (configCasa && configCasa.rotinaNome) || NOME_APP_FLUXOS,
           familyAgreement: normalizeFamilyAgreement(checklistSupabase.family_agreement),
           tasks: Array.isArray(tarefasSupabase) ? tarefasSupabase : []
         };
@@ -5043,7 +5182,7 @@
 
       checklist.code = checklist.code || code;
       checklist.personName = (configCasa && configCasa.rotinaNome) || checklist.personName || 'Casa';
-      checklist.checklistName = (configCasa && configCasa.rotinaNome) || checklist.checklistName || 'Fluxos da Casa';
+      checklist.checklistName = (configCasa && configCasa.rotinaNome) || checklist.checklistName || NOME_APP_FLUXOS;
       checklist.tasks = Array.isArray(checklist.tasks) ? checklist.tasks : [];
 
       currentChecklist = checklist;
@@ -5207,8 +5346,10 @@
 
     function salvarProgressoDiarioCrianca(childId, categoryId, progress) {
       const progressData = progress || {};
-      const dailyKey = progressData.dailyKey || getFluxosStorageKey('progresso-diario-' + getTodayDate() + '-' + childId);
-      const categoryKey = progressData.categoryKey || getFluxosStorageKey('progresso-categoria-' + obterSemanaAtual() + '-' + getTodayDate() + '-' + childId + '-' + categoryId);
+      const dateKey = progressData.data || getTodayDate();
+      const weekKey = progressData.semana || obterSemanaAtual(new Date(dateKey + 'T12:00:00'));
+      const dailyKey = progressData.dailyKey || getFluxosStorageKey('progresso-diario-' + dateKey + '-' + childId);
+      const categoryKey = progressData.categoryKey || getFluxosStorageKey('progresso-categoria-' + weekKey + '-' + dateKey + '-' + childId + '-' + categoryId);
       const tarefasDiariasFeitas = Array.isArray(progressData.tarefasDiariasFeitas)
         ? progressData.tarefasDiariasFeitas.map(String)
         : [];
@@ -5219,7 +5360,7 @@
       localStorage.setItem(dailyKey, JSON.stringify({
         user_id: usuarioLogado && usuarioLogado.id ? usuarioLogado.id : null,
         checklistCode: currentChecklist.code,
-        data: getTodayDate(),
+        data: dateKey,
         criancaId: childId,
         tarefasDiariasFeitas: tarefasDiariasFeitas
       }));
@@ -5227,8 +5368,8 @@
       localStorage.setItem(categoryKey, JSON.stringify({
         user_id: usuarioLogado && usuarioLogado.id ? usuarioLogado.id : null,
         checklistCode: currentChecklist.code,
-        semana: obterSemanaAtual(),
-        data: getTodayDate(),
+        semana: weekKey,
+        data: dateKey,
         criancaId: childId,
         categoriaId: categoryId,
         tarefasCategoriaFeitas: tarefasCategoriaFeitas,
@@ -5240,7 +5381,17 @@
       salvarProgressoDiarioCrianca(childId, categoryId, progress);
     }
 
-    function calcularProgressoDiaCrianca(tarefasDiarias, tarefasCategoria, progress) {
+    function calcularAuraCategoriaProporcional(doneCount, totalCount, categoria) {
+      const auraMaximaDia = obterAuraMaximaDiaCategoria(categoria);
+
+      if (!totalCount || totalCount <= 0 || auraMaximaDia <= 0) {
+        return 0;
+      }
+
+      return Math.round((doneCount / totalCount) * auraMaximaDia);
+    }
+
+    function calcularProgressoDiaCrianca(tarefasDiarias, tarefasCategoria, progress, categoria) {
       const progressData = progress || {};
       const tarefasDiariasFeitas = Array.isArray(progressData.tarefasDiariasFeitas)
         ? progressData.tarefasDiariasFeitas.map(String)
@@ -5262,17 +5413,26 @@
       });
       const total = tarefasDiarias.length + tarefasCategoria.length;
       const done = dailyDone.length + categoryDone.length;
-      const aura = dailyDone.reduce(function(sum, task) {
+      const auraDiarias = dailyDone.reduce(function(sum, task) {
         return sum + (Number(task.aura) || 10);
-      }, 0) + categoryDone.reduce(function(sum, task) {
-        return sum + (Number(task.points) || 10);
       }, 0);
+      const categoriaTotal = tarefasCategoria.length;
+      const categoriaFeitas = categoryDone.length;
+      const auraCategoriaMaxima = obterAuraMaximaDiaCategoria(categoria);
+      const auraCategoria = calcularAuraCategoriaProporcional(categoriaFeitas, categoriaTotal, categoria);
+      const aura = auraDiarias + auraCategoria;
 
       return {
         total: total,
         done: done,
         aura: aura,
+        auraDiarias: auraDiarias,
+        auraCategoria: auraCategoria,
+        auraCategoriaMaxima: auraCategoriaMaxima,
+        categoriaFeitas: categoriaFeitas,
+        categoriaTotal: categoriaTotal,
         percent: total === 0 ? 0 : Math.round((done / total) * 100),
+        percentCategoria: categoriaTotal === 0 ? 0 : Math.round((categoriaFeitas / categoriaTotal) * 100),
         tarefasDiariasFeitas: dailyDone,
         tarefasCategoriaFeitas: categoryDone,
         tarefasDiariasPendentes: dailyPending,
@@ -5282,6 +5442,161 @@
 
     function calcularProgressoFluxo(tasks, progress) {
       return calcularProgressoDiaCrianca([], tasks, progress);
+    }
+
+    function formatarDataISOFluxos(date) {
+      const value = date instanceof Date ? date : new Date(date);
+
+      if (Number.isNaN(value.getTime())) {
+        return getTodayDate();
+      }
+
+      return value.getUTCFullYear() + '-' +
+        String(value.getUTCMonth() + 1).padStart(2, '0') + '-' +
+        String(value.getUTCDate()).padStart(2, '0');
+    }
+
+    function obterDatasDaSemanaAtual(semana) {
+      const weekKey = semana || obterSemanaAtual();
+      const periodo = obterPeriodoSemanaPorChave(weekKey);
+
+      if (!periodo) {
+        return [getTodayDate()];
+      }
+
+      return Array.from({ length: 7 }, function(_, index) {
+        const date = new Date(periodo.inicio);
+        date.setUTCDate(periodo.inicio.getUTCDate() + index);
+        return formatarDataISOFluxos(date);
+      });
+    }
+
+    function calcularAuraCriancaNaData(criancaId, data, escolhasSemana, tarefasDiarias) {
+      const escolhas = escolhasSemana || carregarEscolhasSemana();
+      const categoryId = obterCategoriaDaCriancaNaSemana(criancaId, escolhas);
+      const categoria = categoryId ? getFluxosCategoriaPorId(categoryId) : null;
+      const tarefasCategoria = categoryId ? getFluxosTarefasCategoria(categoryId) : [];
+      const progress = carregarProgressoDiarioCriancaPorData(
+        criancaId,
+        categoryId || 'sem-categoria',
+        data,
+        escolhas.semana
+      );
+      const resumo = calcularProgressoDiaCrianca(tarefasDiarias || carregarTarefasDiarias(), tarefasCategoria, progress, categoria);
+      return resumo.aura;
+    }
+
+    function calcularBonusProatividadeSemanaCrianca(criancaId, semana, proatividades) {
+      const weekKey = semana || obterSemanaAtual();
+      const lista = Array.isArray(proatividades) ? proatividades : carregarProatividadesFluxos();
+      const aprovadas = lista.filter(function(item) {
+        return item.criancaId === criancaId &&
+          item.semana === weekKey &&
+          (item.status === 'aprovada' || item.status === 'reconhecida');
+      });
+
+      return calcularBonusProatividadeFluxos(aprovadas);
+    }
+
+    function calcularRankingAuraSemana(semana) {
+      const weekKey = semana || obterSemanaAtual();
+      const escolhasSemana = carregarEscolhasSemana(weekKey);
+      const datasSemana = obterDatasDaSemanaAtual(weekKey);
+      const tarefasDiarias = carregarTarefasDiarias();
+      const proatividades = carregarProatividadesFluxos();
+
+      return carregarCriancasRotina()
+        .map(function(crianca, index) {
+          const auraTarefas = datasSemana.reduce(function(total, data) {
+            return total + calcularAuraCriancaNaData(crianca.id, data, escolhasSemana, tarefasDiarias);
+          }, 0);
+          const bonusProatividade = calcularBonusProatividadeSemanaCrianca(crianca.id, weekKey, proatividades);
+
+          return {
+            id: crianca.id,
+            nome: crianca.nome,
+            ordem: index,
+            auraTarefas: auraTarefas,
+            bonusProatividade: bonusProatividade,
+            coins: auraTarefas + bonusProatividade
+          };
+        })
+        .sort(function(a, b) {
+          if (b.coins !== a.coins) {
+            return b.coins - a.coins;
+          }
+
+          return a.ordem - b.ordem;
+        });
+    }
+
+    function renderCardRankingAuraSemana(options) {
+      const config = options || {};
+      const weekKey = config.semana || obterSemanaAtual();
+      const ranking = calcularRankingAuraSemana(weekKey);
+      const hasAnyScore = ranking.some(function(item) {
+        return item.coins > 0;
+      });
+      const showPositions = config.compacto !== true && hasAnyScore;
+
+      const card = document.createElement('div');
+      card.className = 'fluxos-card fluxos-ranking-card' + (config.compacto ? ' compact' : '');
+
+      const header = document.createElement('div');
+      header.className = 'fluxos-ranking-header';
+
+      const title = document.createElement('div');
+      title.className = 'fluxos-card-title';
+      title.textContent = '🏆 Placar da Semana';
+
+      const period = document.createElement('div');
+      period.className = 'fluxos-ranking-period';
+      period.textContent = 'Semana atual: ' + formatarSemanaParaExibicao(weekKey);
+
+      header.appendChild(title);
+      header.appendChild(period);
+      card.appendChild(header);
+
+      if (!ranking.length) {
+        const empty = document.createElement('p');
+        empty.className = 'fluxos-ranking-empty';
+        empty.textContent = 'Nenhuma criança cadastrada ainda.';
+        card.appendChild(empty);
+        return card;
+      }
+
+      const list = document.createElement('div');
+      list.className = 'fluxos-ranking-list';
+
+      ranking.forEach(function(item, index) {
+        const row = document.createElement('div');
+        row.className = 'fluxos-ranking-row' +
+          (showPositions ? '' : ' no-position') +
+          (hasAnyScore && index === 0 ? ' is-leader' : '') +
+          (config.criancaAtivaId === item.id ? ' is-active-child' : '');
+
+        if (showPositions) {
+          const position = document.createElement('div');
+          position.className = 'fluxos-ranking-position';
+          position.textContent = (index + 1) + 'º';
+          row.appendChild(position);
+        }
+
+        const name = document.createElement('div');
+        name.className = 'fluxos-ranking-name';
+        name.textContent = item.nome;
+
+        const coins = document.createElement('div');
+        coins.className = 'fluxos-ranking-coins';
+        coins.textContent = item.coins + ' coins';
+
+        row.appendChild(name);
+        row.appendChild(coins);
+        list.appendChild(row);
+      });
+
+      card.appendChild(list);
+      return card;
     }
 
     function getFluxosProatividadesKey() {
@@ -5610,6 +5925,7 @@
             return {
               id: categoria.id,
               nome: categoria.nome,
+              auraMaximaDia: obterAuraMaximaDiaCategoria(categoria),
               tarefas: categoria.tarefas.slice()
             };
           })
@@ -5617,6 +5933,7 @@
             return {
               id: categoria.id,
               nome: categoria.nome,
+              auraMaximaDia: obterAuraMaximaDiaCategoria(categoria),
               tarefas: categoria.tarefas.slice()
             };
           }),
@@ -5657,7 +5974,7 @@
       childModeActive = false;
       fluxosCriancaSelecionadaId = null;
       limparFluxosContent();
-      appTopbar.querySelector('.brand span').textContent = 'Fluxos da Casa';
+      appTopbar.querySelector('.brand span').textContent = NOME_APP_FLUXOS;
 
       if (!fluxosConfigInicialDraft) {
         fluxosConfigInicialDraft = criarConfigPadraoEditavel();
@@ -5792,7 +6109,7 @@
     }
 
     function renderCategoriasConfiguracao(wrapper) {
-      const card = criarCardConfiguracaoInicial('3. Fluxos da casa', 'Edite os ambientes e as tarefas de cada um.');
+      const card = criarCardConfiguracaoInicial('3. Missões da casa', 'Edite os ambientes e as tarefas de cada um.');
       const list = document.createElement('div');
       list.className = 'fluxos-editor-list';
 
@@ -5812,6 +6129,19 @@
         nameInput.placeholder = 'Ex: Sala';
         nameInput.addEventListener('input', function() {
           fluxosConfigInicialDraft.categorias[index].nome = nameInput.value;
+        });
+
+        const auraLabel = document.createElement('label');
+        auraLabel.textContent = 'Valor mÃ¡ximo diÃ¡rio';
+
+        const auraInput = document.createElement('input');
+        auraInput.type = 'number';
+        auraInput.min = '0';
+        auraInput.step = '1';
+        auraInput.value = obterAuraMaximaDiaCategoria(categoria);
+        auraInput.placeholder = '60';
+        auraInput.addEventListener('input', function() {
+          fluxosConfigInicialDraft.categorias[index].auraMaximaDia = auraInput.value;
         });
 
         const removeButton = document.createElement('button');
@@ -5839,7 +6169,9 @@
         });
 
         nameLabel.appendChild(nameInput);
+        auraLabel.appendChild(auraInput);
         nameRow.appendChild(nameLabel);
+        nameRow.appendChild(auraLabel);
         nameRow.appendChild(removeButton);
         tasksLabel.appendChild(tasksInput);
         area.appendChild(nameRow);
@@ -5855,6 +6187,7 @@
         fluxosConfigInicialDraft.categorias.push({
           id: gerarIdCategoriaFluxo('novo fluxo'),
           nome: '',
+          auraMaximaDia: 60,
           tarefas: []
         });
         renderConfiguracaoInicialFluxos();
@@ -5994,6 +6327,9 @@
       const temCategoriaVazia = fluxosConfigInicialDraft.categorias.some(function(categoria) {
         return !normalizarNomeCriancaRotina(categoria.nome);
       });
+      const temAuraCategoriaInvalida = fluxosConfigInicialDraft.categorias.some(function(categoria) {
+        return validarAuraMaximaDiaCategoria(categoria.auraMaximaDia) === null;
+      });
       const temTarefaDiariaVazia = fluxosConfigInicialDraft.tarefasDiarias.some(function(tarefa) {
         return !normalizarNomeCriancaRotina(tarefa.titulo);
       });
@@ -6026,7 +6362,11 @@
       }
 
       if (nomesDuplicadosConfiguracao(categorias, function(categoria) { return categoria.nome; })) {
-        return { ok: false, mensagem: 'Não use nomes duplicados para fluxos da casa.' };
+        return { ok: false, mensagem: 'Não use nomes duplicados para missões da casa.' };
+      }
+
+      if (temAuraCategoriaInvalida) {
+        return { ok: false, mensagem: 'O valor máximo diário do fluxo precisa ser zero ou maior.' };
       }
 
       if (temTarefaDiariaVazia) {
@@ -6163,6 +6503,7 @@
       actions.appendChild(parentButton);
       header.appendChild(actions);
       fluxosContent.appendChild(header);
+      fluxosContent.appendChild(renderCardRankingAuraSemana());
     }
 
     function renderModoCriancaFluxos() {
@@ -6193,6 +6534,7 @@
       actions.appendChild(exitButton);
       header.appendChild(actions);
       fluxosContent.appendChild(header);
+      fluxosContent.appendChild(renderCardRankingAuraSemana({ compacto: true }));
       renderEscolhaCrianca();
     }
 
@@ -6285,6 +6627,10 @@
       actions.appendChild(exitButton);
       header.appendChild(actions);
       fluxosContent.appendChild(header);
+      fluxosContent.appendChild(renderCardRankingAuraSemana({
+        compacto: true,
+        criancaAtivaId: crianca.id
+      }));
 
       if (!categoryId) {
         renderEscolhaCategoriaSemana(crianca, escolhas);
@@ -6428,7 +6774,7 @@
       const tarefasDiarias = carregarTarefasDiarias();
       const tarefasCategoria = getFluxosTarefasCategoria(categoryId);
       const progress = carregarProgressoDiarioCrianca(crianca.id, categoryId);
-      const resumo = calcularProgressoDiaCrianca(tarefasDiarias, tarefasCategoria, progress);
+      const resumo = calcularProgressoDiaCrianca(tarefasDiarias, tarefasCategoria, progress, categoria);
       const proatividadesAprovadas = obterProatividadesAprovadasDoDiaCrianca(crianca.id, getTodayDate());
       const bonusProatividade = calcularBonusProatividadeFluxos(proatividadesAprovadas);
       resumo.proatividadesAprovadas = proatividadesAprovadas;
@@ -6457,6 +6803,12 @@
       card.appendChild(title);
       card.appendChild(progressText);
       card.appendChild(progressBar);
+
+      const categoryScoreText = document.createElement('div');
+      categoryScoreText.className = 'muted';
+      categoryScoreText.textContent = 'Responsabilidade: ' + resumo.categoriaFeitas + '/' + resumo.categoriaTotal +
+        ' feitas • Aura da responsabilidade: ' + resumo.auraCategoria + ' de ' + resumo.auraCategoriaMaxima + ' coins';
+      card.appendChild(categoryScoreText);
 
       renderGrupoTarefasFluxos(card, {
         titulo: 'Tarefas diárias',
@@ -6488,6 +6840,7 @@
         obterPontos: function(task) {
           return task.points;
         },
+        mostrarPontos: false,
         feitas: progress.tarefasCategoriaFeitas,
         alternar: function(task) {
           alternarTarefaCategoriaFeita(crianca.id, categoryId, task.id);
@@ -6611,13 +6964,16 @@
         const name = document.createElement('div');
         name.textContent = config.obterNome(task);
 
-        const points = document.createElement('div');
-        points.className = 'fluxos-small';
-        points.textContent = '+' + (Number(config.obterPontos(task)) || 10);
-
         taskRow.appendChild(checkbox);
         taskRow.appendChild(name);
-        taskRow.appendChild(points);
+
+        if (config.mostrarPontos !== false) {
+          const points = document.createElement('div');
+          points.className = 'fluxos-small';
+          points.textContent = '+' + (Number(config.obterPontos(task)) || 10);
+          taskRow.appendChild(points);
+        }
+
         card.appendChild(taskRow);
       });
     }
@@ -6667,6 +7023,12 @@
       });
     }
 
+    function criarLinhasTarefasDiariasRelatorio(tarefas) {
+      return (Array.isArray(tarefas) ? tarefas : []).map(function(task) {
+        return '- ' + obterTituloTarefaRelatorio(task) + ' (+' + (Number(task.aura) || 10) + ')';
+      });
+    }
+
     function obterTarefasConcluidasRelatorio(resumo) {
       return []
         .concat(Array.isArray(resumo.tarefasDiariasFeitas) ? resumo.tarefasDiariasFeitas : [])
@@ -6700,6 +7062,16 @@
       const auraTotal = Number(resumo.auraTotal) || (Number(resumo.aura) || 0) + calcularBonusProatividadeFluxos(proatividadesAprovadas);
       const linhasConcluidas = criarLinhasTarefasRelatorio(tarefasConcluidas);
       const linhasPendentes = criarLinhasTarefasRelatorio(tarefasPendentes);
+      const linhasDiariasFeitas = criarLinhasTarefasDiariasRelatorio(resumo.tarefasDiariasFeitas);
+      const linhasDiariasPendentes = criarLinhasTarefasRelatorio(resumo.tarefasDiariasPendentes);
+      const linhasCategoriaFeitas = criarLinhasTarefasRelatorio(resumo.tarefasCategoriaFeitas);
+      const linhasCategoriaPendentes = criarLinhasTarefasRelatorio(resumo.tarefasCategoriaPendentes);
+      const categoriaFeitas = Number(resumo.categoriaFeitas) || 0;
+      const categoriaTotal = Number(resumo.categoriaTotal) || categoriaTasks.length;
+      const auraCategoria = resumo.auraCategoria !== undefined ? Number(resumo.auraCategoria) || 0 : 0;
+      const auraCategoriaMaxima = resumo.auraCategoriaMaxima !== undefined
+        ? Number(resumo.auraCategoriaMaxima) || 0
+        : obterAuraMaximaDiaCategoria(categoria);
       const linhas = tipo === 'final'
         ? [
           'Tudo pronto!',
@@ -6709,8 +7081,15 @@
           'Feitas: ' + resumo.done + '/' + resumo.total,
           'Aura conquistada: ' + auraTotal + ' coins',
           '',
-          'Tarefas concluídas:',
-          linhasConcluidas.length ? linhasConcluidas.join('\n') : '- Nenhuma'
+          'Tarefas diárias:',
+          linhasDiariasFeitas.length ? linhasDiariasFeitas.join('\n') : '- Nenhuma',
+          '',
+          'Responsabilidade da semana: ' + categoria.nome,
+          'Progresso da responsabilidade: ' + categoriaFeitas + '/' + categoriaTotal,
+          'Aura da responsabilidade: ' + auraCategoria + ' de ' + auraCategoriaMaxima + ' coins',
+          '',
+          'Tarefas da responsabilidade:',
+          linhasCategoriaFeitas.length ? linhasCategoriaFeitas.join('\n') : '- Nenhuma'
         ]
         : [
           'Relatório do dia',
@@ -6720,13 +7099,27 @@
           'Feitas: ' + resumo.done + '/' + resumo.total,
           'Aura conquistada: ' + auraTotal + ' coins',
           '',
+          'Tarefas diárias concluídas:',
+          linhasDiariasFeitas.length ? linhasDiariasFeitas.join('\n') : '- Nenhuma',
+          '',
+          'Tarefas diárias pendentes:',
+          linhasDiariasPendentes.length ? linhasDiariasPendentes.join('\n') : '- Nenhuma',
+          '',
+          'Responsabilidade da semana: ' + categoria.nome,
+          'Progresso da responsabilidade: ' + categoriaFeitas + '/' + categoriaTotal,
+          'Aura da responsabilidade: ' + auraCategoria + ' de ' + auraCategoriaMaxima + ' coins',
+          '',
+          'Tarefas da responsabilidade concluídas:',
+          linhasCategoriaFeitas.length ? linhasCategoriaFeitas.join('\n') : '- Nenhuma',
+          '',
+          'Tarefas da responsabilidade pendentes:',
+          linhasCategoriaPendentes.length ? linhasCategoriaPendentes.join('\n') : '- Nenhuma',
+          '',
           'Tarefas concluídas:',
           linhasConcluidas.length ? linhasConcluidas.join('\n') : '- Nenhuma',
           '',
           'Tarefas pendentes:',
-          linhasPendentes.length ? linhasPendentes.join('\n') : '- Nenhuma',
-          '',
-          'Responsabilidade da semana: ' + categoria.nome
+          linhasPendentes.length ? linhasPendentes.join('\n') : '- Nenhuma'
         ];
 
       if (linhasProatividade.length > 0) {
@@ -6865,7 +7258,7 @@
             tarefasCategoriaFeitas: [],
             doneTaskIds: []
           };
-        const resumo = calcularProgressoDiaCrianca(tarefasDiarias, tarefasCategoria, progress);
+        const resumo = calcularProgressoDiaCrianca(tarefasDiarias, tarefasCategoria, progress, categoria);
         const proatividadesHistorico = proatividadesDoDia.filter(function(item) {
           return item.criancaId === crianca.id && item.status !== 'pendente';
         });
@@ -7506,6 +7899,10 @@
         title.className = 'fluxos-card-title';
         title.textContent = 'Tarefas da ' + categoria.nome;
 
+        const meta = document.createElement('div');
+        meta.className = 'fluxos-small';
+        meta.textContent = 'Valor máximo diário: ' + obterAuraMaximaDiaCategoria(categoria) + ' Aura Coins';
+
         const actions = document.createElement('div');
         actions.className = 'routine-child-actions';
 
@@ -7531,6 +7928,7 @@
         header.appendChild(title);
         header.appendChild(actions);
         card.appendChild(header);
+        card.appendChild(meta);
 
         getFluxosTarefasCategoria(categoria.id).forEach(function(task) {
           const row = document.createElement('div');
@@ -7647,6 +8045,7 @@
       categorias.push({
         id: gerarIdCategoriaFluxo(nomeLimpo),
         nome: nomeLimpo,
+        auraMaximaDia: 60,
         tarefas: [],
         ativa: true
       });
@@ -7682,8 +8081,22 @@
         return;
       }
 
+      const auraText = prompt('Valor máximo diário da categoria (Aura Coins)', String(obterAuraMaximaDiaCategoria(categoria)));
+
+      if (auraText === null) {
+        return;
+      }
+
+      const auraMaximaDia = validarAuraMaximaDiaCategoria(auraText);
+
+      if (auraMaximaDia === null) {
+        alert('Informe um valor máximo diário maior ou igual a zero. Se deixar vazio, será usado 60.');
+        return;
+      }
+
       const nomeAntigo = categoria.nome;
       categoria.nome = nomeLimpo;
+      categoria.auraMaximaDia = auraMaximaDia;
       salvarCategoriasFluxos(categorias);
 
       if (currentChecklist && Array.isArray(currentChecklist.tasks)) {
