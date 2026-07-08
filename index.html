@@ -1254,6 +1254,101 @@
       font-weight: 900;
     }
 
+    .fluxos-collapsible-card {
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      background: #ffffff;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    }
+
+    .fluxos-collapsible-header {
+      display: grid;
+      width: 100%;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 14px 16px;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .fluxos-collapsible-header:hover {
+      background: #f8fafc;
+    }
+
+    .fluxos-collapsible-arrow {
+      display: inline-flex;
+      width: 22px;
+      height: 22px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #0f766e;
+      font-size: 0.86rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .fluxos-collapsible-title-area {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .fluxos-collapsible-title {
+      overflow: hidden;
+      color: #0f172a;
+      font-size: 1rem;
+      font-weight: 900;
+      line-height: 1.25;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .fluxos-collapsible-subtitle {
+      overflow: hidden;
+      color: #64748b;
+      font-size: 0.9rem;
+      font-weight: 700;
+      line-height: 1.35;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .fluxos-collapsible-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 24px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: #ccfbf1;
+      color: #0f766e;
+      font-size: 0.82rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .fluxos-collapsible-card.expanded .fluxos-collapsible-header {
+      background: #f8fafc;
+    }
+
+    .fluxos-collapsible-content {
+      display: grid;
+      gap: 12px;
+      padding: 14px 16px 16px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .fluxos-collapsible-content.hidden {
+      display: none;
+    }
+
     .fluxos-ranking-card {
       gap: 10px;
     }
@@ -2029,6 +2124,15 @@
         grid-template-columns: minmax(0, min(100%, 320px));
       }
 
+      .fluxos-collapsible-header {
+        grid-template-columns: auto minmax(0, 1fr);
+      }
+
+      .fluxos-collapsible-badge {
+        grid-column: 2;
+        justify-self: start;
+      }
+
       .template-preview-list {
         display: grid;
       }
@@ -2602,6 +2706,7 @@
     let fluxosCriancaSelecionadaId = null;
     let fluxosConfigInicialDraft = null;
     let fluxosHistoricoDataSelecionada = null;
+    let fluxosCollapsibleCounter = 0;
     let lastCompletedTaskAnimationId = null;
     let notificationRenderVersion = 0;
 
@@ -5910,6 +6015,94 @@
       return header;
     }
 
+    function criarCardRecolhivelFluxos(options) {
+      const config = options || {};
+      const card = document.createElement('section');
+      card.className = 'fluxos-collapsible-card';
+
+      const contentId = 'fluxos-collapsible-' + String(config.id || (++fluxosCollapsibleCounter))
+        .replace(/[^a-zA-Z0-9_-]/g, '-');
+      const headerButton = document.createElement('button');
+      headerButton.className = 'fluxos-collapsible-header';
+      headerButton.type = 'button';
+      headerButton.setAttribute('aria-expanded', 'false');
+      headerButton.setAttribute('aria-controls', contentId);
+
+      const arrow = document.createElement('span');
+      arrow.className = 'fluxos-collapsible-arrow';
+      arrow.textContent = '▸';
+
+      const titleArea = document.createElement('span');
+      titleArea.className = 'fluxos-collapsible-title-area';
+
+      const title = document.createElement('span');
+      title.className = 'fluxos-collapsible-title';
+      title.textContent = config.titulo || 'Seção';
+      titleArea.appendChild(title);
+
+      if (config.subtitulo) {
+        const subtitle = document.createElement('span');
+        subtitle.className = 'fluxos-collapsible-subtitle';
+        subtitle.textContent = config.subtitulo;
+        titleArea.appendChild(subtitle);
+      }
+
+      headerButton.appendChild(arrow);
+      headerButton.appendChild(titleArea);
+
+      if (config.badge) {
+        const badge = document.createElement('span');
+        badge.className = 'fluxos-collapsible-badge';
+        badge.textContent = config.badge;
+        headerButton.appendChild(badge);
+      }
+
+      const content = document.createElement('div');
+      content.className = 'fluxos-collapsible-content hidden';
+      content.id = contentId;
+      content.setAttribute('role', 'region');
+
+      if (config.conteudo) {
+        if (config.removerCabecalhoConteudo) {
+          const firstChild = config.conteudo.firstElementChild;
+
+          if (
+            firstChild &&
+            (firstChild.classList.contains('fluxos-card-title') || firstChild.classList.contains('routine-children-header'))
+          ) {
+            firstChild.remove();
+          }
+        }
+
+        if (config.conteudoVazioTexto && !config.conteudo.childElementCount && !String(config.conteudo.textContent || '').trim()) {
+          const emptyText = document.createElement('p');
+          emptyText.className = 'muted';
+          emptyText.textContent = config.conteudoVazioTexto;
+          config.conteudo.appendChild(emptyText);
+        }
+
+        while (config.conteudo.firstChild) {
+          content.appendChild(config.conteudo.firstChild);
+        }
+      }
+
+      headerButton.addEventListener('click', function() {
+        const expanded = headerButton.getAttribute('aria-expanded') !== 'true';
+        headerButton.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        arrow.textContent = expanded ? '▾' : '▸';
+        content.classList.toggle('hidden', !expanded);
+        card.classList.toggle('expanded', expanded);
+      });
+
+      card.appendChild(headerButton);
+      card.appendChild(content);
+      return card;
+    }
+
+    function anexarCardRecolhivelFluxos(options) {
+      fluxosContent.appendChild(criarCardRecolhivelFluxos(options));
+    }
+
     function criarConfigPadraoEditavel() {
       const config = carregarConfigFluxosCasa();
       const dailyKey = getFluxosTarefasDiariasKey();
@@ -7226,7 +7419,15 @@
         card.appendChild(list);
       }
 
-      fluxosContent.appendChild(card);
+      anexarCardRecolhivelFluxos({
+        id: 'notificacoes',
+        titulo: 'Notificações',
+        subtitulo: pendentes.length ? 'Proatividades aguardando análise.' : 'Nenhuma proatividade pendente.',
+        badge: pendentes.length ? pendentes.length + ' pendentes' : '',
+        conteudo: card,
+        removerCabecalhoConteudo: true,
+        conteudoVazioTexto: 'Nenhuma proatividade pendente.'
+      });
     }
 
     function formatarDataCompletaFluxos(data) {
@@ -7324,7 +7525,13 @@
         emptyText.className = 'muted';
         emptyText.textContent = 'Nenhum registro encontrado para esta data.';
         card.appendChild(emptyText);
-        fluxosContent.appendChild(card);
+        anexarCardRecolhivelFluxos({
+          id: 'historico',
+          titulo: 'Histórico',
+          subtitulo: formatarDataCompletaFluxos(dataSelecionada),
+          conteudo: card,
+          removerCabecalhoConteudo: true
+        });
         return;
       }
 
@@ -7390,7 +7597,13 @@
       });
 
       card.appendChild(list);
-      fluxosContent.appendChild(card);
+      anexarCardRecolhivelFluxos({
+        id: 'historico',
+        titulo: 'Histórico',
+        subtitulo: formatarDataCompletaFluxos(dataSelecionada),
+        conteudo: card,
+        removerCabecalhoConteudo: true
+      });
     }
 
     function renderConfiguracoesRotinaResponsavel() {
@@ -7414,7 +7627,13 @@
       card.appendChild(title);
       card.appendChild(text);
       card.appendChild(button);
-      fluxosContent.appendChild(card);
+      anexarCardRecolhivelFluxos({
+        id: 'configuracao-rotina',
+        titulo: 'Configuração da rotina',
+        subtitulo: 'Nome atual: ' + obterNomeRotinaFluxos(),
+        conteudo: card,
+        removerCabecalhoConteudo: true
+      });
     }
 
     async function editarNomeRotinaFluxos() {
@@ -7516,7 +7735,13 @@
       card.appendChild(penaltiesLabel);
       card.appendChild(noteLabel);
       card.appendChild(saveButton);
-      fluxosContent.appendChild(card);
+      anexarCardRecolhivelFluxos({
+        id: 'beneficios-penalidades',
+        titulo: 'Benefícios e Penalidades',
+        subtitulo: 'Regras do combinado da casa',
+        conteudo: card,
+        removerCabecalhoConteudo: true
+      });
     }
 
     function salvarCombinadosResponsavel(combinados) {
@@ -7559,7 +7784,13 @@
       card.appendChild(title);
       card.appendChild(text);
       card.appendChild(button);
-      fluxosContent.appendChild(card);
+      anexarCardRecolhivelFluxos({
+        id: 'pin-modo-crianca',
+        titulo: 'PIN do Modo Criança',
+        subtitulo: carregarPinModoCrianca() ? 'PIN configurado' : 'PIN ainda não configurado',
+        conteudo: card,
+        removerCabecalhoConteudo: true
+      });
     }
 
     function renderEscalaResponsavelFluxos() {
@@ -7613,7 +7844,13 @@
 
       actions.appendChild(resetButton);
       card.appendChild(actions);
-      fluxosContent.appendChild(card);
+      anexarCardRecolhivelFluxos({
+        id: 'escala-semana',
+        titulo: 'Escala da semana',
+        subtitulo: formatarSemanaParaExibicao(escolhas.semana),
+        conteudo: card,
+        removerCabecalhoConteudo: true
+      });
     }
 
     function corrigirResponsavelFluxo(categoryId, childId) {
@@ -7704,7 +7941,13 @@
       card.appendChild(title);
       card.appendChild(list);
       card.appendChild(addArea);
-      fluxosContent.appendChild(card);
+      anexarCardRecolhivelFluxos({
+        id: 'criancas-rotina',
+        titulo: 'Crianças da rotina',
+        subtitulo: carregarCriancasRotina().length + ' cadastradas',
+        conteudo: card,
+        removerCabecalhoConteudo: true
+      });
     }
 
     function renderTarefasDiariasResponsavel() {
@@ -7803,7 +8046,13 @@
       card.appendChild(title);
       card.appendChild(list);
       card.appendChild(addArea);
-      fluxosContent.appendChild(card);
+      anexarCardRecolhivelFluxos({
+        id: 'tarefas-diarias',
+        titulo: 'Tarefas diárias',
+        subtitulo: tarefas.length + ' tarefas cadastradas',
+        conteudo: card,
+        removerCabecalhoConteudo: true
+      });
     }
 
     function adicionarTarefaDiaria(titulo, aura) {
@@ -7889,6 +8138,7 @@
 
     function renderEditorTarefasFluxos() {
       getFluxosCategoriasPadrao().forEach(function(categoria) {
+        const tarefasDaCategoria = getFluxosTarefasCategoria(categoria.id);
         const card = document.createElement('div');
         card.className = 'fluxos-card';
 
@@ -7930,7 +8180,7 @@
         card.appendChild(header);
         card.appendChild(meta);
 
-        getFluxosTarefasCategoria(categoria.id).forEach(function(task) {
+        tarefasDaCategoria.forEach(function(task) {
           const row = document.createElement('div');
           row.className = 'fluxos-task';
 
@@ -7981,7 +8231,12 @@
         addArea.appendChild(label);
         addArea.appendChild(addButton);
         card.appendChild(addArea);
-        fluxosContent.appendChild(card);
+        anexarCardRecolhivelFluxos({
+          id: 'tarefas-categoria-' + categoria.id,
+          titulo: 'Tarefas da ' + categoria.nome,
+          subtitulo: tarefasDaCategoria.length + ' tarefas • máximo diário ' + obterAuraMaximaDiaCategoria(categoria) + ' coins',
+          conteudo: card
+        });
       });
 
       renderAdicionarCategoriaFluxos();
@@ -8018,7 +8273,13 @@
       addArea.appendChild(addButton);
       card.appendChild(title);
       card.appendChild(addArea);
-      fluxosContent.appendChild(card);
+      anexarCardRecolhivelFluxos({
+        id: 'novo-fluxo',
+        titulo: 'Novo fluxo da casa',
+        subtitulo: 'Adicionar outro ambiente ou responsabilidade',
+        conteudo: card,
+        removerCabecalhoConteudo: true
+      });
     }
 
     function categoriaFluxoDuplicada(nome, categorias, ignoredId) {
