@@ -1256,24 +1256,26 @@
 
     .fluxos-collapsible-card {
       overflow: hidden;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #dbe4ee;
       border-radius: 14px;
       background: #ffffff;
       box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
     }
 
     .fluxos-collapsible-header {
+      position: relative;
       display: grid;
       width: 100%;
-      grid-template-columns: auto minmax(0, 1fr) auto;
-      gap: 10px;
+      grid-template-columns: minmax(56px, 1fr) minmax(0, 2fr) minmax(56px, 1fr);
+      gap: 12px;
       align-items: center;
-      padding: 14px 16px;
+      padding: 16px;
       border: 0;
-      background: transparent;
+      background: #ffffff;
       color: inherit;
-      text-align: left;
+      text-align: center;
       cursor: pointer;
+      transition: background 0.2s ease;
     }
 
     .fluxos-collapsible-header:hover {
@@ -1282,48 +1284,49 @@
 
     .fluxos-collapsible-arrow {
       display: inline-flex;
-      width: 22px;
-      height: 22px;
+      width: 24px;
+      height: 24px;
       align-items: center;
       justify-content: center;
+      justify-self: start;
       border-radius: 999px;
       background: #f1f5f9;
       color: #0f766e;
-      font-size: 0.86rem;
+      font-size: 0.8rem;
       font-weight: 900;
       line-height: 1;
     }
 
     .fluxos-collapsible-title-area {
       display: grid;
-      gap: 2px;
+      gap: 3px;
       min-width: 0;
+      grid-column: 2;
+      justify-items: center;
+      text-align: center;
     }
 
     .fluxos-collapsible-title {
-      overflow: hidden;
       color: #0f172a;
-      font-size: 1rem;
+      font-size: 1.03rem;
       font-weight: 900;
-      line-height: 1.25;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      line-height: 1.3;
+      overflow-wrap: anywhere;
     }
 
     .fluxos-collapsible-subtitle {
-      overflow: hidden;
       color: #64748b;
-      font-size: 0.9rem;
+      font-size: 0.86rem;
       font-weight: 700;
       line-height: 1.35;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      overflow-wrap: anywhere;
     }
 
     .fluxos-collapsible-badge {
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      justify-self: end;
       min-height: 24px;
       padding: 3px 9px;
       border-radius: 999px;
@@ -1340,13 +1343,58 @@
 
     .fluxos-collapsible-content {
       display: grid;
-      gap: 12px;
-      padding: 14px 16px 16px;
-      border-top: 1px solid #e2e8f0;
+      gap: 16px;
+      padding: 20px;
+      border-top: 1px solid #dbe4ee;
+      background: #ffffff;
     }
 
     .fluxos-collapsible-content.hidden {
       display: none;
+    }
+
+    .fluxos-collapsible-content .routine-children-list {
+      gap: 10px;
+    }
+
+    .fluxos-collapsible-content .routine-child-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      padding: 14px 16px;
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
+    .fluxos-collapsible-content .routine-child-item > :first-child {
+      min-width: 0;
+    }
+
+    .fluxos-collapsible-content .routine-child-actions {
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .fluxos-collapsible-content .routine-child-actions .btn-ghost,
+    .fluxos-collapsible-content .fluxos-task > .btn-ghost {
+      min-width: 72px;
+      border-color: #dbe4ee;
+      background: #ffffff;
+    }
+
+    .fluxos-collapsible-content .routine-child-actions .btn-ghost.danger,
+    .fluxos-collapsible-content .fluxos-task > .btn-ghost.danger {
+      border-color: #fecaca;
+      background: #fffafa;
+    }
+
+    .fluxos-collapsible-content .fluxos-task {
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      background: #f8fafc;
     }
 
     .fluxos-ranking-card {
@@ -2125,12 +2173,59 @@
       }
 
       .fluxos-collapsible-header {
-        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-columns: 28px minmax(0, 1fr) 28px;
+        gap: 8px;
+        padding: 14px 12px;
+      }
+
+      .fluxos-collapsible-arrow {
+        grid-column: 1;
+        grid-row: 1 / span 2;
+      }
+
+      .fluxos-collapsible-title-area {
+        grid-column: 2;
+        grid-row: 1;
       }
 
       .fluxos-collapsible-badge {
         grid-column: 2;
-        justify-self: start;
+        grid-row: 2;
+        justify-self: center;
+      }
+
+      .fluxos-collapsible-content {
+        gap: 14px;
+        padding: 16px 12px;
+      }
+
+      .fluxos-collapsible-content .routine-child-item {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 14px;
+      }
+
+      .fluxos-collapsible-content .routine-child-actions {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .fluxos-collapsible-content .routine-child-actions .btn-ghost {
+        flex: 1 1 110px;
+      }
+
+      .fluxos-collapsible-content .fluxos-task {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 14px;
+      }
+
+      .fluxos-collapsible-content .fluxos-task > :first-child {
+        grid-column: 1 / -1;
+      }
+
+      .fluxos-collapsible-content .fluxos-task > select,
+      .fluxos-collapsible-content .fluxos-task > .btn-ghost {
+        width: 100%;
       }
 
       .template-preview-list {
@@ -2707,6 +2802,7 @@
     let fluxosConfigInicialDraft = null;
     let fluxosHistoricoDataSelecionada = null;
     let fluxosCollapsibleCounter = 0;
+    let fluxosCardsRecolhiveisAbertos = new Set();
     let lastCompletedTaskAnimationId = null;
     let notificationRenderVersion = 0;
 
@@ -6018,19 +6114,22 @@
     function criarCardRecolhivelFluxos(options) {
       const config = options || {};
       const card = document.createElement('section');
+      const cardStateId = config.id ? String(config.id) : '';
+      const expanded = cardStateId ? fluxosCardsRecolhiveisAbertos.has(cardStateId) : false;
       card.className = 'fluxos-collapsible-card';
+      card.classList.toggle('expanded', expanded);
 
-      const contentId = 'fluxos-collapsible-' + String(config.id || (++fluxosCollapsibleCounter))
+      const contentId = 'fluxos-collapsible-' + String(cardStateId || (++fluxosCollapsibleCounter))
         .replace(/[^a-zA-Z0-9_-]/g, '-');
       const headerButton = document.createElement('button');
       headerButton.className = 'fluxos-collapsible-header';
       headerButton.type = 'button';
-      headerButton.setAttribute('aria-expanded', 'false');
+      headerButton.setAttribute('aria-expanded', expanded ? 'true' : 'false');
       headerButton.setAttribute('aria-controls', contentId);
 
       const arrow = document.createElement('span');
       arrow.className = 'fluxos-collapsible-arrow';
-      arrow.textContent = '▸';
+      arrow.textContent = expanded ? '▾' : '▸';
 
       const titleArea = document.createElement('span');
       titleArea.className = 'fluxos-collapsible-title-area';
@@ -6058,7 +6157,8 @@
       }
 
       const content = document.createElement('div');
-      content.className = 'fluxos-collapsible-content hidden';
+      content.className = 'fluxos-collapsible-content';
+      content.classList.toggle('hidden', !expanded);
       content.id = contentId;
       content.setAttribute('role', 'region');
 
@@ -6087,11 +6187,20 @@
       }
 
       headerButton.addEventListener('click', function() {
-        const expanded = headerButton.getAttribute('aria-expanded') !== 'true';
-        headerButton.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-        arrow.textContent = expanded ? '▾' : '▸';
-        content.classList.toggle('hidden', !expanded);
-        card.classList.toggle('expanded', expanded);
+        const shouldExpand = headerButton.getAttribute('aria-expanded') !== 'true';
+
+        if (cardStateId) {
+          if (shouldExpand) {
+            fluxosCardsRecolhiveisAbertos.add(cardStateId);
+          } else {
+            fluxosCardsRecolhiveisAbertos.delete(cardStateId);
+          }
+        }
+
+        headerButton.setAttribute('aria-expanded', shouldExpand ? 'true' : 'false');
+        arrow.textContent = shouldExpand ? '▾' : '▸';
+        content.classList.toggle('hidden', !shouldExpand);
+        card.classList.toggle('expanded', shouldExpand);
       });
 
       card.appendChild(headerButton);
@@ -6690,7 +6799,10 @@
       parentButton.className = 'btn secondary';
       parentButton.type = 'button';
       parentButton.textContent = 'Modo Responsável';
-      parentButton.addEventListener('click', renderModoResponsavelFluxos);
+      parentButton.addEventListener('click', function() {
+        fluxosCardsRecolhiveisAbertos.clear();
+        renderModoResponsavelFluxos();
+      });
 
       actions.appendChild(childButton);
       actions.appendChild(parentButton);
