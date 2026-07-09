@@ -5621,6 +5621,7 @@
 
       await salvarChecklist(currentChecklist);
       await salvarTarefas(currentChecklist);
+      garantirResetSemanalFluxos();
       return currentChecklist;
     }
 
@@ -5690,6 +5691,213 @@
         JSON.stringify(escolhasSemana)
       );
       return escolhasSemana;
+    }
+
+    function getFluxosSugestoesSemanaKey(semana) {
+      return getFluxosStorageKey('sugestoes-' + (semana || obterSemanaAtual()));
+    }
+
+    function carregarSugestoesSemanaFluxos(semana) {
+      const weekKey = semana || obterSemanaAtual();
+
+      try {
+        const savedData = localStorage.getItem(getFluxosSugestoesSemanaKey(weekKey));
+        const data = savedData ? JSON.parse(savedData) : {};
+        return {
+          semana: weekKey,
+          sugestoes: data.sugestoes && typeof data.sugestoes === 'object' ? data.sugestoes : {},
+          criadaEm: data.criadaEm || null
+        };
+      } catch (error) {
+        console.warn('Sugestões da semana não carregadas:', error);
+        return {
+          semana: weekKey,
+          sugestoes: {},
+          criadaEm: null
+        };
+      }
+    }
+
+    function salvarSugestoesSemanaFluxos(semana, sugestoes) {
+      const weekKey = semana || obterSemanaAtual();
+      const dados = sugestoes && sugestoes.sugestoes
+        ? sugestoes
+        : {
+          semana: weekKey,
+          sugestoes: sugestoes || {},
+          criadaEm: new Date().toISOString()
+        };
+      const registro = {
+        semana: weekKey,
+        sugestoes: dados.sugestoes && typeof dados.sugestoes === 'object' ? dados.sugestoes : {},
+        criadaEm: dados.criadaEm || new Date().toISOString()
+      };
+
+      localStorage.setItem(getFluxosSugestoesSemanaKey(weekKey), JSON.stringify(registro));
+      return registro;
+    }
+
+    function obterSemanaAnteriorFluxos(semana) {
+      const periodo = obterPeriodoSemanaPorChave(semana || obterSemanaAtual());
+
+      if (!periodo) {
+        return null;
+      }
+
+      const dataAnterior = new Date(periodo.inicio);
+      dataAnterior.setUTCHours(12, 0, 0, 0);
+      dataAnterior.setUTCDate(dataAnterior.getUTCDate() - 7);
+      return obterSemanaAtual(dataAnterior);
+    }
+
+    function gerarSugestoesSemanaFluxos(semana) {
+      const weekKey = semana || obterSemanaAtual();
+      const escolhasAtuais = carregarEscolhasSemana(weekKey);
+      const criancas = carregarCriancasRotina();
+      const categorias = getFluxosCategoriasPadrao();
+      const semanaAnterior = obterSemanaAnteriorFluxos(weekKey);
+      const escolhasAnteriores = semanaAnterior
+        ? carregarEscolhasSemana(semanaAnterior)
+        : { semana: null, escolhas: {} };
+      const categoriasOcupadas = new Set(Object.keys(escolhasAtuais.escolhas).filter(function(categoryId) {
+        return Boolean(escolhasAtuais.escolhas[categoryId]);
+      }));
+      const criancasConfirmadas = new Set(Object.keys(escolhasAtuais.escolhas).map(function(categoryId) {
+        return escolhasAtuais.escolhas[categoryId];
+      }).filter(Boolean));
+      const categoriasDisponiveis = categorias.filter(function(categoria) {
+        return !categoriasOcupadas.has(categoria.id);
+      });
+      const sugestoes = {};
+
+      criancas.forEach(function(crianca) {
+        if (criancasConfirmadas.has(crianca.id) || categoriasDisponiveis.length === 0) {
+          return;
+        }
+
+        const categoriaAnterior = obterCategoriaDaCriancaNaSemana(crianca.id, escolhasAnteriores);
+        const alternativas = categoriasDisponiveis.filter(function(categoria) {
+          return categoria.id !== categoriaAnterior;
+        });
+        const opcoes = alternativas.length > 0 ? alternativas : categoriasDisponiveis;
+        const sorteada = opcoes[Math.floor(Math.random() * opcoes.length)];
+
+        if (!sorteada) {
+          return;
+        }
+
+        sugestoes[crianca.id] = sorteada.id;
+        const indexDisponivel = categoriasDisponiveis.findIndex(function(categoria) {
+          return categoria.id === sorteada.id;
+        });
+
+        if (indexDisponivel !== -1) {
+          categoriasDisponiveis.splice(indexDisponivel, 1);
+        }
+      });
+
+      return salvarSugestoesSemanaFluxos(weekKey, {
+        semana: weekKey,
+        sugestoes: sugestoes,
+        criadaEm: new Date().toISOString()
+      });
+    }
+
+    function getFluxosUltimaSemanaResetadaKey() {
+      return getFluxosStorageKey('ultima-semana-resetada');
+    }
+
+    function carregarUltimaSemanaResetadaFluxos() {
+      return localStorage.getItem(getFluxosUltimaSemanaResetadaKey()) || null;
+    }
+
+    function salvarUltimaSemanaResetadaFluxos(semanaKey) {
+      localStorage.setItem(getFluxosUltimaSemanaResetadaKey(), semanaKey);
+      return semanaKey;
+    }
+
+    function resetarPontuacaoSemanaFluxos(semanaKey, motivo) {
+      const weekKey = semanaKey || obterSemanaAtual();
+      const datasSemana = obterDatasDaSemanaAtual(weekKey);
+      const criancas = carregarCriancasRotina();
+      const categorias = getFluxosCategoriasPadrao();
+
+      datasSemana.forEach(function(dateKey) {
+        criancas.forEach(function(crianca) {
+          localStorage.removeItem(
+            getFluxosStorageKey('progresso-diario-' + dateKey + '-' + crianca.id)
+          );
+
+          categorias.forEach(function(categoria) {
+            localStorage.removeItem(
+              getFluxosStorageKey('progresso-categoria-' + weekKey + '-' + dateKey + '-' + crianca.id + '-' + categoria.id)
+            );
+            localStorage.removeItem(
+              getFluxosStorageKey('progresso-' + weekKey + '-' + dateKey + '-' + crianca.id + '-' + categoria.id)
+            );
+          });
+        });
+      });
+
+      const proatividades = carregarProatividadesFluxos();
+      let proatividadesAlteradas = false;
+      const proatividadesAtualizadas = proatividades.map(function(item) {
+        if (item.semana !== weekKey || item.resetadaDaPontuacao === true) {
+          return item;
+        }
+
+        proatividadesAlteradas = true;
+        return {
+          ...item,
+          resetadaDaPontuacao: true
+        };
+      });
+
+      if (proatividadesAlteradas) {
+        salvarProatividadesFluxos(proatividadesAtualizadas);
+      }
+
+      if (motivo === 'virada-semana') {
+        salvarEscolhasSemana({
+          semana: weekKey,
+          escolhas: {}
+        });
+      }
+
+      return true;
+    }
+
+    function garantirResetSemanalFluxos() {
+      const semanaAtual = obterSemanaAtual();
+      const ultimaSemanaResetada = carregarUltimaSemanaResetadaFluxos();
+      const escolhasAtuais = carregarEscolhasSemana(semanaAtual);
+      const sugestoesAtuais = carregarSugestoesSemanaFluxos(semanaAtual);
+      const temEscolhaConfirmada = Object.keys(escolhasAtuais.escolhas).some(function(categoryId) {
+        return Boolean(escolhasAtuais.escolhas[categoryId]);
+      });
+
+      if (!ultimaSemanaResetada) {
+        salvarUltimaSemanaResetadaFluxos(semanaAtual);
+
+        if (!temEscolhaConfirmada && !sugestoesAtuais.criadaEm) {
+          gerarSugestoesSemanaFluxos(semanaAtual);
+        }
+
+        return false;
+      }
+
+      if (ultimaSemanaResetada !== semanaAtual) {
+        resetarPontuacaoSemanaFluxos(semanaAtual, 'virada-semana');
+        gerarSugestoesSemanaFluxos(semanaAtual);
+        salvarUltimaSemanaResetadaFluxos(semanaAtual);
+        return true;
+      }
+
+      if (!temEscolhaConfirmada && !sugestoesAtuais.criadaEm) {
+        gerarSugestoesSemanaFluxos(semanaAtual);
+      }
+
+      return false;
     }
 
     function obterCriancaFluxos(childId) {
@@ -5918,6 +6126,7 @@
       const aprovadas = lista.filter(function(item) {
         return item.criancaId === criancaId &&
           item.semana === weekKey &&
+          item.resetadaDaPontuacao !== true &&
           (item.status === 'aprovada' || item.status === 'reconhecida');
       });
 
@@ -6053,7 +6262,8 @@
         dataCriacao: dados.dataCriacao || dados.createdAt || new Date().toISOString(),
         dataAprovacao: dados.dataAprovacao || dados.approvedAt || null,
         data: dados.data || getTodayDate(),
-        semana: dados.semana || obterSemanaAtual()
+        semana: dados.semana || obterSemanaAtual(),
+        resetadaDaPontuacao: dados.resetadaDaPontuacao === true
       };
     }
 
@@ -7202,6 +7412,7 @@
     }
 
     function renderTelaInicialFluxos() {
+      garantirResetSemanalFluxos();
       childModeActive = false;
       fluxosCriancaSelecionadaId = null;
       limparFluxosContent();
@@ -7246,6 +7457,8 @@
     }
 
     function renderModoCriancaFluxos() {
+      garantirResetSemanalFluxos();
+
       if (!garantirPinModoCrianca()) {
         renderTelaInicialFluxos();
         return;
@@ -7334,6 +7547,7 @@
     }
 
     function renderFluxosCriancaSelecionada() {
+      garantirResetSemanalFluxos();
       limparFluxosContent();
 
       const crianca = obterCriancaFluxos(fluxosCriancaSelecionadaId);
@@ -7475,36 +7689,76 @@
 
       const title = document.createElement('div');
       title.className = 'fluxos-card-title';
-      title.textContent = 'Qual missão você vai assumir esta semana?';
-
-      const grid = document.createElement('div');
-      grid.className = 'fluxos-grid';
-
-      getFluxosCategoriasPadrao().forEach(function(categoria) {
-        const assignedChildId = escolhas.escolhas[categoria.id];
-        const available = !assignedChildId;
-        const button = document.createElement('button');
-        button.className = 'fluxos-choice ' + (available ? 'available' : 'occupied');
-        button.type = 'button';
-        button.disabled = !available;
-        button.textContent = categoria.nome;
-
-        const status = document.createElement('span');
-        status.textContent = available ? 'Disponível' : 'Ocupada por ' + obterNomeCriancaFluxos(assignedChildId);
-        button.appendChild(status);
-
-        if (available) {
-          button.addEventListener('click', function() {
-            atribuirCategoriaFluxos(crianca.id, categoria.id);
-            renderFluxosCriancaSelecionada();
-          });
-        }
-
-        grid.appendChild(button);
-      });
+      title.textContent = 'Nova semana, nova missão!';
 
       card.appendChild(title);
-      card.appendChild(grid);
+
+      const sugestoes = carregarSugestoesSemanaFluxos(escolhas.semana);
+      const categoryId = sugestoes.sugestoes[crianca.id] || null;
+      const categoria = categoryId
+        ? getFluxosCategoriasPadrao().find(function(item) {
+          return item.id === categoryId;
+        })
+        : null;
+      const categoriaOcupada = categoria && escolhas.escolhas[categoria.id] &&
+        escolhas.escolhas[categoria.id] !== crianca.id;
+
+      if (!categoria || categoriaOcupada) {
+        const unavailableText = document.createElement('p');
+        unavailableText.textContent = 'Nenhuma responsabilidade disponível para você agora.';
+
+        const helpText = document.createElement('p');
+        helpText.className = 'muted';
+        helpText.textContent = 'Peça ao responsável para ajustar a escala.';
+
+        card.appendChild(unavailableText);
+        card.appendChild(helpText);
+        fluxosContent.appendChild(card);
+        return;
+      }
+
+      const intro = document.createElement('p');
+      intro.textContent = crianca.nome + ', o sistema sorteou uma sugestão para você:';
+
+      const categoryName = document.createElement('div');
+      categoryName.className = 'fluxos-card-title';
+      categoryName.textContent = categoria.nome;
+
+      const assumeButton = document.createElement('button');
+      assumeButton.className = 'btn';
+      assumeButton.type = 'button';
+      assumeButton.textContent = 'Assumir ' + categoria.nome;
+      assumeButton.addEventListener('click', function() {
+        const escolhasAtualizadas = carregarEscolhasSemana(escolhas.semana);
+        const sugestoesAtualizadas = carregarSugestoesSemanaFluxos(escolhas.semana);
+        const categoriaJaConfirmada = obterCategoriaDaCriancaNaSemana(crianca.id, escolhasAtualizadas);
+        const responsavelAtual = escolhasAtualizadas.escolhas[categoria.id];
+
+        if (categoriaJaConfirmada) {
+          renderFluxosCriancaSelecionada();
+          return;
+        }
+
+        if (sugestoesAtualizadas.sugestoes[crianca.id] !== categoria.id) {
+          renderFluxosCriancaSelecionada();
+          return;
+        }
+
+        if (responsavelAtual && responsavelAtual !== crianca.id) {
+          gerarSugestoesSemanaFluxos(escolhas.semana);
+          renderFluxosCriancaSelecionada();
+          return;
+        }
+
+        atribuirCategoriaFluxos(crianca.id, categoria.id);
+        delete sugestoesAtualizadas.sugestoes[crianca.id];
+        salvarSugestoesSemanaFluxos(escolhas.semana, sugestoesAtualizadas);
+        renderFluxosCriancaSelecionada();
+      });
+
+      card.appendChild(intro);
+      card.appendChild(categoryName);
+      card.appendChild(assumeButton);
       fluxosContent.appendChild(card);
     }
 
@@ -7896,6 +8150,7 @@
     }
 
     function renderModoResponsavelFluxos() {
+      garantirResetSemanalFluxos();
       childModeActive = false;
       limparFluxosContent();
       fluxosContent.appendChild(criarFluxosHeader('Modo Responsável', 'Acompanhe a escala da semana e ajuste a rotina.', true));
@@ -8425,7 +8680,12 @@
     }
 
     function corrigirResponsavelFluxo(categoryId, childId) {
+      const semanaAtual = obterSemanaAtual();
       atribuirCategoriaFluxos(childId || null, categoryId);
+      resetarPontuacaoSemanaFluxos(semanaAtual, 'revezamento-manual');
+      gerarSugestoesSemanaFluxos(semanaAtual);
+      salvarUltimaSemanaResetadaFluxos(semanaAtual);
+      fluxosCardsRecolhiveisAbertos.add('escala-semana');
       renderModoResponsavelFluxos();
     }
 
@@ -8440,6 +8700,10 @@
         semana: obterSemanaAtual(),
         escolhas: {}
       });
+      resetarPontuacaoSemanaFluxos(obterSemanaAtual(), 'revezamento-manual');
+      gerarSugestoesSemanaFluxos(obterSemanaAtual());
+      salvarUltimaSemanaResetadaFluxos(obterSemanaAtual());
+      fluxosCardsRecolhiveisAbertos.add('escala-semana');
       renderModoResponsavelFluxos();
     }
 
@@ -9346,6 +9610,7 @@
       }
 
       await carregarConfigFluxos(checklistsSupabase);
+      garantirResetSemanalFluxos();
       const estadoModoCrianca = carregarEstadoModoCriancaFluxos();
       const criancaAtiva = estadoModoCrianca.ativo && estadoModoCrianca.criancaId
         ? obterCriancaFluxos(estadoModoCrianca.criancaId)
