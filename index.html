@@ -6115,8 +6115,10 @@
     }
 
     function formatarProatividadeRelatorio(item) {
-      const bonus = Number(item.bonusAura) || 0;
-      return '- ' + item.texto + ' (' + (bonus > 0 ? '+' + bonus + ' coins' : 'reconhecida sem coins') + ')';
+      const dados = item || {};
+      const texto = String(dados.texto || dados.title || dados.titulo || 'Proatividade').trim() || 'Proatividade';
+      const bonus = Number(dados.bonusAura) || 0;
+      return '- ' + texto + ' (' + (bonus > 0 ? '+' + bonus + ' coins' : 'reconhecida sem coins') + ')';
     }
 
     function getFluxosCombinadosKey() {
@@ -7751,7 +7753,9 @@
     }
 
     function obterTituloTarefaRelatorio(task) {
-      return task.titulo || task.name || task.nome || 'Tarefa';
+      const dados = task || {};
+      const titulo = dados.titulo || dados.title || dados.name || dados.nome || 'Tarefa';
+      return String(titulo).trim() || 'Tarefa';
     }
 
     function criarLinhasTarefasRelatorio(tarefas) {
@@ -7760,9 +7764,26 @@
       });
     }
 
-    function criarLinhasTarefasDiariasRelatorio(tarefas) {
-      return (Array.isArray(tarefas) ? tarefas : []).map(function(task) {
-        return '- ' + obterTituloTarefaRelatorio(task) + ' (+' + (Number(task.aura) || 10) + ')';
+    function obterChaveTarefaRelatorio(task) {
+      if (task && task.id !== undefined && task.id !== null) {
+        return 'id:' + String(task.id);
+      }
+
+      return 'titulo:' + obterTituloTarefaRelatorio(task);
+    }
+
+    function removerTarefasDuplicadasRelatorio(tarefas, chavesIgnoradas) {
+      const chaves = chavesIgnoradas || new Set();
+
+      return (Array.isArray(tarefas) ? tarefas : []).filter(function(task) {
+        const chave = obterChaveTarefaRelatorio(task);
+
+        if (chaves.has(chave)) {
+          return false;
+        }
+
+        chaves.add(chave);
+        return true;
       });
     }
 
@@ -7787,85 +7808,90 @@
     }
 
     function gerarRelatorioWhatsAppFluxo(crianca, categoria, resumo, tarefasDiarias, tarefasCategoria, tipoRelatorio) {
+      const categoriaAtual = categoria || null;
       const diarias = Array.isArray(tarefasDiarias) ? tarefasDiarias : carregarTarefasDiarias();
-      const categoriaTasks = Array.isArray(tarefasCategoria) ? tarefasCategoria : getFluxosTarefasCategoria(categoria.id);
+      const categoriaTasks = Array.isArray(tarefasCategoria)
+        ? tarefasCategoria
+        : (categoriaAtual ? getFluxosTarefasCategoria(categoriaAtual.id) : []);
       const tipo = tipoRelatorio || (resumo.total > 0 && resumo.done === resumo.total ? 'final' : (resumo.done === 0 ? 'vazio' : 'parcial'));
-      const tarefasConcluidas = obterTarefasConcluidasRelatorio(resumo);
-      const tarefasPendentes = obterTarefasPendentesRelatorio(resumo, diarias, categoriaTasks);
-      const proatividadesAprovadas = Array.isArray(resumo.proatividadesAprovadas)
+      const chavesConcluidas = new Set();
+      const tarefasConcluidas = removerTarefasDuplicadasRelatorio(
+        obterTarefasConcluidasRelatorio(resumo),
+        chavesConcluidas
+      );
+      const tarefasPendentes = removerTarefasDuplicadasRelatorio(
+        obterTarefasPendentesRelatorio(resumo, diarias, categoriaTasks),
+        chavesConcluidas
+      );
+      const proatividadesRelatorio = (Array.isArray(resumo.proatividadesAprovadas)
         ? resumo.proatividadesAprovadas
-        : obterProatividadesAprovadasDoDiaCrianca(crianca.id, getTodayDate());
-      const linhasProatividade = proatividadesAprovadas.map(formatarProatividadeRelatorio);
-      const auraTotal = Number(resumo.auraTotal) || (Number(resumo.aura) || 0) + calcularBonusProatividadeFluxos(proatividadesAprovadas);
-      const linhasConcluidas = criarLinhasTarefasRelatorio(tarefasConcluidas);
+        : obterProatividadesAprovadasDoDiaCrianca(crianca && crianca.id ? crianca.id : '', getTodayDate()))
+        .filter(function(item) {
+          return item && (item.status === 'aprovada' || item.status === 'reconhecida');
+        });
+      const linhasProatividade = proatividadesRelatorio.map(formatarProatividadeRelatorio);
+      const auraTotal = Number(resumo.auraTotal) ||
+        (Number(resumo.aura) || 0) + calcularBonusProatividadeFluxos(proatividadesRelatorio);
       const linhasPendentes = criarLinhasTarefasRelatorio(tarefasPendentes);
-      const linhasDiariasFeitas = criarLinhasTarefasDiariasRelatorio(resumo.tarefasDiariasFeitas);
-      const linhasDiariasPendentes = criarLinhasTarefasRelatorio(resumo.tarefasDiariasPendentes);
-      const linhasCategoriaFeitas = criarLinhasTarefasRelatorio(resumo.tarefasCategoriaFeitas);
-      const linhasCategoriaPendentes = criarLinhasTarefasRelatorio(resumo.tarefasCategoriaPendentes);
-      const categoriaFeitas = Number(resumo.categoriaFeitas) || 0;
-      const categoriaTotal = Number(resumo.categoriaTotal) || categoriaTasks.length;
-      const auraCategoria = resumo.auraCategoria !== undefined ? Number(resumo.auraCategoria) || 0 : 0;
-      const auraCategoriaMaxima = resumo.auraCategoriaMaxima !== undefined
-        ? Number(resumo.auraCategoriaMaxima) || 0
-        : obterAuraMaximaDiaCategoria(categoria);
-      const linhas = tipo === 'final'
-        ? [
-          'Tudo pronto!',
-          crianca.nome + ' concluiu todas as missões do dia.',
+      const nomeCrianca = crianca && crianca.nome ? crianca.nome : 'Criança';
+      const nomeCategoria = categoriaAtual && categoriaAtual.nome ? categoriaAtual.nome : 'Não definida';
+      let linhas;
+
+      if (tipo === 'final') {
+        linhas = [
+          'Relatório final - ' + nomeCrianca,
           '',
-          'Progresso: 100%',
-          'Feitas: ' + resumo.done + '/' + resumo.total,
-          'Aura conquistada: ' + auraTotal + ' coins',
+          nomeCrianca + ' concluiu todas as ' + resumo.total + ' missões de hoje.',
+          'Aura conquistada: ' + auraTotal + ' coins.',
+          'Responsabilidade da semana: ' + nomeCategoria + '.'
+        ];
+      } else if (tipo === 'vazio') {
+        linhas = [
+          'Relatório do dia - ' + nomeCrianca,
           '',
-          'Tarefas diárias:',
-          linhasDiariasFeitas.length ? linhasDiariasFeitas.join('\n') : '- Nenhuma',
-          '',
-          'Responsabilidade da semana: ' + categoria.nome,
-          'Progresso da responsabilidade: ' + categoriaFeitas + '/' + categoriaTotal,
-          'Aura da responsabilidade: ' + auraCategoria + ' de ' + auraCategoriaMaxima + ' coins',
-          '',
-          'Tarefas da responsabilidade:',
-          linhasCategoriaFeitas.length ? linhasCategoriaFeitas.join('\n') : '- Nenhuma'
-        ]
-        : [
-          'Relatório do dia',
-          crianca.nome + (tipo === 'vazio' ? ' ainda não concluiu missões.' : ' concluiu parte das missões.'),
-          '',
-          'Progresso: ' + resumo.percent + '%',
-          'Feitas: ' + resumo.done + '/' + resumo.total,
-          'Aura conquistada: ' + auraTotal + ' coins',
-          '',
-          'Tarefas diárias concluídas:',
-          linhasDiariasFeitas.length ? linhasDiariasFeitas.join('\n') : '- Nenhuma',
-          '',
-          'Tarefas diárias pendentes:',
-          linhasDiariasPendentes.length ? linhasDiariasPendentes.join('\n') : '- Nenhuma',
-          '',
-          'Responsabilidade da semana: ' + categoria.nome,
-          'Progresso da responsabilidade: ' + categoriaFeitas + '/' + categoriaTotal,
-          'Aura da responsabilidade: ' + auraCategoria + ' de ' + auraCategoriaMaxima + ' coins',
-          '',
-          'Tarefas da responsabilidade concluídas:',
-          linhasCategoriaFeitas.length ? linhasCategoriaFeitas.join('\n') : '- Nenhuma',
-          '',
-          'Tarefas da responsabilidade pendentes:',
-          linhasCategoriaPendentes.length ? linhasCategoriaPendentes.join('\n') : '- Nenhuma',
-          '',
-          'Tarefas concluídas:',
-          linhasConcluidas.length ? linhasConcluidas.join('\n') : '- Nenhuma',
-          '',
-          'Tarefas pendentes:',
-          linhasPendentes.length ? linhasPendentes.join('\n') : '- Nenhuma'
+          nomeCrianca + ' ainda não concluiu nenhuma missão hoje.',
+          'Responsabilidade da semana: ' + nomeCategoria + '.',
+          'Aura conquistada até agora: ' + auraTotal + ' coins.'
         ];
 
-      if (linhasProatividade.length > 0) {
-        linhas.push('', 'Proatividade:', linhasProatividade.join('\n'));
+        if (linhasPendentes.length > 0) {
+          linhas.push('', 'Ainda faltam:');
+          linhas.push(...linhasPendentes);
+        }
+      } else {
+        linhas = [
+          'Relatório do dia - ' + nomeCrianca,
+          '',
+          nomeCrianca + ' fez ' + resumo.done + ' de ' + resumo.total + ' missões hoje.',
+          'Conquistou ' + auraTotal + ' Aura Coins.',
+          'Responsabilidade da semana: ' + nomeCategoria + '.'
+        ];
+
+        if (linhasPendentes.length > 0) {
+          linhas.push('', 'Ainda faltam:');
+          linhas.push(...linhasPendentes);
+        }
       }
 
-      const text = linhas.join('\n');
+      if (linhasProatividade.length > 0) {
+        linhas.push('', 'Proatividade reconhecida:');
+        linhas.push(...linhasProatividade);
+      }
+
+      const mensagem = linhas.join('\n');
+      console.log('[RELATORIO WHATSAPP TEXTO FINAL]');
+      console.log(mensagem);
+
+      if (mensagem.indexOf('*') !== -1) {
+        console.warn('[RELATORIO WHATSAPP] ERRO: mensagem contém asterisco antes de abrir o WhatsApp.');
+      }
+
+      if (mensagem.indexOf('\uFFFD') !== -1) {
+        console.warn('[RELATORIO WHATSAPP] ERRO: mensagem contém caractere quebrado antes de abrir o WhatsApp.');
+      }
+
       const phone = (currentChecklist.whatsapp || '').replace(/\D/g, '');
-      const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(text);
+      const url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(mensagem);
       window.open(url, '_blank');
     }
 
