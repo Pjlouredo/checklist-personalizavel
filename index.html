@@ -1282,6 +1282,13 @@
       background: #f8fafc;
     }
 
+    .fluxos-collapsible-controls {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+      justify-self: start;
+    }
+
     .fluxos-collapsible-arrow {
       display: inline-flex;
       width: 24px;
@@ -1295,6 +1302,47 @@
       font-size: 0.8rem;
       font-weight: 900;
       line-height: 1;
+    }
+
+    .fluxos-card-drag-handle {
+      display: inline-flex;
+      width: 24px;
+      height: 28px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      color: #64748b;
+      font-size: 0.9rem;
+      font-weight: 900;
+      line-height: 1;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .fluxos-card-drag-handle:hover {
+      background: #e2e8f0;
+      color: #0f766e;
+    }
+
+    .fluxos-card-drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .fluxos-collapsible-card.fluxos-card-dragging {
+      opacity: 0.6;
+      border-color: #5eead4;
+      box-shadow: 0 10px 24px rgba(15, 118, 110, 0.12);
+    }
+
+    .fluxos-collapsible-card.fluxos-card-drag-over {
+      border-color: #14b8a6;
+      box-shadow: 0 12px 26px rgba(15, 118, 110, 0.16);
+    }
+
+    body.fluxos-card-sorting {
+      cursor: grabbing;
+      user-select: none;
     }
 
     .fluxos-collapsible-title-area {
@@ -1367,6 +1415,15 @@
       background: #f8fafc;
     }
 
+    .fluxos-collapsible-content .routine-child-item.fluxos-sortable-daily-task {
+      grid-template-columns: 24px minmax(0, 1fr) auto;
+    }
+
+    .fluxos-sortable-daily-task > .fluxos-sortable-task-name {
+      display: grid;
+      gap: 2px;
+    }
+
     .fluxos-collapsible-content .routine-child-item > :first-child {
       min-width: 0;
     }
@@ -1395,6 +1452,53 @@
       padding: 14px 16px;
       border-radius: 8px;
       background: #f8fafc;
+    }
+
+    .fluxos-collapsible-content .fluxos-task.fluxos-sortable-task {
+      grid-template-columns: 24px minmax(0, 1fr) auto auto;
+      transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+    }
+
+    .fluxos-sortable-task-name {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      font-weight: 800;
+    }
+
+    .fluxos-drag-handle {
+      display: inline-flex;
+      width: 24px;
+      height: 32px;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      font-size: 1rem;
+      font-weight: 900;
+      line-height: 1;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .fluxos-drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .fluxos-sortable-task.dragging {
+      opacity: 0.55;
+      border-color: #5eead4;
+      background: #f0fdfa;
+      box-shadow: 0 8px 18px rgba(15, 118, 110, 0.12);
+    }
+
+    .fluxos-sortable-task.drag-over {
+      border-color: #14b8a6;
+      background: #ecfdf5;
+    }
+
+    body.fluxos-sorting {
+      cursor: grabbing;
+      user-select: none;
     }
 
     .fluxos-ranking-card {
@@ -1999,6 +2103,11 @@
       background: #fef2f2;
     }
 
+    .btn-ghost:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
     .empty {
       padding: 18px;
       border: 1px dashed #cbd5e1;
@@ -2173,12 +2282,12 @@
       }
 
       .fluxos-collapsible-header {
-        grid-template-columns: 28px minmax(0, 1fr) 28px;
+        grid-template-columns: 60px minmax(0, 1fr) 60px;
         gap: 8px;
         padding: 14px 12px;
       }
 
-      .fluxos-collapsible-arrow {
+      .fluxos-collapsible-controls {
         grid-column: 1;
         grid-row: 1 / span 2;
       }
@@ -2205,6 +2314,26 @@
         padding: 14px;
       }
 
+      .fluxos-collapsible-content .routine-child-item.fluxos-sortable-daily-task {
+        grid-template-columns: 24px minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .fluxos-collapsible-content .fluxos-sortable-daily-task > .fluxos-drag-handle {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .fluxos-collapsible-content .fluxos-sortable-daily-task > .fluxos-sortable-task-name {
+        grid-column: 2;
+        grid-row: 1;
+      }
+
+      .fluxos-collapsible-content .fluxos-sortable-daily-task > .routine-child-actions {
+        grid-column: 2;
+        grid-row: 2;
+      }
+
       .fluxos-collapsible-content .routine-child-actions {
         width: 100%;
         justify-content: flex-start;
@@ -2226,6 +2355,31 @@
       .fluxos-collapsible-content .fluxos-task > select,
       .fluxos-collapsible-content .fluxos-task > .btn-ghost {
         width: 100%;
+      }
+
+      .fluxos-collapsible-content .fluxos-task.fluxos-sortable-task {
+        grid-template-columns: 24px repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .fluxos-collapsible-content .fluxos-sortable-task > .fluxos-drag-handle {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .fluxos-collapsible-content .fluxos-sortable-task > .fluxos-sortable-task-name {
+        grid-column: 2 / -1;
+        grid-row: 1;
+      }
+
+      .fluxos-collapsible-content .fluxos-sortable-task > .btn-ghost:nth-of-type(1) {
+        grid-column: 2;
+        grid-row: 2;
+      }
+
+      .fluxos-collapsible-content .fluxos-sortable-task > .btn-ghost:nth-of-type(2) {
+        grid-column: 3;
+        grid-row: 2;
       }
 
       .template-preview-list {
@@ -4735,6 +4889,9 @@
             id: dados.id || ('categoria_' + (normalizeAccessCode(nome) || index) + '_' + index),
             nome: nome,
             auraMaximaDia: obterAuraMaximaDiaCategoria(dados),
+            ordemTarefas: Array.isArray(dados.ordemTarefas)
+              ? dados.ordemTarefas.map(String)
+              : [],
             tarefas: tarefas
               .map(function(tarefa) {
                 return normalizarNomeCriancaRotina(tarefa);
@@ -4896,6 +5053,46 @@
 
     function getFluxosUserIdSeguro() {
       return usuarioLogado && usuarioLogado.id ? String(usuarioLogado.id) : null;
+    }
+
+    function getFluxosOrdemAbasResponsavelKey() {
+      const userId = getFluxosUserIdSeguro();
+      return userId ? 'fluxos-casa-ordem-abas-' + userId : null;
+    }
+
+    function carregarOrdemAbasResponsavelFluxos() {
+      const key = getFluxosOrdemAbasResponsavelKey();
+
+      if (!key) {
+        return [];
+      }
+
+      try {
+        const savedData = localStorage.getItem(key);
+        const ordem = savedData ? JSON.parse(savedData) : [];
+
+        if (!Array.isArray(ordem)) {
+          return [];
+        }
+
+        return Array.from(new Set(ordem.map(String).filter(Boolean)));
+      } catch (error) {
+        console.warn('Ordem das abas do Modo Responsável não carregada:', error);
+        return [];
+      }
+    }
+
+    function salvarOrdemAbasResponsavelFluxos(ordem) {
+      const key = getFluxosOrdemAbasResponsavelKey();
+      const ordemNormalizada = Array.from(new Set(
+        (Array.isArray(ordem) ? ordem : []).map(String).filter(Boolean)
+      ));
+
+      if (key) {
+        localStorage.setItem(key, JSON.stringify(ordemNormalizada));
+      }
+
+      return ordemNormalizada;
     }
 
     function configuracaoInicialFluxosConcluida() {
@@ -5097,6 +5294,7 @@
           }
 
           return {
+            ...dados,
             id: dados.id || ('diaria_' + normalizeAccessCode(titulo) + '_' + index),
             titulo: titulo,
             aura: Number(dados.aura || dados.points || 10) || 10,
@@ -5202,9 +5400,32 @@
 
     function getFluxosTarefasCategoria(categoryId) {
       const categoria = getFluxosCategoriaPorId(categoryId);
-      return (currentChecklist && Array.isArray(currentChecklist.tasks) ? currentChecklist.tasks : [])
+      const tarefas = (currentChecklist && Array.isArray(currentChecklist.tasks) ? currentChecklist.tasks : [])
         .filter(function(task) {
           return normalizeAccessCode(getTaskCategory(task)) === normalizeAccessCode(categoria.nome);
+        });
+
+      if (!Array.isArray(categoria.ordemTarefas) || !categoria.ordemTarefas.length) {
+        return tarefas;
+      }
+
+      const ordem = new Map(categoria.ordemTarefas.map(function(taskId, index) {
+        return [String(taskId), index];
+      }));
+
+      return tarefas
+        .map(function(task, index) {
+          return {
+            task: task,
+            index: index,
+            order: ordem.has(String(task.id)) ? ordem.get(String(task.id)) : Number.MAX_SAFE_INTEGER
+          };
+        })
+        .sort(function(a, b) {
+          return a.order === b.order ? a.index - b.index : a.order - b.order;
+        })
+        .map(function(item) {
+          return item.task;
         });
     }
 
@@ -5254,9 +5475,13 @@
       }
 
       const categorias = getFluxosCategoriasPadrao().map(function(categoria) {
+        const tarefasCategoria = getFluxosTarefasCategoria(categoria.id);
         return {
           ...categoria,
-          tarefas: getFluxosTarefasCategoria(categoria.id).map(function(task) {
+          ordemTarefas: tarefasCategoria.map(function(task) {
+            return String(task.id);
+          }),
+          tarefas: tarefasCategoria.map(function(task) {
             return task.name;
           })
         };
@@ -6111,6 +6336,191 @@
       return header;
     }
 
+    function obterCardsRecolhiveisResponsavelFluxos() {
+      return Array.from(fluxosContent.children).filter(function(element) {
+        return element.classList.contains('fluxos-collapsible-card') &&
+          Boolean(element.dataset.fluxosCardId);
+      });
+    }
+
+    function aplicarOrdemAbasResponsavelFluxos() {
+      const cards = obterCardsRecolhiveisResponsavelFluxos();
+      const cardsById = new Map(cards.map(function(card) {
+        return [String(card.dataset.fluxosCardId), card];
+      }));
+      const cardsOrdenados = [];
+
+      carregarOrdemAbasResponsavelFluxos().forEach(function(cardId) {
+        const card = cardsById.get(String(cardId));
+
+        if (card) {
+          cardsOrdenados.push(card);
+          cardsById.delete(String(cardId));
+        }
+      });
+
+      cards.forEach(function(card) {
+        const cardId = String(card.dataset.fluxosCardId);
+
+        if (cardsById.has(cardId)) {
+          cardsOrdenados.push(card);
+          cardsById.delete(cardId);
+        }
+      });
+
+      cardsOrdenados.forEach(function(card) {
+        fluxosContent.appendChild(card);
+      });
+
+      return cardsOrdenados.map(function(card) {
+        return String(card.dataset.fluxosCardId);
+      });
+    }
+
+    function configurarArrasteAbaResponsavelFluxos(card, handle) {
+      let dragging = false;
+      let pointerId = null;
+      let initialOrder = [];
+      let anchor = null;
+      let dragOverCard = null;
+
+      function limparEstadoArraste() {
+        card.classList.remove('fluxos-card-dragging');
+        document.body.classList.remove('fluxos-card-sorting');
+
+        if (dragOverCard) {
+          dragOverCard.classList.remove('fluxos-card-drag-over');
+          dragOverCard = null;
+        }
+      }
+
+      function restaurarOrdemInicial(container) {
+        const cardsById = new Map(obterCardsRecolhiveisResponsavelFluxos().map(function(item) {
+          return [String(item.dataset.fluxosCardId), item];
+        }));
+
+        initialOrder.forEach(function(cardId) {
+          const item = cardsById.get(String(cardId));
+
+          if (item && item.parentElement === container) {
+            container.insertBefore(item, anchor);
+          }
+        });
+      }
+
+      function finalizarArraste(cancelled) {
+        if (!dragging) {
+          return;
+        }
+
+        const container = card.parentElement;
+        dragging = false;
+        document.removeEventListener('pointermove', movimentarArraste);
+        document.removeEventListener('pointerup', soltarArraste);
+        document.removeEventListener('pointercancel', cancelarArraste);
+        limparEstadoArraste();
+        pointerId = null;
+
+        if (cancelled) {
+          restaurarOrdemInicial(container);
+          return;
+        }
+
+        const newOrder = obterCardsRecolhiveisResponsavelFluxos().map(function(item) {
+          return String(item.dataset.fluxosCardId);
+        });
+
+        if (newOrder.join('|') !== initialOrder.join('|')) {
+          salvarOrdemAbasResponsavelFluxos(newOrder);
+        }
+      }
+
+      function movimentarArraste(event) {
+        if (!dragging || event.pointerId !== pointerId) {
+          return;
+        }
+
+        event.preventDefault();
+
+        if (event.clientY < 72) {
+          window.scrollBy(0, -12);
+        } else if (event.clientY > window.innerHeight - 72) {
+          window.scrollBy(0, 12);
+        }
+
+        const targetCard = document.elementsFromPoint(event.clientX, event.clientY)
+          .map(function(element) {
+            return element.closest('.fluxos-collapsible-card');
+          })
+          .find(function(candidate) {
+            return candidate && candidate !== card;
+          }) || null;
+
+        if (!targetCard || targetCard.parentElement !== card.parentElement) {
+          if (dragOverCard) {
+            dragOverCard.classList.remove('fluxos-card-drag-over');
+            dragOverCard = null;
+          }
+          return;
+        }
+
+        if (dragOverCard && dragOverCard !== targetCard) {
+          dragOverCard.classList.remove('fluxos-card-drag-over');
+        }
+
+        dragOverCard = targetCard;
+        dragOverCard.classList.add('fluxos-card-drag-over');
+
+        const targetRect = targetCard.getBoundingClientRect();
+        const insertAfter = event.clientY > targetRect.top + (targetRect.height / 2);
+        targetCard.parentElement.insertBefore(card, insertAfter ? targetCard.nextSibling : targetCard);
+      }
+
+      function soltarArraste(event) {
+        if (event.pointerId === pointerId) {
+          event.preventDefault();
+          finalizarArraste(false);
+        }
+      }
+
+      function cancelarArraste(event) {
+        if (event.pointerId === pointerId) {
+          finalizarArraste(true);
+        }
+      }
+
+      handle.addEventListener('click', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+
+      handle.addEventListener('pointerdown', function(event) {
+        if ((event.pointerType === 'mouse' && event.button !== 0) || dragging) {
+          return;
+        }
+
+        const cards = obterCardsRecolhiveisResponsavelFluxos();
+
+        if (cards.length < 2 || card.parentElement !== fluxosContent) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        dragging = true;
+        pointerId = event.pointerId;
+        initialOrder = cards.map(function(item) {
+          return String(item.dataset.fluxosCardId);
+        });
+        anchor = cards[cards.length - 1].nextSibling;
+        card.classList.add('fluxos-card-dragging');
+        document.body.classList.add('fluxos-card-sorting');
+        document.addEventListener('pointermove', movimentarArraste, { passive: false });
+        document.addEventListener('pointerup', soltarArraste);
+        document.addEventListener('pointercancel', cancelarArraste);
+      });
+    }
+
     function criarCardRecolhivelFluxos(options) {
       const config = options || {};
       const card = document.createElement('section');
@@ -6118,6 +6528,10 @@
       const expanded = cardStateId ? fluxosCardsRecolhiveisAbertos.has(cardStateId) : false;
       card.className = 'fluxos-collapsible-card';
       card.classList.toggle('expanded', expanded);
+
+      if (cardStateId) {
+        card.dataset.fluxosCardId = cardStateId;
+      }
 
       const contentId = 'fluxos-collapsible-' + String(cardStateId || (++fluxosCollapsibleCounter))
         .replace(/[^a-zA-Z0-9_-]/g, '-');
@@ -6130,6 +6544,20 @@
       const arrow = document.createElement('span');
       arrow.className = 'fluxos-collapsible-arrow';
       arrow.textContent = expanded ? '▾' : '▸';
+
+      const controls = document.createElement('span');
+      controls.className = 'fluxos-collapsible-controls';
+      controls.appendChild(arrow);
+
+      if (cardStateId) {
+        const dragHandle = document.createElement('span');
+        dragHandle.className = 'fluxos-card-drag-handle';
+        dragHandle.textContent = '⋮⋮';
+        dragHandle.title = 'Arraste para reorganizar esta aba';
+        dragHandle.setAttribute('aria-hidden', 'true');
+        controls.appendChild(dragHandle);
+        configurarArrasteAbaResponsavelFluxos(card, dragHandle);
+      }
 
       const titleArea = document.createElement('span');
       titleArea.className = 'fluxos-collapsible-title-area';
@@ -6146,7 +6574,7 @@
         titleArea.appendChild(subtitle);
       }
 
-      headerButton.appendChild(arrow);
+      headerButton.appendChild(controls);
       headerButton.appendChild(titleArea);
 
       if (config.badge) {
@@ -6186,7 +6614,11 @@
         }
       }
 
-      headerButton.addEventListener('click', function() {
+      headerButton.addEventListener('click', function(event) {
+        if (event.target.closest('.fluxos-card-drag-handle')) {
+          return;
+        }
+
         const shouldExpand = headerButton.getAttribute('aria-expanded') !== 'true';
 
         if (cardStateId) {
@@ -7451,6 +7883,7 @@
       renderEditorCriancasFluxos();
       renderTarefasDiariasResponsavel();
       renderEditorTarefasFluxos();
+      aplicarOrdemAbasResponsavelFluxos();
     }
 
     function renderSinoProatividadeResponsavel() {
@@ -8083,9 +8516,18 @@
 
       tarefas.forEach(function(tarefa) {
         const item = document.createElement('div');
-        item.className = 'routine-child-item';
+        item.className = 'routine-child-item fluxos-sortable-task fluxos-sortable-daily-task';
+        item.dataset.categoryId = 'tarefas-diarias';
+        item.dataset.taskId = String(tarefa.id);
 
         const details = document.createElement('div');
+        details.className = 'fluxos-sortable-task-name';
+
+        const dragHandle = document.createElement('span');
+        dragHandle.className = 'fluxos-drag-handle';
+        dragHandle.textContent = '⋮⋮';
+        dragHandle.title = 'Arraste para reordenar';
+        dragHandle.setAttribute('aria-hidden', 'true');
 
         const name = document.createElement('div');
         name.className = 'routine-child-name';
@@ -8118,6 +8560,8 @@
         details.appendChild(meta);
         actions.appendChild(editButton);
         actions.appendChild(removeButton);
+        configurarArrasteTarefaFluxo(item, dragHandle, 'tarefas-diarias', salvarOrdemTarefasDiarias);
+        item.appendChild(dragHandle);
         item.appendChild(details);
         item.appendChild(actions);
         list.appendChild(item);
@@ -8248,8 +8692,271 @@
       renderModoResponsavelFluxos();
     }
 
+    function salvarOrdemTarefasDiarias(taskIds) {
+      const tarefas = carregarTarefasDiarias();
+      const tarefasPorId = new Map(tarefas.map(function(tarefa) {
+        return [String(tarefa.id), tarefa];
+      }));
+      const tarefasOrdenadas = [];
+
+      (Array.isArray(taskIds) ? taskIds : []).forEach(function(taskId) {
+        const tarefa = tarefasPorId.get(String(taskId));
+
+        if (tarefa && !tarefasOrdenadas.includes(tarefa)) {
+          tarefasOrdenadas.push(tarefa);
+        }
+      });
+
+      tarefas.forEach(function(tarefa) {
+        if (!tarefasOrdenadas.includes(tarefa)) {
+          tarefasOrdenadas.push(tarefa);
+        }
+      });
+
+      const ordemAtual = tarefas.map(function(tarefa) {
+        return String(tarefa.id);
+      });
+      const novaOrdem = tarefasOrdenadas.map(function(tarefa) {
+        return String(tarefa.id);
+      });
+
+      if (ordemAtual.join('|') === novaOrdem.join('|')) {
+        return false;
+      }
+
+      salvarTarefasDiarias(tarefasOrdenadas);
+      renderModoResponsavelFluxos();
+      return true;
+    }
+
+    function obterLinhasOrdenaveisFluxo(container, categoryId) {
+      return Array.from(container.children).filter(function(element) {
+        return element.classList.contains('fluxos-sortable-task') &&
+          String(element.dataset.categoryId) === String(categoryId);
+      });
+    }
+
+    async function salvarOrdemTarefasFluxo(categoryId, taskIds) {
+      if (!currentChecklist || !Array.isArray(currentChecklist.tasks)) {
+        return false;
+      }
+
+      const categoria = getFluxosCategoriaPorId(categoryId);
+      const categoryName = normalizeAccessCode(categoria.nome);
+      const tarefasDaCategoria = currentChecklist.tasks.filter(function(task) {
+        return normalizeAccessCode(getTaskCategory(task)) === categoryName;
+      });
+      const tarefasPorId = new Map(tarefasDaCategoria.map(function(task) {
+        return [String(task.id), task];
+      }));
+      const tarefasOrdenadas = [];
+
+      (Array.isArray(taskIds) ? taskIds : []).forEach(function(taskId) {
+        const task = tarefasPorId.get(String(taskId));
+
+        if (task && !tarefasOrdenadas.includes(task)) {
+          tarefasOrdenadas.push(task);
+        }
+      });
+
+      tarefasDaCategoria.forEach(function(task) {
+        if (!tarefasOrdenadas.includes(task)) {
+          tarefasOrdenadas.push(task);
+        }
+      });
+
+      const ordemAtual = getFluxosTarefasCategoria(categoryId).map(function(task) {
+        return String(task.id);
+      });
+      const novaOrdem = tarefasOrdenadas.map(function(task) {
+        return String(task.id);
+      });
+
+      if (ordemAtual.join('|') === novaOrdem.join('|')) {
+        return false;
+      }
+
+      let taskIndex = 0;
+      currentChecklist.tasks = currentChecklist.tasks.map(function(task) {
+        if (normalizeAccessCode(getTaskCategory(task)) !== categoryName) {
+          return task;
+        }
+
+        const reorderedTask = tarefasOrdenadas[taskIndex];
+        taskIndex += 1;
+        return reorderedTask;
+      });
+
+      const categorias = getFluxosCategoriasPadrao();
+      const categoriaConfigurada = categorias.find(function(item) {
+        return String(item.id) === String(categoryId);
+      });
+
+      if (categoriaConfigurada) {
+        categoriaConfigurada.ordemTarefas = novaOrdem;
+        categoriaConfigurada.tarefas = tarefasOrdenadas.map(function(task) {
+          return task.name;
+        });
+        salvarCategoriasFluxos(categorias);
+      }
+
+      sincronizarTarefasCategoriasFluxos();
+      await salvarTarefas(currentChecklist);
+      renderModoResponsavelFluxos();
+      return true;
+    }
+
+    function configurarArrasteTarefaFluxo(row, handle, categoryId, salvarNovaOrdem) {
+      let dragging = false;
+      let pointerId = null;
+      let initialOrder = [];
+      let anchor = null;
+      let dragOverRow = null;
+
+      function limparEstadoArraste() {
+        row.classList.remove('dragging');
+        document.body.classList.remove('fluxos-sorting');
+
+        if (dragOverRow) {
+          dragOverRow.classList.remove('drag-over');
+          dragOverRow = null;
+        }
+      }
+
+      function restaurarOrdemInicial(container) {
+        const rowsById = new Map(obterLinhasOrdenaveisFluxo(container, categoryId).map(function(item) {
+          return [String(item.dataset.taskId), item];
+        }));
+
+        initialOrder.forEach(function(taskId) {
+          const item = rowsById.get(String(taskId));
+
+          if (item) {
+            container.insertBefore(item, anchor);
+          }
+        });
+      }
+
+      async function finalizarArraste(cancelled) {
+        if (!dragging) {
+          return;
+        }
+
+        const container = row.parentElement;
+        dragging = false;
+        document.removeEventListener('pointermove', movimentarArraste);
+        document.removeEventListener('pointerup', soltarArraste);
+        document.removeEventListener('pointercancel', cancelarArraste);
+        limparEstadoArraste();
+        pointerId = null;
+
+        if (cancelled) {
+          restaurarOrdemInicial(container);
+          return;
+        }
+
+        const newOrder = obterLinhasOrdenaveisFluxo(container, categoryId).map(function(item) {
+          return String(item.dataset.taskId);
+        });
+
+        if (newOrder.join('|') !== initialOrder.join('|')) {
+          if (typeof salvarNovaOrdem === 'function') {
+            await salvarNovaOrdem(newOrder);
+          } else {
+            await salvarOrdemTarefasFluxo(categoryId, newOrder);
+          }
+        }
+      }
+
+      function movimentarArraste(event) {
+        if (!dragging || event.pointerId !== pointerId) {
+          return;
+        }
+
+        event.preventDefault();
+
+        if (event.clientY < 72) {
+          window.scrollBy(0, -12);
+        } else if (event.clientY > window.innerHeight - 72) {
+          window.scrollBy(0, 12);
+        }
+
+        const targetRow = document.elementsFromPoint(event.clientX, event.clientY)
+          .map(function(element) {
+            return element.closest('.fluxos-sortable-task');
+          })
+          .find(function(candidate) {
+            return candidate && candidate !== row;
+          }) || null;
+
+        if (
+          !targetRow ||
+          targetRow.parentElement !== row.parentElement ||
+          String(targetRow.dataset.categoryId) !== String(categoryId)
+        ) {
+          if (dragOverRow) {
+            dragOverRow.classList.remove('drag-over');
+            dragOverRow = null;
+          }
+          return;
+        }
+
+        if (dragOverRow && dragOverRow !== targetRow) {
+          dragOverRow.classList.remove('drag-over');
+        }
+
+        dragOverRow = targetRow;
+        dragOverRow.classList.add('drag-over');
+
+        const targetRect = targetRow.getBoundingClientRect();
+        const insertAfter = event.clientY > targetRect.top + (targetRect.height / 2);
+        targetRow.parentElement.insertBefore(row, insertAfter ? targetRow.nextSibling : targetRow);
+      }
+
+      function soltarArraste(event) {
+        if (event.pointerId === pointerId) {
+          event.preventDefault();
+          finalizarArraste(false);
+        }
+      }
+
+      function cancelarArraste(event) {
+        if (event.pointerId === pointerId) {
+          finalizarArraste(true);
+        }
+      }
+
+      handle.addEventListener('pointerdown', function(event) {
+        if ((event.pointerType === 'mouse' && event.button !== 0) || dragging) {
+          return;
+        }
+
+        const container = row.parentElement;
+        const rows = obterLinhasOrdenaveisFluxo(container, categoryId);
+
+        if (rows.length < 2) {
+          return;
+        }
+
+        event.preventDefault();
+        dragging = true;
+        pointerId = event.pointerId;
+        initialOrder = rows.map(function(item) {
+          return String(item.dataset.taskId);
+        });
+        anchor = rows[rows.length - 1].nextSibling;
+        row.classList.add('dragging');
+        document.body.classList.add('fluxos-sorting');
+        document.addEventListener('pointermove', movimentarArraste, { passive: false });
+        document.addEventListener('pointerup', soltarArraste);
+        document.addEventListener('pointercancel', cancelarArraste);
+      });
+    }
+
     function renderEditorTarefasFluxos() {
-      getFluxosCategoriasPadrao().forEach(function(categoria) {
+      const categorias = getFluxosCategoriasPadrao();
+
+      categorias.forEach(function(categoria) {
         const tarefasDaCategoria = getFluxosTarefasCategoria(categoria.id);
         const card = document.createElement('div');
         card.className = 'fluxos-card';
@@ -8294,9 +9001,18 @@
 
         tarefasDaCategoria.forEach(function(task) {
           const row = document.createElement('div');
-          row.className = 'fluxos-task';
+          row.className = 'fluxos-task fluxos-sortable-task';
+          row.dataset.categoryId = String(categoria.id);
+          row.dataset.taskId = String(task.id);
+
+          const dragHandle = document.createElement('span');
+          dragHandle.className = 'fluxos-drag-handle';
+          dragHandle.textContent = '⋮⋮';
+          dragHandle.title = 'Arraste para reordenar';
+          dragHandle.setAttribute('aria-hidden', 'true');
 
           const name = document.createElement('div');
+          name.className = 'fluxos-sortable-task-name';
           name.textContent = task.name;
 
           const editButton = document.createElement('button');
@@ -8315,6 +9031,8 @@
             removerTarefaFluxo(task.id);
           });
 
+          configurarArrasteTarefaFluxo(row, dragHandle, categoria.id);
+          row.appendChild(dragHandle);
           row.appendChild(name);
           row.appendChild(editButton);
           row.appendChild(removeButton);
